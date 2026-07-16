@@ -21,6 +21,7 @@
     "dashboard": "Today",
     "habits": "Habits",
     "todos": "Tasks",
+    "journal": "Journal",
     "planning": "Planning",
     "settings": "Settings"
   },
@@ -127,6 +128,7 @@
     "dueDate": "Due date",
     "priority": "Priority",
     "domain": "Domain",
+    "project": "Project",
     "subtasks": "Subtasks",
     "addSubtask": "Add subtask",
     "subtaskPlaceholder": "Subtask",
@@ -177,10 +179,39 @@
     "title": "Trash",
     "habitsSection": "Habits",
     "todosSection": "Tasks",
+    "projectsSection": "Projects",
     "empty": "Trash is empty.",
     "retentionNote": "Items are removed for good 30 days after deletion.",
     "restore": "Restore",
     "deleteForever": "Delete forever",
     "deleteForeverConfirm": "Delete this permanently? This can't be undone."
+  },
+  "projects": {
+    "title": "Projects",
+    "newProject": "New project",
+    "editProject": "Edit project",
+    "name": "Name",
+    "namePlaceholder": "e.g. Move apartments",
+    "domain": "Domain",
+    "color": "Color",
+    "empty": "No projects yet.",
+    "notFound": "This project isn't here anymore.",
+    "linkedTodos": "Tasks",
+    "noTodos": "No tasks in this project yet.",
+    "archiveConfirm": "Archive this project? Its tasks stay as they are.",
+    "deleteConfirm": "Move this project to Trash? Its tasks keep their history, they'll just no longer show a project."
+  },
+  "journal": {
+    "title": "Journal",
+    "freeEntry": "Free entry",
+    "entryLabel": "Entry",
+    "entryPlaceholder": "Write whatever comes to mind…",
+    "mood": "Mood (optional)",
+    "entriesTitle": "Past entries",
+    "empty": "No entries yet.",
+    "managePrompts": "Prompts",
+    "active": "Active",
+    "newPromptPlaceholder": "Add your own prompt",
+    "deletePromptConfirm": "Delete this prompt? Past entries written from it are unaffected."
   }
 }

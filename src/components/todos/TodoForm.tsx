@@ -5,6 +5,7 @@ import { Field, Input, Select, TextArea } from '../ui/Input'
 import { Button } from '../ui/Button'
 import { useDomains } from '../../state/useDomains'
 import { usePriorityLevels } from '../../state/useTimeBlocks'
+import { useProjects } from '../../state/useProjects'
 import type { Todo, TodoSubtask } from '../../db/types'
 import type { NewTodoInput } from '../../data/todos'
 import { newId } from '../../lib/id'
@@ -12,6 +13,7 @@ import { newId } from '../../lib/id'
 export function TodoForm({
   spaceId,
   initial,
+  defaultProjectId,
   onSave,
   onClose,
   onArchive,
@@ -19,6 +21,7 @@ export function TodoForm({
 }: {
   spaceId: string
   initial?: Todo
+  defaultProjectId?: string
   onSave: (data: NewTodoInput) => void
   onClose: () => void
   onArchive?: () => void
@@ -27,12 +30,14 @@ export function TodoForm({
   const { t } = useTranslation()
   const domains = useDomains(spaceId)
   const priorities = usePriorityLevels(spaceId)
+  const projects = useProjects(spaceId)
 
   const [title, setTitle] = useState(initial?.title ?? '')
   const [description, setDescription] = useState(initial?.description ?? '')
   const [dueDate, setDueDate] = useState(initial?.dueDate ?? '')
   const [priorityLevelId, setPriorityLevelId] = useState(initial?.priorityLevelId ?? '')
   const [domainId, setDomainId] = useState(initial?.domainId ?? '')
+  const [projectId, setProjectId] = useState(initial?.projectId ?? defaultProjectId ?? '')
   const [criticalReminder, setCriticalReminder] = useState(initial?.criticalReminder ?? false)
   const [subtasks, setSubtasks] = useState<TodoSubtask[]>(initial?.subtasks ?? [])
   const [subtaskDraft, setSubtaskDraft] = useState('')
@@ -52,6 +57,7 @@ export function TodoForm({
       dueDate: dueDate || undefined,
       priorityLevelId: priorityLevelId || undefined,
       domainId: domainId || undefined,
+      projectId: projectId || undefined,
       criticalReminder,
       subtasks: subtasks.length ? subtasks : undefined,
     }
@@ -97,16 +103,28 @@ export function TodoForm({
           </Field>
         </div>
 
-        <Field label={t('todos.domain')}>
-          <Select value={domainId} onChange={(e) => setDomainId(e.target.value)}>
-            <option value="">{t('common.none')}</option>
-            {domains.map((d) => (
-              <option key={d.id} value={d.id}>
-                {d.icon} {d.name}
-              </option>
-            ))}
-          </Select>
-        </Field>
+        <div className="grid grid-cols-2 gap-3">
+          <Field label={t('todos.domain')}>
+            <Select value={domainId} onChange={(e) => setDomainId(e.target.value)}>
+              <option value="">{t('common.none')}</option>
+              {domains.map((d) => (
+                <option key={d.id} value={d.id}>
+                  {d.icon} {d.name}
+                </option>
+              ))}
+            </Select>
+          </Field>
+          <Field label={t('todos.project')}>
+            <Select value={projectId} onChange={(e) => setProjectId(e.target.value)}>
+              <option value="">{t('common.none')}</option>
+              {projects.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                </option>
+              ))}
+            </Select>
+          </Field>
+        </div>
 
         <Field label={t('todos.subtasks')}>
           <div className="flex flex-col gap-2">

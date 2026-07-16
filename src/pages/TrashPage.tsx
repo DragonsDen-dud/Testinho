@@ -1,11 +1,58 @@
+import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useAppSettings } from '../state/useAppSettings'
 import { listTrashedHabits, restoreHabit, purgeHabit } from '../data/habits'
 import { listTrashedTodos, restoreTodo, purgeTodo } from '../data/todos'
+import { listTrashedProjects, restoreProject, purgeProject } from '../data/projects'
 import { Button } from '../components/ui/Button'
 import { EmptyState } from '../components/ui/EmptyState'
+
+function TrashSection<T extends { id: string }>({
+  title,
+  items,
+  label,
+  onRestore,
+  onPurgeForever,
+  deleteForeverConfirmText,
+}: {
+  title: string
+  items: T[]
+  label: (item: T) => string
+  onRestore: (id: string) => void
+  onPurgeForever: (id: string) => void
+  deleteForeverConfirmText: string
+}): ReactNode {
+  const { t } = useTranslation()
+  if (items.length === 0) return null
+  return (
+    <div>
+      <h2 className="text-xs font-medium text-[var(--stoa-text-muted)] mb-2">{title}</h2>
+      <ul className="flex flex-col gap-2">
+        {items.map((item) => (
+          <li
+            key={item.id}
+            className="flex items-center gap-3 rounded-xl border border-[var(--stoa-border)] bg-[var(--stoa-surface)] px-3.5 py-3"
+          >
+            <span className="flex-1 text-sm font-medium">{label(item)}</span>
+            <Button variant="secondary" onClick={() => onRestore(item.id)}>
+              {t('trash.restore')}
+            </Button>
+            <Button
+              variant="danger"
+              onClick={() => {
+                if (confirm(deleteForeverConfirmText)) onPurgeForever(item.id)
+              }}
+            >
+              {t('trash.deleteForever')}
+            </Button>
+          </li>
+        ))}
+      </ul>
+    </div>
+  )
+}
 
 export function TrashPage() {
   const { t } = useTranslation()
@@ -15,7 +62,8 @@ export function TrashPage() {
 
   const trashedHabits = useLiveQuery(() => (spaceId ? listTrashedHabits(spaceId) : []), [spaceId]) ?? []
   const trashedTodos = useLiveQuery(() => (spaceId ? listTrashedTodos(spaceId) : []), [spaceId]) ?? []
-  const isEmpty = trashedHabits.length === 0 && trashedTodos.length === 0
+  const trashedProjects = useLiveQuery(() => (spaceId ? listTrashedProjects(spaceId) : []), [spaceId]) ?? []
+  const isEmpty = trashedHabits.length === 0 && trashedTodos.length === 0 && trashedProjects.length === 0
 
   return (
     <div className="p-4 max-w-md mx-auto w-full flex flex-col gap-4">
@@ -31,59 +79,30 @@ export function TrashPage() {
 
       {isEmpty && <EmptyState text={t('trash.empty')} />}
 
-      {trashedHabits.length > 0 && (
-        <div>
-          <h2 className="text-xs font-medium text-[var(--stoa-text-muted)] mb-2">{t('trash.habitsSection')}</h2>
-          <ul className="flex flex-col gap-2">
-            {trashedHabits.map((h) => (
-              <li
-                key={h.id}
-                className="flex items-center gap-3 rounded-xl border border-[var(--stoa-border)] bg-[var(--stoa-surface)] px-3.5 py-3"
-              >
-                <span className="flex-1 text-sm font-medium">{h.name}</span>
-                <Button variant="secondary" onClick={() => restoreHabit(h.id)}>
-                  {t('trash.restore')}
-                </Button>
-                <Button
-                  variant="danger"
-                  onClick={() => {
-                    if (confirm(t('trash.deleteForeverConfirm'))) purgeHabit(h.id)
-                  }}
-                >
-                  {t('trash.deleteForever')}
-                </Button>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      {trashedTodos.length > 0 && (
-        <div>
-          <h2 className="text-xs font-medium text-[var(--stoa-text-muted)] mb-2">{t('trash.todosSection')}</h2>
-          <ul className="flex flex-col gap-2">
-            {trashedTodos.map((td) => (
-              <li
-                key={td.id}
-                className="flex items-center gap-3 rounded-xl border border-[var(--stoa-border)] bg-[var(--stoa-surface)] px-3.5 py-3"
-              >
-                <span className="flex-1 text-sm font-medium">{td.title}</span>
-                <Button variant="secondary" onClick={() => restoreTodo(td.id)}>
-                  {t('trash.restore')}
-                </Button>
-                <Button
-                  variant="danger"
-                  onClick={() => {
-                    if (confirm(t('trash.deleteForeverConfirm'))) purgeTodo(td.id)
-                  }}
-                >
-                  {t('trash.deleteForever')}
-                </Button>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
+      <TrashSection
+        title={t('trash.habitsSection')}
+        items={trashedHabits}
+        label={(h) => h.name}
+        onRestore={restoreHabit}
+        onPurgeForever={purgeHabit}
+        deleteForeverConfirmText={t('trash.deleteForeverConfirm')}
+      />
+      <TrashSection
+        title={t('trash.todosSection')}
+        items={trashedTodos}
+        label={(td) => td.title}
+        onRestore={restoreTodo}
+        onPurgeForever={purgeTodo}
+        deleteForeverConfirmText={t('trash.deleteForeverConfirm')}
+      />
+      <TrashSection
+        title={t('trash.projectsSection')}
+        items={trashedProjects}
+        label={(p) => p.name}
+        onRestore={restoreProject}
+        onPurgeForever={purgeProject}
+        deleteForeverConfirmText={t('trash.deleteForeverConfirm')}
+      />
     </div>
   )
 }

@@ -9,6 +9,9 @@ import type {
   HabitLog,
   Todo,
   PlanEntry,
+  Project,
+  JournalPrompt,
+  JournalEntry,
 } from './types'
 
 export class StoaDatabase extends Dexie {
@@ -21,6 +24,9 @@ export class StoaDatabase extends Dexie {
   habitLogs!: Table<HabitLog, string>
   todos!: Table<Todo, string>
   planEntries!: Table<PlanEntry, string>
+  projects!: Table<Project, string>
+  journalPrompts!: Table<JournalPrompt, string>
+  journalEntries!: Table<JournalEntry, string>
 
   constructor() {
     super('stoa')
@@ -48,6 +54,15 @@ export class StoaDatabase extends Dexie {
           await tx.table('appSettings').update('singleton', { trashRetentionDays: 30 })
         }
       })
+    // v3: Projects (Article 32) and Journal (Article 33). Project is
+    // soft-deletable from creation per Article 20's explicit inclusion of
+    // Project alongside Habit/Todo in Trash — no retrofit needed here.
+    this.version(3).stores({
+      todos: 'id, spaceId, domainId, priorityLevelId, projectId, status, dueDate, deletedAt',
+      projects: 'id, spaceId, domainId, archivedAt, deletedAt',
+      journalPrompts: 'id, spaceId, sortOrder, active',
+      journalEntries: 'id, spaceId, date, promptId',
+    })
   }
 }
 

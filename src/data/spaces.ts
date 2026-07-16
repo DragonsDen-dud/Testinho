@@ -12,6 +12,25 @@ const DEFAULT_PRIORITIES: Record<Language, string[]> = {
   ru: ['Высокий', 'Средний', 'Низкий'],
 }
 
+// Article 33 starter set — records in the DB, not hardcoded UI copy: the
+// user can edit, delete, or add their own from day one.
+const DEFAULT_JOURNAL_PROMPTS: Record<Language, string[]> = {
+  en: [
+    'What went well today?',
+    'What was hard?',
+    'What did I waste time on?',
+    'What am I grateful for today?',
+    'What would I do differently?',
+  ],
+  ru: [
+    'Что сегодня получилось хорошо?',
+    'Что было сложным?',
+    'На что я потратил время впустую?',
+    'За что я благодарен сегодня?',
+    'Что бы я сделал иначе?',
+  ],
+}
+
 export async function createSpace(
   data: { name: string; color: string; icon: string },
   language: Language = 'en',
@@ -42,6 +61,15 @@ export async function createSpace(
       name,
       sortOrder: i,
       weight: DEFAULT_PRIORITIES[language].length - i,
+    })),
+  )
+  await db.journalPrompts.bulkAdd(
+    DEFAULT_JOURNAL_PROMPTS[language].map((text, i) => ({
+      id: newId(),
+      spaceId: space.id,
+      text,
+      active: true,
+      sortOrder: i,
     })),
   )
 

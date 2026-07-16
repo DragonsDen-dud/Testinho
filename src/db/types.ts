@@ -112,6 +112,7 @@ export interface Todo {
   dueDate?: string
   priorityLevelId?: string
   domainId?: string
+  projectId?: string
   criticalReminder: boolean
   subtasks?: TodoSubtask[]
   status: TodoStatus
@@ -128,4 +129,33 @@ export interface PlanEntry {
   content: string
   linkedTodoIds?: string[]
   linkedHabitIds?: string[]
+}
+
+export interface Project {
+  id: string
+  spaceId: string
+  name: string
+  domainId?: string
+  color?: string
+  createdAt: string
+  archivedAt?: string
+  deletedAt?: string
+}
+
+export interface JournalPrompt {
+  id: string
+  spaceId: string
+  text: string
+  active: boolean
+  sortOrder: number
+}
+
+export interface JournalEntry {
+  id: string
+  spaceId: string
+  date: string
+  promptId?: string
+  text: string
+  mood?: number
+  createdAt: string
 }

@@ -21,9 +21,11 @@ Everything lives in this browser's IndexedDB (via Dexie). No account, no cloud s
 - **Planning** — day plan notes linked to habits/tasks (E.5, basic)
 - **Dashboard** — today's habits and tasks, configurable module order (Article 45)
 - **Settings** — language (RU/EN), theme (dark/light/high-contrast/system), Space management
-- **Trash** — soft-delete for Habits/To-Do (`deletedAt`), Restore, permanent delete, and a 30-day auto-purge sweep on app start (Article 20, E.14). All active-item queries funnel through `listActiveHabits`/`listActiveTodos` in `src/data/`, so every screen — Dashboard, Planning, overdue banner — excludes trashed records from a single point rather than repeating the filter per query.
+- **Trash** — soft-delete for Habits/To-Do/Projects (`deletedAt`), Restore, permanent delete, and a 30-day auto-purge sweep on app start (Article 20, E.14). All active-item queries funnel through `listActiveHabits`/`listActiveTodos`/`listActiveProjects` in `src/data/`, so every screen — Dashboard, Planning, overdue banner — excludes trashed records from a single point rather than repeating the filter per query.
+- **Projects** — simple one-level grouping for tasks with a progress bar (% done of active linked tasks), soft-deletable from creation like Habit/Todo (Article 32, E.13)
+- **Journal** — its own bottom-nav tab, prompt-driven or free-text entries with optional mood, a fully editable starter set of 5 prompts seeded per Space (never hardcoded UI copy — DB records the user can edit/delete/add to from day one) (Article 33, E.12)
 
-Deferred to later passes per the contract's build plan: AI reports, Journal, Projects, Calendar `.ics` export, Telegram reminders, voice input, cross-Space analytics, and the remaining polish items in Section H steps 21–31.
+Deferred to later passes per the contract's build plan: AI reports, photo attachments (Article 23), Calendar `.ics` export, Telegram reminders, voice input, cross-Space analytics, and the remaining polish items in Section H steps 21–31.
 
 ## Development
 

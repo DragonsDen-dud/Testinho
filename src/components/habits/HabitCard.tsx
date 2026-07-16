@@ -8,6 +8,7 @@ import { logHabit } from '../../data/habits'
 import { todayKey } from '../../lib/date'
 import { Button } from '../ui/Button'
 import { Input } from '../ui/Input'
+import { ProgressBar } from '../ui/ProgressBar'
 
 export function HabitCard({ habit, todayLog }: { habit: Habit; todayLog?: HabitLog }) {
   const { t } = useTranslation()
@@ -41,11 +42,8 @@ export function HabitCard({ habit, todayLog }: { habit: Habit; todayLog?: HabitL
           {primaryStat}
           {secondaryStat}
         </button>
-        <div className="w-full max-w-[8rem] bg-[var(--stoa-border)] rounded-full h-1.5 mt-1.5 overflow-hidden">
-          <div
-            className="h-full bg-[var(--stoa-accent)] transition-all"
-            style={{ width: `${strength}%` }}
-          />
+        <div className="w-full max-w-[8rem] mt-1.5">
+          <ProgressBar percent={strength} />
         </div>
       </div>
 

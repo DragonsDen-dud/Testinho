@@ -14,6 +14,9 @@ import { SettingsPage } from './pages/SettingsPage'
 import { SpacesPage } from './pages/SpacesPage'
 import { DomainsPage } from './pages/DomainsPage'
 import { TrashPage } from './pages/TrashPage'
+import { ProjectsPage } from './pages/ProjectsPage'
+import { ProjectDetailPage } from './pages/ProjectDetailPage'
+import { JournalPage } from './pages/JournalPage'
 
 function App() {
   const { i18n } = useTranslation()
@@ -50,6 +53,9 @@ function App() {
           <Route path="/habits/:id/edit" element={<HabitsPage />} />
           <Route path="/todos" element={<TodosPage />} />
           <Route path="/todos/:id/edit" element={<TodosPage />} />
+          <Route path="/projects" element={<ProjectsPage />} />
+          <Route path="/projects/:id" element={<ProjectDetailPage />} />
+          <Route path="/journal" element={<JournalPage />} />
           <Route path="/planning" element={<PlanningPage />} />
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="/settings/spaces" element={<SpacesPage />} />

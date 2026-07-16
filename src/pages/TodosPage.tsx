@@ -40,6 +40,13 @@ export function TodosPage() {
         <Button onClick={() => setCreating(true)}>+ {t('todos.newTodo')}</Button>
       </div>
 
+      <button
+        className="text-sm text-[var(--stoa-accent)] self-start"
+        onClick={() => navigate('/projects')}
+      >
+        {t('projects.title')} →
+      </button>
+
       {overdue.length > 0 && tab === 'open' && (
         <div className="rounded-xl bg-[var(--stoa-danger)]/10 border border-[var(--stoa-danger)]/30 px-3.5 py-2.5 text-sm text-[var(--stoa-danger)] flex items-center justify-between">
           <span>{t('dashboard.overdueBanner', { count: overdue.length })}</span>
