@@ -1,7 +1,8 @@
 import { db } from '../db/db'
 import { newId } from '../lib/id'
 import { excludeTrashed, onlyTrashed, isExpired } from '../lib/trash'
-import type { Todo } from '../db/types'
+import { computeNextDueDate } from '../lib/todoRecurrence'
+import type { Todo, TodoStatus } from '../db/types'
 
 export type NewTodoInput = Omit<Todo, 'id' | 'createdAt' | 'status' | 'completedAt' | 'deletedAt'>
 
@@ -16,8 +17,8 @@ export async function listTrashedTodos(spaceId: string): Promise<Todo[]> {
   return onlyTrashed(rows)
 }
 
-export async function createTodo(data: NewTodoInput): Promise<Todo> {
-  const todo: Todo = { ...data, id: newId(), status: 'open', createdAt: new Date().toISOString() }
+export async function createTodo(data: NewTodoInput, initialStatus: TodoStatus = 'open'): Promise<Todo> {
+  const todo: Todo = { ...data, id: newId(), status: initialStatus, createdAt: new Date().toISOString() }
   await db.todos.add(todo)
   return todo
 }
@@ -26,8 +27,34 @@ export async function updateTodo(id: string, patch: Partial<Todo>): Promise<void
   await db.todos.update(id, patch)
 }
 
-export async function markTodoDone(id: string): Promise<void> {
+/**
+ * Marks the todo done. If it's recurring (Article 28), also creates the next
+ * instance — computed from this instance's own dueDate, never "today", so a
+ * late completion doesn't compress the next interval. Returns the new
+ * instance when one was generated, otherwise undefined.
+ */
+export async function markTodoDone(id: string): Promise<Todo | undefined> {
+  const current = await db.todos.get(id)
   await db.todos.update(id, { status: 'done', completedAt: new Date().toISOString() })
+  if (!current?.recurrence || !current.dueDate) return undefined
+
+  const next: Todo = {
+    id: newId(),
+    spaceId: current.spaceId,
+    title: current.title,
+    description: current.description,
+    dueDate: computeNextDueDate(current.dueDate, current.recurrence),
+    scheduledTime: current.scheduledTime,
+    priorityLevelId: current.priorityLevelId,
+    domainId: current.domainId,
+    projectId: current.projectId,
+    criticalReminder: current.criticalReminder,
+    recurrence: current.recurrence,
+    status: 'open',
+    createdAt: new Date().toISOString(),
+  }
+  await db.todos.add(next)
+  return next
 }
 
 export async function reopenTodo(id: string): Promise<void> {
@@ -36,6 +63,33 @@ export async function reopenTodo(id: string): Promise<void> {
 
 export async function archiveTodo(id: string): Promise<void> {
   await db.todos.update(id, { status: 'archived' })
+}
+
+/** Article 31 — pushes an existing todo to the Someday list. */
+export async function moveToSomeday(id: string): Promise<void> {
+  await db.todos.update(id, { status: 'someday' })
+}
+
+/**
+ * Article 31 — "Start doing this": a someday item can only become 'open'
+ * once both dueDate and priorityLevelId are supplied. Throws if either is
+ * missing, rather than silently promoting a task with no plan behind it.
+ */
+export async function promoteSomeday(id: string, dueDate: string, priorityLevelId: string): Promise<void> {
+  if (!dueDate || !priorityLevelId) {
+    throw new Error('promoteSomeday requires both dueDate and priorityLevelId')
+  }
+  await db.todos.update(id, { status: 'open', dueDate, priorityLevelId })
+}
+
+/** Article 30 — reschedule a single todo (used by the Tomorrow/In a week/Pick a date menu). */
+export async function rescheduleTodo(id: string, newDueDate: string): Promise<void> {
+  await db.todos.update(id, { dueDate: newDueDate })
+}
+
+/** Article 30 — bulk reschedule for the overdue triage screen's "all to X" actions. */
+export async function bulkRescheduleTodos(ids: string[], newDueDate: string): Promise<void> {
+  await db.todos.where('id').anyOf(ids).modify({ dueDate: newDueDate })
 }
 
 export async function toggleSubtask(todo: Todo, subtaskId: string): Promise<void> {

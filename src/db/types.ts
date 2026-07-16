@@ -6,7 +6,8 @@ export type Language = 'ru' | 'en'
 export type ThemePreset = 'dark' | 'light' | 'contrast' | 'system'
 export type HabitType = 'build' | 'avoid'
 export type HabitLogStatus = 'done' | 'not_done' | 'skip'
-export type TodoStatus = 'open' | 'done' | 'archived'
+export type TodoStatus = 'open' | 'done' | 'archived' | 'someday'
+export type TodoRecurrenceType = 'daily' | 'weekly' | 'monthly' | 'custom'
 export type ScheduleType = 'daily' | 'weekly_n_times' | 'specific_weekdays' | 'custom'
 
 export interface AppSettings {
@@ -17,6 +18,7 @@ export interface AppSettings {
   homeScreenModuleOrder: string[]
   onboardingComplete: boolean
   trashRetentionDays: number
+  overdueBannerLastShownDate?: string
 }
 
 export interface Space {
@@ -113,17 +115,26 @@ export interface TodoSubtask {
   done: boolean
 }
 
+export interface TodoRecurrence {
+  type: TodoRecurrenceType
+  params: {
+    interval?: number // every N days/weeks/months (custom is treated as days); default 1
+  }
+}
+
 export interface Todo {
   id: string
   spaceId: string
   title: string
   description?: string
   dueDate?: string
+  scheduledTime?: string // HH:mm (Article 29)
   priorityLevelId?: string
   domainId?: string
   projectId?: string
   criticalReminder: boolean
   subtasks?: TodoSubtask[]
+  recurrence?: TodoRecurrence // Article 28 — regenerates on completion, not a Habit
   status: TodoStatus
   completedAt?: string
   createdAt: string

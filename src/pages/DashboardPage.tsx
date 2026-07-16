@@ -1,7 +1,7 @@
-import type { ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
-import { useAppSettings } from '../state/useAppSettings'
+import { useAppSettings, updateAppSettings } from '../state/useAppSettings'
 import { useSpaces } from '../state/useSpaces'
 import { useHabits, useLogsForDate } from '../state/useHabits'
 import { useOpenTodosToday } from '../state/useTodos'
@@ -9,6 +9,7 @@ import { HabitCard } from '../components/habits/HabitCard'
 import { TodoItem } from '../components/todos/TodoItem'
 import { EmptyState } from '../components/ui/EmptyState'
 import { isScheduledOnDate } from '../lib/habitStrength'
+import { shouldShowOverdueBanner } from '../lib/overdueBanner'
 import { todayKey } from '../lib/date'
 
 export function DashboardPage() {
@@ -27,7 +28,26 @@ export function DashboardPage() {
     allHabits.map((h) => h.id),
     date,
   )
-  const { today: todosToday, overdue } = useOpenTodosToday(settings?.activeSpaceId)
+  const { today: todosToday, overdue, loaded: todosLoaded } = useOpenTodosToday(settings?.activeSpaceId)
+
+  // Article 30 — once per calendar day. Deliberately does NOT latch on a
+  // negative result: useOpenTodosToday's live query can resolve once for
+  // spaceId=undefined (before settings loads, returning an empty/stale
+  // overdue list) before re-resolving again for the real spaceId — "has
+  // resolved once" isn't the same as "has settled to the real value". So
+  // this only ever locks in when it finds something to show (via the ref);
+  // an empty/stale read is silently ignored and re-checked next render
+  // rather than being treated as a final "nothing to show" verdict.
+  const [showOverdueBanner, setShowOverdueBanner] = useState(false)
+  const markedShownRef = useRef(false)
+  useEffect(() => {
+    if (markedShownRef.current || !settings?.activeSpaceId || !todosLoaded) return
+    if (overdue.length > 0 && shouldShowOverdueBanner(settings.overdueBannerLastShownDate, date)) {
+      markedShownRef.current = true
+      setShowOverdueBanner(true)
+      updateAppSettings({ overdueBannerLastShownDate: date })
+    }
+  }, [settings, todosLoaded, overdue.length, date])
 
   const order = settings?.homeScreenModuleOrder ?? ['habits', 'todos']
 
@@ -73,14 +93,19 @@ export function DashboardPage() {
         </div>
       </div>
 
-      {overdue.length > 0 && (
-        <button
-          className="rounded-xl bg-[var(--stoa-danger)]/10 border border-[var(--stoa-danger)]/30 px-3.5 py-2.5 text-sm text-[var(--stoa-danger)] flex items-center justify-between"
-          onClick={() => navigate('/todos')}
-        >
-          <span>{t('dashboard.overdueBanner', { count: overdue.length })}</span>
-          <span className="underline">{t('dashboard.reviewOverdue')}</span>
-        </button>
+      {showOverdueBanner && (
+        <div className="rounded-xl bg-[var(--stoa-danger)]/10 border border-[var(--stoa-danger)]/30 px-3.5 py-2.5 text-sm text-[var(--stoa-danger)] flex items-center justify-between gap-2">
+          <button className="flex-1 text-left underline-offset-2" onClick={() => navigate('/todos/overdue')}>
+            {t('dashboard.overdueBanner', { count: overdue.length })} — {t('dashboard.reviewOverdue')}
+          </button>
+          <button
+            aria-label={t('common.close')}
+            className="text-[var(--stoa-danger)]/70 hover:text-[var(--stoa-danger)] px-1"
+            onClick={() => setShowOverdueBanner(false)}
+          >
+            ×
+          </button>
+        </div>
       )}
 
       {order.map((key) => sections[key]).filter(Boolean)}

@@ -17,6 +17,7 @@ import { TrashPage } from './pages/TrashPage'
 import { ProjectsPage } from './pages/ProjectsPage'
 import { ProjectDetailPage } from './pages/ProjectDetailPage'
 import { JournalPage } from './pages/JournalPage'
+import { OverdueTriagePage } from './pages/OverdueTriagePage'
 
 function App() {
   const { i18n } = useTranslation()
@@ -53,6 +54,7 @@ function App() {
           <Route path="/habits/:id/edit" element={<HabitsPage />} />
           <Route path="/todos" element={<TodosPage />} />
           <Route path="/todos/:id/edit" element={<TodosPage />} />
+          <Route path="/todos/overdue" element={<OverdueTriagePage />} />
           <Route path="/projects" element={<ProjectsPage />} />
           <Route path="/projects/:id" element={<ProjectDetailPage />} />
           <Route path="/journal" element={<JournalPage />} />

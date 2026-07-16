@@ -3,19 +3,36 @@ import { useTranslation } from 'react-i18next'
 import { useAppSettings } from '../state/useAppSettings'
 import { useHabits } from '../state/useHabits'
 import { useTodos } from '../state/useTodos'
+import { useTimeBlocks } from '../state/useTimeBlocks'
 import { usePlanEntry } from '../state/usePlanEntry'
 import { savePlanEntry } from '../data/planEntries'
 import { TextArea } from '../components/ui/Input'
 import { Button } from '../components/ui/Button'
 import { addDays, todayKey, formatHumanDate } from '../lib/date'
+import { isScheduledOnDate } from '../lib/habitStrength'
 
 export function PlanningPage() {
   const { t, i18n } = useTranslation()
   const settings = useAppSettings()
   const [date, setDate] = useState(todayKey())
   const habits = useHabits(settings?.activeSpaceId)
+  const timeBlocks = useTimeBlocks(settings?.activeSpaceId)
   const todos = useTodos(settings?.activeSpaceId).filter((td) => td.status === 'open')
   const planEntry = usePlanEntry(settings?.activeSpaceId, date, 'day')
+
+  // Article 29 — todos with a scheduledTime for this date, alongside habits
+  // grouped by TimeBlock. TimeBlock only carries a freeform approxTimeRange
+  // string, not a structured start time, so a single minute-precise merged
+  // timeline isn't mechanically possible with the current data model; these
+  // render as two adjacent groups instead (see PR notes).
+  const habitsOnDate = habits.filter((h) => isScheduledOnDate(h, date))
+  const habitsByTimeBlock = timeBlocks
+    .map((tb) => ({ timeBlock: tb, habits: habitsOnDate.filter((h) => h.timeBlockId === tb.id) }))
+    .filter((group) => group.habits.length > 0)
+  const unblockedHabits = habitsOnDate.filter((h) => !h.timeBlockId)
+  const scheduledTodos = todos
+    .filter((td) => td.dueDate === date && td.scheduledTime)
+    .sort((a, b) => (a.scheduledTime ?? '').localeCompare(b.scheduledTime ?? ''))
 
   const [content, setContent] = useState('')
   const [linkedHabitIds, setLinkedHabitIds] = useState<string[]>([])
@@ -61,6 +78,46 @@ export function PlanningPage() {
         value={content}
         onChange={(e) => setContent(e.target.value)}
       />
+
+      {(habitsByTimeBlock.length > 0 || unblockedHabits.length > 0 || scheduledTodos.length > 0) && (
+        <div className="flex flex-col gap-3">
+          <div className="text-xs font-medium text-[var(--stoa-text-muted)]">{t('planning.timelineTitle')}</div>
+
+          {habitsByTimeBlock.map(({ timeBlock, habits: blockHabits }) => (
+            <div key={timeBlock.id} className="flex flex-col gap-1">
+              <div className="text-xs font-semibold text-[var(--stoa-accent)]">{timeBlock.name}</div>
+              {blockHabits.map((h) => (
+                <div key={h.id} className="text-sm pl-2">
+                  {h.name}
+                </div>
+              ))}
+            </div>
+          ))}
+
+          {unblockedHabits.length > 0 && (
+            <div className="flex flex-col gap-1">
+              <div className="text-xs font-semibold text-[var(--stoa-text-muted)]">{t('planning.noTimeBlock')}</div>
+              {unblockedHabits.map((h) => (
+                <div key={h.id} className="text-sm pl-2">
+                  {h.name}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {scheduledTodos.length > 0 && (
+            <div className="flex flex-col gap-1">
+              <div className="text-xs font-semibold text-[var(--stoa-accent)]">{t('todos.scheduledTime')}</div>
+              {scheduledTodos.map((td) => (
+                <div key={td.id} className="text-sm pl-2 flex gap-2">
+                  <span className="text-[var(--stoa-text-muted)] tabular-nums">{td.scheduledTime}</span>
+                  {td.title}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {habits.length > 0 && (
         <div>
