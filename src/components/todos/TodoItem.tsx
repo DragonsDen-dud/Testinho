@@ -1,0 +1,50 @@
+import { useTranslation } from 'react-i18next'
+import type { Todo } from '../../db/types'
+import { markTodoDone, reopenTodo } from '../../data/todos'
+import { todayKey } from '../../lib/date'
+import { usePriorityLevels } from '../../state/useTimeBlocks'
+
+export function TodoItem({ todo, onOpen }: { todo: Todo; onOpen: () => void }) {
+  const { t, i18n } = useTranslation()
+  const priorities = usePriorityLevels(todo.spaceId)
+  const priority = priorities.find((p) => p.id === todo.priorityLevelId)
+  const isOverdue = !!todo.dueDate && todo.dueDate < todayKey() && todo.status === 'open'
+  const doneSubtasks = todo.subtasks?.filter((s) => s.done).length ?? 0
+
+  return (
+    <div className="flex items-start gap-3 rounded-xl border border-[var(--stoa-border)] bg-[var(--stoa-surface)] px-3.5 py-3">
+      <button
+        aria-label={todo.status === 'done' ? t('todos.reopen') : t('todos.markDone')}
+        onClick={() => (todo.status === 'done' ? reopenTodo(todo.id) : markTodoDone(todo.id))}
+        className={`mt-0.5 w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${
+          todo.status === 'done' ? 'bg-[var(--stoa-accent)] border-[var(--stoa-accent)]' : 'border-[var(--stoa-border)]'
+        }`}
+      >
+        {todo.status === 'done' && <span className="text-[var(--stoa-bg)] text-xs">✓</span>}
+      </button>
+      <button className="flex-1 text-left" onClick={onOpen}>
+        <div className={`text-sm font-medium ${todo.status === 'done' ? 'line-through text-[var(--stoa-text-muted)]' : ''}`}>
+          {todo.title}
+        </div>
+        <div className="flex gap-2 mt-1 flex-wrap items-center">
+          {todo.dueDate && (
+            <span className={`text-xs ${isOverdue ? 'text-[var(--stoa-danger)]' : 'text-[var(--stoa-text-muted)]'}`}>
+              {isOverdue ? t('todos.overdue') + ': ' : ''}
+              {new Date(todo.dueDate).toLocaleDateString(i18n.language, { day: 'numeric', month: 'short' })}
+            </span>
+          )}
+          {priority && (
+            <span className="text-xs px-1.5 py-0.5 rounded bg-[var(--stoa-border)]/50 text-[var(--stoa-text-muted)]">
+              {priority.name}
+            </span>
+          )}
+          {todo.subtasks && todo.subtasks.length > 0 && (
+            <span className="text-xs text-[var(--stoa-text-muted)]">
+              {doneSubtasks}/{todo.subtasks.length}
+            </span>
+          )}
+        </div>
+      </button>
+    </div>
+  )
+}

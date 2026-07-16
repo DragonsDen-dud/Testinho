@@ -1,0 +1,175 @@
+import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import { Sheet } from '../ui/Sheet'
+import { Field, Input, Select, TextArea } from '../ui/Input'
+import { Button } from '../ui/Button'
+import { useDomains } from '../../state/useDomains'
+import { usePriorityLevels } from '../../state/useTimeBlocks'
+import type { Todo, TodoSubtask } from '../../db/types'
+import type { NewTodoInput } from '../../data/todos'
+import { newId } from '../../lib/id'
+
+export function TodoForm({
+  spaceId,
+  initial,
+  onSave,
+  onClose,
+  onArchive,
+}: {
+  spaceId: string
+  initial?: Todo
+  onSave: (data: NewTodoInput) => void
+  onClose: () => void
+  onArchive?: () => void
+}) {
+  const { t } = useTranslation()
+  const domains = useDomains(spaceId)
+  const priorities = usePriorityLevels(spaceId)
+
+  const [title, setTitle] = useState(initial?.title ?? '')
+  const [description, setDescription] = useState(initial?.description ?? '')
+  const [dueDate, setDueDate] = useState(initial?.dueDate ?? '')
+  const [priorityLevelId, setPriorityLevelId] = useState(initial?.priorityLevelId ?? '')
+  const [domainId, setDomainId] = useState(initial?.domainId ?? '')
+  const [criticalReminder, setCriticalReminder] = useState(initial?.criticalReminder ?? false)
+  const [subtasks, setSubtasks] = useState<TodoSubtask[]>(initial?.subtasks ?? [])
+  const [subtaskDraft, setSubtaskDraft] = useState('')
+
+  function addSubtask() {
+    if (!subtaskDraft.trim()) return
+    setSubtasks((prev) => [...prev, { id: newId(), title: subtaskDraft.trim(), done: false }])
+    setSubtaskDraft('')
+  }
+
+  function submit() {
+    if (!title.trim()) return
+    const data: NewTodoInput = {
+      spaceId,
+      title: title.trim(),
+      description: description.trim() || undefined,
+      dueDate: dueDate || undefined,
+      priorityLevelId: priorityLevelId || undefined,
+      domainId: domainId || undefined,
+      criticalReminder,
+      subtasks: subtasks.length ? subtasks : undefined,
+    }
+    onSave(data)
+  }
+
+  return (
+    <Sheet title={initial ? t('todos.editTodo') : t('todos.newTodo')} onClose={onClose}>
+      <form
+        className="flex flex-col gap-4"
+        onSubmit={(e) => {
+          e.preventDefault()
+          submit()
+        }}
+      >
+        <Field label={t('todos.titleLabel')}>
+          <Input
+            autoFocus
+            placeholder={t('todos.titlePlaceholder')}
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            required
+          />
+        </Field>
+
+        <Field label={t('todos.description')}>
+          <TextArea rows={2} value={description} onChange={(e) => setDescription(e.target.value)} />
+        </Field>
+
+        <div className="grid grid-cols-2 gap-3">
+          <Field label={t('todos.dueDate')}>
+            <Input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
+          </Field>
+          <Field label={t('todos.priority')}>
+            <Select value={priorityLevelId} onChange={(e) => setPriorityLevelId(e.target.value)}>
+              <option value="">{t('common.none')}</option>
+              {priorities.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                </option>
+              ))}
+            </Select>
+          </Field>
+        </div>
+
+        <Field label={t('todos.domain')}>
+          <Select value={domainId} onChange={(e) => setDomainId(e.target.value)}>
+            <option value="">{t('common.none')}</option>
+            {domains.map((d) => (
+              <option key={d.id} value={d.id}>
+                {d.icon} {d.name}
+              </option>
+            ))}
+          </Select>
+        </Field>
+
+        <Field label={t('todos.subtasks')}>
+          <div className="flex flex-col gap-2">
+            {subtasks.map((s) => (
+              <div key={s.id} className="flex gap-2 items-center">
+                <span className="flex-1 text-sm">{s.title}</span>
+                <button
+                  type="button"
+                  className="text-xs text-[var(--stoa-danger)]"
+                  onClick={() => setSubtasks((prev) => prev.filter((x) => x.id !== s.id))}
+                >
+                  {t('common.delete')}
+                </button>
+              </div>
+            ))}
+            <div className="flex gap-2">
+              <Input
+                placeholder={t('todos.subtaskPlaceholder')}
+                value={subtaskDraft}
+                onChange={(e) => setSubtaskDraft(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault()
+                    addSubtask()
+                  }
+                }}
+              />
+              <Button type="button" variant="secondary" onClick={addSubtask}>
+                {t('common.add')}
+              </Button>
+            </div>
+          </div>
+        </Field>
+
+        <label className="flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={criticalReminder}
+            onChange={(e) => setCriticalReminder(e.target.checked)}
+          />
+          {t('todos.criticalReminder')}
+        </label>
+
+        <div className="flex gap-2 justify-between mt-2">
+          {initial && onArchive ? (
+            <Button
+              type="button"
+              variant="danger"
+              onClick={() => {
+                if (confirm(t('todos.archiveConfirm'))) onArchive()
+              }}
+            >
+              {t('common.archive')}
+            </Button>
+          ) : (
+            <span />
+          )}
+          <div className="flex gap-2">
+            <Button type="button" variant="secondary" onClick={onClose}>
+              {t('common.cancel')}
+            </Button>
+            <Button type="submit">{t('common.save')}</Button>
+          </div>
+        </div>
+      </form>
+    </Sheet>
+  )
+}
