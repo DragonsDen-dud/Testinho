@@ -1,5 +1,5 @@
 import { useLiveQuery } from 'dexie-react-hooks'
-import { db } from '../db/db'
+import { listActiveTodos } from '../data/todos'
 import type { Todo } from '../db/types'
 import { todayKey } from '../lib/date'
 
@@ -7,7 +7,7 @@ export function useTodos(spaceId: string | null | undefined): Todo[] {
   return (
     useLiveQuery(async () => {
       if (!spaceId) return []
-      const rows = await db.todos.where('spaceId').equals(spaceId).toArray()
+      const rows = await listActiveTodos(spaceId)
       return rows.sort((a, b) => (a.dueDate ?? '9999').localeCompare(b.dueDate ?? '9999'))
     }, [spaceId]) ?? []
   )

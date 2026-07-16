@@ -1,13 +1,14 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db/db'
+import { listActiveHabits } from '../data/habits'
 import type { Habit, HabitLog } from '../db/types'
 
 export function useHabits(spaceId: string | null | undefined): Habit[] {
   return (
     useLiveQuery(async () => {
       if (!spaceId) return []
-      const rows = await db.habits.where('spaceId').equals(spaceId).toArray()
-      return rows.filter((h) => !h.archivedAt).sort((a, b) => a.createdAt.localeCompare(b.createdAt))
+      const rows = await listActiveHabits(spaceId)
+      return rows.sort((a, b) => a.createdAt.localeCompare(b.createdAt))
     }, [spaceId]) ?? []
   )
 }

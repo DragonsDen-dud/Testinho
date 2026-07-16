@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useAppSettings } from '../state/useAppSettings'
 import { useHabits, useLogsForDate } from '../state/useHabits'
-import { createHabit, updateHabit, archiveHabit } from '../data/habits'
+import { createHabit, updateHabit, archiveHabit, deleteHabit } from '../data/habits'
 import { HabitForm } from '../components/habits/HabitForm'
 import { HabitCard } from '../components/habits/HabitCard'
 import { Button } from '../components/ui/Button'
@@ -62,6 +62,14 @@ export function HabitsPage() {
             editingHabit
               ? async () => {
                   await archiveHabit(editingHabit.id)
+                  closeForm()
+                }
+              : undefined
+          }
+          onDelete={
+            editingHabit
+              ? async () => {
+                  await deleteHabit(editingHabit.id)
                   closeForm()
                 }
               : undefined

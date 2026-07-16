@@ -1,3 +1,7 @@
+export interface Trashable {
+  deletedAt?: string
+}
+
 export type Language = 'ru' | 'en'
 export type ThemePreset = 'dark' | 'light' | 'contrast' | 'system'
 export type HabitType = 'build' | 'avoid'
@@ -12,6 +16,7 @@ export interface AppSettings {
   activeSpaceId: string | null
   homeScreenModuleOrder: string[]
   onboardingComplete: boolean
+  trashRetentionDays: number
 }
 
 export interface Space {
@@ -80,6 +85,7 @@ export interface Habit {
   note?: string
   createdAt: string
   archivedAt?: string
+  deletedAt?: string
 }
 
 export interface HabitLog {
@@ -111,6 +117,7 @@ export interface Todo {
   status: TodoStatus
   completedAt?: string
   createdAt: string
+  deletedAt?: string
 }
 
 export interface PlanEntry {

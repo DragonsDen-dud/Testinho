@@ -21,8 +21,9 @@ Everything lives in this browser's IndexedDB (via Dexie). No account, no cloud s
 - **Planning** — day plan notes linked to habits/tasks (E.5, basic)
 - **Dashboard** — today's habits and tasks, configurable module order (Article 45)
 - **Settings** — language (RU/EN), theme (dark/light/high-contrast/system), Space management
+- **Trash** — soft-delete for Habits/To-Do (`deletedAt`), Restore, permanent delete, and a 30-day auto-purge sweep on app start (Article 20, E.14). All active-item queries funnel through `listActiveHabits`/`listActiveTodos` in `src/data/`, so every screen — Dashboard, Planning, overdue banner — excludes trashed records from a single point rather than repeating the filter per query.
 
-Deferred to later passes per the contract's build plan: AI reports, Journal, Projects, Trash/soft-delete, Calendar `.ics` export, Telegram reminders, voice input, cross-Space analytics, and the remaining polish items in Section H steps 18–31.
+Deferred to later passes per the contract's build plan: AI reports, Journal, Projects, Calendar `.ics` export, Telegram reminders, voice input, cross-Space analytics, and the remaining polish items in Section H steps 21–31.
 
 ## Development
 
@@ -31,4 +32,5 @@ npm install
 npm run dev      # start dev server
 npm run build    # typecheck + production build
 npm run lint      # oxlint
+npm run test      # vitest (data-layer + soft-delete regression tests)
 ```

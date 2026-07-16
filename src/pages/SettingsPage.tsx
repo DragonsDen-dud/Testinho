@@ -71,6 +71,12 @@ export function SettingsPage() {
       >
         {t('settings.manageDomains')} →
       </button>
+      <button
+        className="text-left text-sm py-2.5 border-t border-[var(--stoa-border)]"
+        onClick={() => navigate('/settings/trash')}
+      >
+        {t('settings.manageTrash')} →
+      </button>
 
       <div className="border-t border-[var(--stoa-border)] pt-4 text-xs text-[var(--stoa-text-muted)]">
         <div className="font-medium mb-1">{t('settings.about')}</div>

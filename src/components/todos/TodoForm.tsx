@@ -15,12 +15,14 @@ export function TodoForm({
   onSave,
   onClose,
   onArchive,
+  onDelete,
 }: {
   spaceId: string
   initial?: Todo
   onSave: (data: NewTodoInput) => void
   onClose: () => void
   onArchive?: () => void
+  onDelete?: () => void
 }) {
   const { t } = useTranslation()
   const domains = useDomains(spaceId)
@@ -149,16 +151,31 @@ export function TodoForm({
         </label>
 
         <div className="flex gap-2 justify-between mt-2">
-          {initial && onArchive ? (
-            <Button
-              type="button"
-              variant="danger"
-              onClick={() => {
-                if (confirm(t('todos.archiveConfirm'))) onArchive()
-              }}
-            >
-              {t('common.archive')}
-            </Button>
+          {initial && (onArchive || onDelete) ? (
+            <div className="flex gap-2">
+              {onArchive && (
+                <Button
+                  type="button"
+                  variant="danger"
+                  onClick={() => {
+                    if (confirm(t('todos.archiveConfirm'))) onArchive()
+                  }}
+                >
+                  {t('common.archive')}
+                </Button>
+              )}
+              {onDelete && (
+                <Button
+                  type="button"
+                  variant="danger"
+                  onClick={() => {
+                    if (confirm(t('todos.deleteConfirm'))) onDelete()
+                  }}
+                >
+                  {t('common.delete')}
+                </Button>
+              )}
+            </div>
           ) : (
             <span />
           )}

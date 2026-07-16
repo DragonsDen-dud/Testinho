@@ -17,12 +17,14 @@ export function HabitForm({
   onSave,
   onClose,
   onArchive,
+  onDelete,
 }: {
   spaceId: string
   initial?: Habit
   onSave: (data: NewHabitInput) => void
   onClose: () => void
   onArchive?: () => void
+  onDelete?: () => void
 }) {
   const { t, i18n } = useTranslation()
   const domains = useDomains(spaceId)
@@ -267,16 +269,31 @@ export function HabitForm({
         </Field>
 
         <div className="flex gap-2 justify-between mt-2">
-          {initial && onArchive ? (
-            <Button
-              type="button"
-              variant="danger"
-              onClick={() => {
-                if (confirm(t('habits.archiveConfirm'))) onArchive()
-              }}
-            >
-              {t('common.archive')}
-            </Button>
+          {initial && (onArchive || onDelete) ? (
+            <div className="flex gap-2">
+              {onArchive && (
+                <Button
+                  type="button"
+                  variant="danger"
+                  onClick={() => {
+                    if (confirm(t('habits.archiveConfirm'))) onArchive()
+                  }}
+                >
+                  {t('common.archive')}
+                </Button>
+              )}
+              {onDelete && (
+                <Button
+                  type="button"
+                  variant="danger"
+                  onClick={() => {
+                    if (confirm(t('habits.deleteConfirm'))) onDelete()
+                  }}
+                >
+                  {t('common.delete')}
+                </Button>
+              )}
+            </div>
           ) : (
             <span />
           )}

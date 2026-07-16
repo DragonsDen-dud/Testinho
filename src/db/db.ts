@@ -35,6 +35,19 @@ export class StoaDatabase extends Dexie {
       todos: 'id, spaceId, domainId, priorityLevelId, status, dueDate',
       planEntries: 'id, spaceId, date, scope, [spaceId+date+scope]',
     })
+    // v2: Article 20 soft-delete — deletedAt indexed on trashable entities
+    // so Trash queries and the retention purge sweep don't full-scan.
+    this.version(2)
+      .stores({
+        habits: 'id, spaceId, domainId, timeBlockId, archivedAt, deletedAt',
+        todos: 'id, spaceId, domainId, priorityLevelId, status, dueDate, deletedAt',
+      })
+      .upgrade(async (tx) => {
+        const settings = await tx.table('appSettings').get('singleton')
+        if (settings && settings.trashRetentionDays === undefined) {
+          await tx.table('appSettings').update('singleton', { trashRetentionDays: 30 })
+        }
+      })
   }
 }
 
@@ -50,6 +63,7 @@ export async function ensureAppSettings(): Promise<AppSettings> {
     activeSpaceId: null,
     homeScreenModuleOrder: ['habits', 'todos'],
     onboardingComplete: false,
+    trashRetentionDays: 30,
   }
   await db.appSettings.put(defaults)
   return defaults

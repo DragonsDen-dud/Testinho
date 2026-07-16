@@ -113,6 +113,7 @@
     "logValue": "Log value",
     "empty": "No habits yet. Add your first one.",
     "archiveConfirm": "Archive this habit? Its history stays intact.",
+    "deleteConfirm": "Move this habit to Trash? You can restore it later, or it'll be removed for good after 30 days.",
     "loggedToday": "Logged for today",
     "notLoggedToday": "Not logged yet"
   },
@@ -140,7 +141,8 @@
     "emptyOpen": "Nothing open — good place to be.",
     "overdue": "Overdue",
     "noDueDate": "No due date",
-    "archiveConfirm": "Archive this task?"
+    "archiveConfirm": "Archive this task?",
+    "deleteConfirm": "Move this task to Trash? You can restore it later, or it'll be removed for good after 30 days."
   },
   "planning": {
     "title": "Planning",
@@ -167,7 +169,18 @@
     "activeSpace": "Active Space",
     "manageSpaces": "Manage Spaces",
     "manageDomains": "Manage life domains",
+    "manageTrash": "Trash",
     "about": "About",
     "aboutText": "STOA keeps everything on this device. No account, no cloud sync."
+  },
+  "trash": {
+    "title": "Trash",
+    "habitsSection": "Habits",
+    "todosSection": "Tasks",
+    "empty": "Trash is empty.",
+    "retentionNote": "Items are removed for good 30 days after deletion.",
+    "restore": "Restore",
+    "deleteForever": "Delete forever",
+    "deleteForeverConfirm": "Delete this permanently? This can't be undone."
   }
 }

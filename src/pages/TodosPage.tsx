@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useAppSettings } from '../state/useAppSettings'
 import { useTodos } from '../state/useTodos'
-import { createTodo, updateTodo, archiveTodo } from '../data/todos'
+import { createTodo, updateTodo, archiveTodo, deleteTodo } from '../data/todos'
 import { TodoForm } from '../components/todos/TodoForm'
 import { TodoItem } from '../components/todos/TodoItem'
 import { Button } from '../components/ui/Button'
@@ -86,6 +86,14 @@ export function TodosPage() {
             editingTodo
               ? async () => {
                   await archiveTodo(editingTodo.id)
+                  closeForm()
+                }
+              : undefined
+          }
+          onDelete={
+            editingTodo
+              ? async () => {
+                  await deleteTodo(editingTodo.id)
                   closeForm()
                 }
               : undefined

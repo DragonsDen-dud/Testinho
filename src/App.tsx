@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAppSettings } from './state/useAppSettings'
 import { ensureAppSettings } from './db/db'
+import { purgeExpiredTrash } from './data/trash'
 import { AppShell } from './components/layout/AppShell'
 import { OnboardingPage } from './pages/OnboardingPage'
 import { DashboardPage } from './pages/DashboardPage'
@@ -12,13 +13,14 @@ import { PlanningPage } from './pages/PlanningPage'
 import { SettingsPage } from './pages/SettingsPage'
 import { SpacesPage } from './pages/SpacesPage'
 import { DomainsPage } from './pages/DomainsPage'
+import { TrashPage } from './pages/TrashPage'
 
 function App() {
   const { i18n } = useTranslation()
   const settings = useAppSettings()
 
   useEffect(() => {
-    ensureAppSettings()
+    ensureAppSettings().then(() => purgeExpiredTrash())
   }, [])
 
   useEffect(() => {
@@ -52,6 +54,7 @@ function App() {
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="/settings/spaces" element={<SpacesPage />} />
           <Route path="/settings/domains" element={<DomainsPage />} />
+          <Route path="/settings/trash" element={<TrashPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>
