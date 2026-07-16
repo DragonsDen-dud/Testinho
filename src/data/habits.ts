@@ -1,6 +1,7 @@
 import { db } from '../db/db'
 import { newId } from '../lib/id'
 import { excludeTrashed, onlyTrashed, isExpired } from '../lib/trash'
+import { todayKey } from '../lib/date'
 import type { Habit, HabitLog, HabitLogStatus } from '../db/types'
 
 export type NewHabitInput = Omit<Habit, 'id' | 'createdAt' | 'archivedAt' | 'deletedAt'>
@@ -34,6 +35,15 @@ export async function unarchiveHabit(id: string): Promise<void> {
   await db.habits.update(id, { archivedAt: undefined })
 }
 
+/** Article 21 — pause from today until `until` (inclusive). Strength freezes, no check-in, no reminders. */
+export async function pauseHabit(id: string, until: string): Promise<void> {
+  await db.habits.update(id, { pausedFrom: todayKey(), pausedUntil: until })
+}
+
+export async function resumeHabit(id: string): Promise<void> {
+  await db.habits.update(id, { pausedFrom: undefined, pausedUntil: undefined })
+}
+
 /** Soft-delete (Article 20) — moves the habit to Trash, recoverable until purge. */
 export async function deleteHabit(id: string): Promise<void> {
   await db.habits.update(id, { deletedAt: new Date().toISOString() })
@@ -57,11 +67,12 @@ export async function purgeExpiredHabits(retentionDays: number, asOf = new Date(
   return expired.length
 }
 
+/** For non-measurable habits: sets the day's status directly (done/not_done/skip). */
 export async function logHabit(
   habitId: string,
   date: string,
   status: HabitLogStatus,
-  extra?: { value?: number; note?: string; mood?: number },
+  extra?: { note?: string; mood?: number },
 ): Promise<void> {
   const existing = await db.habitLogs.where('[habitId+date]').equals([habitId, date]).first()
   const record: HabitLog = {
@@ -69,7 +80,33 @@ export async function logHabit(
     habitId,
     date,
     status,
-    value: extra?.value ?? existing?.value,
+    note: extra?.note ?? existing?.note,
+    mood: extra?.mood ?? existing?.mood,
+  }
+  await db.habitLogs.put(record)
+}
+
+/**
+ * For measurable habits (Article 24): appends one entry rather than
+ * overwriting a single value, so a habit can be logged more than once a
+ * day. `bonus` is a neutral fact (entries.length >= 2) — never rendered as
+ * a score or reward (Article 6, Article 24 explicit callout).
+ */
+export async function logMeasurableEntry(
+  habitId: string,
+  date: string,
+  value: number,
+  extra?: { note?: string; mood?: number },
+): Promise<void> {
+  const existing = await db.habitLogs.where('[habitId+date]').equals([habitId, date]).first()
+  const entries = [...(existing?.entries ?? []), { timestamp: new Date().toISOString(), value }]
+  const record: HabitLog = {
+    id: existing?.id ?? newId(),
+    habitId,
+    date,
+    status: 'done',
+    entries,
+    bonus: entries.length >= 2,
     note: extra?.note ?? existing?.note,
     mood: extra?.mood ?? existing?.mood,
   }

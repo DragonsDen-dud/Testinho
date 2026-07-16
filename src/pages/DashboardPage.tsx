@@ -20,8 +20,11 @@ export function DashboardPage() {
   const allHabits = useHabits(settings?.activeSpaceId)
   const date = todayKey()
   const todaysHabits = allHabits.filter((h) => isScheduledOnDate(h, date))
+  // Fetched for all habits, not just today's — a dependency can point at a
+  // habit that isn't itself scheduled today, and its completion still needs
+  // to resolve correctly (Article 25).
   const logsToday = useLogsForDate(
-    todaysHabits.map((h) => h.id),
+    allHabits.map((h) => h.id),
     date,
   )
   const { today: todosToday, overdue } = useOpenTodosToday(settings?.activeSpaceId)
@@ -35,7 +38,9 @@ export function DashboardPage() {
         {todaysHabits.length === 0 ? (
           <EmptyState text={t('dashboard.noHabitsToday')} />
         ) : (
-          todaysHabits.map((h) => <HabitCard key={h.id} habit={h} todayLog={logsToday.get(h.id)} />)
+          todaysHabits.map((h) => (
+            <HabitCard key={h.id} habit={h} todayLog={logsToday.get(h.id)} allHabits={allHabits} logsToday={logsToday} />
+          ))
         )}
       </section>
     ),

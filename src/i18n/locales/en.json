@@ -112,11 +112,21 @@
     "markNotDone": "Not done",
     "markSkip": "Skip",
     "logValue": "Log value",
+    "logAnother": "Log another",
+    "entriesTodayLabel_one": "{{count}} entry today",
+    "entriesTodayLabel_other": "{{count}} entries today",
     "empty": "No habits yet. Add your first one.",
     "archiveConfirm": "Archive this habit? Its history stays intact.",
     "deleteConfirm": "Move this habit to Trash? You can restore it later, or it'll be removed for good after 30 days.",
     "loggedToday": "Logged for today",
-    "notLoggedToday": "Not logged yet"
+    "notLoggedToday": "Not logged yet",
+    "dependsOn": "Depends on (must be done first)",
+    "dependencyCycleError": "That would create a loop — these habits already depend on each other.",
+    "blockedByLabel": "First: {{names}}",
+    "pause": "Pause",
+    "pauseAction": "Pause",
+    "pausedUntilLabel": "Paused until {{date}}",
+    "resumeNow": "Resume now"
   },
   "todos": {
     "title": "Tasks",
@@ -198,6 +208,7 @@
     "notFound": "This project isn't here anymore.",
     "linkedTodos": "Tasks",
     "noTodos": "No tasks in this project yet.",
+    "deletedBadge": "Project deleted",
     "archiveConfirm": "Archive this project? Its tasks stay as they are.",
     "deleteConfirm": "Move this project to Trash? Its tasks keep their history, they'll just no longer show a project."
   },

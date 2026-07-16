@@ -39,9 +39,17 @@ export async function restoreProject(id: string): Promise<void> {
   await db.projects.update(id, { deletedAt: undefined })
 }
 
-/** Hard delete — irreversible. Only call from Trash's "delete forever". Linked
- * todos keep their projectId; they simply stop resolving to a project (no cascade). */
+/**
+ * Hard delete — irreversible. Only call from Trash's "delete forever" or the
+ * retention sweep. This is the point of no return for the Project, so it's
+ * also the point of no return for the reference: every Todo that pointed at
+ * it gets demoted to project-less. While merely soft-deleted (in Trash),
+ * linked Todos keep their projectId untouched — see deleteProject above.
+ */
 export async function purgeProject(id: string): Promise<void> {
+  await db.todos.where('projectId').equals(id).modify((todo) => {
+    delete todo.projectId
+  })
   await db.projects.delete(id)
 }
 

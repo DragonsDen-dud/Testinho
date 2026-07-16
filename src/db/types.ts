@@ -82,10 +82,18 @@ export interface Habit {
   reminderTimes: string[]
   criticalReminder: boolean
   stake?: HabitStake
+  dependsOnHabitIds?: string[]
+  pausedFrom?: string
+  pausedUntil?: string
   note?: string
   createdAt: string
   archivedAt?: string
   deletedAt?: string
+}
+
+export interface HabitLogEntry {
+  timestamp: string
+  value: number
 }
 
 export interface HabitLog {
@@ -93,7 +101,8 @@ export interface HabitLog {
   habitId: string
   date: string // YYYY-MM-DD
   status: HabitLogStatus
-  value?: number
+  entries?: HabitLogEntry[] // measurable habits only — multiple logs/day (Article 24)
+  bonus?: boolean // entries.length >= 2 — neutral fact, never a score/reward (Article 24)
   note?: string
   mood?: number
 }

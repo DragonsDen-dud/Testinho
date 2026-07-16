@@ -3,11 +3,13 @@ import type { Todo } from '../../db/types'
 import { markTodoDone, reopenTodo } from '../../data/todos'
 import { todayKey } from '../../lib/date'
 import { usePriorityLevels } from '../../state/useTimeBlocks'
+import { useProject } from '../../state/useProjects'
 
 export function TodoItem({ todo, onOpen }: { todo: Todo; onOpen: () => void }) {
   const { t, i18n } = useTranslation()
   const priorities = usePriorityLevels(todo.spaceId)
   const priority = priorities.find((p) => p.id === todo.priorityLevelId)
+  const project = useProject(todo.projectId)
   const isOverdue = !!todo.dueDate && todo.dueDate < todayKey() && todo.status === 'open'
   const doneSubtasks = todo.subtasks?.filter((s) => s.done).length ?? 0
 
@@ -41,6 +43,17 @@ export function TodoItem({ todo, onOpen }: { todo: Todo; onOpen: () => void }) {
           {todo.subtasks && todo.subtasks.length > 0 && (
             <span className="text-xs text-[var(--stoa-text-muted)]">
               {doneSubtasks}/{todo.subtasks.length}
+            </span>
+          )}
+          {todo.projectId && project && !project.deletedAt && (
+            <span className="text-xs px-1.5 py-0.5 rounded bg-[var(--stoa-border)]/50 text-[var(--stoa-text-muted)] flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: project.color ?? 'var(--stoa-accent)' }} />
+              {project.name}
+            </span>
+          )}
+          {todo.projectId && project?.deletedAt && (
+            <span className="text-xs px-1.5 py-0.5 rounded border border-dashed border-[var(--stoa-text-muted)] text-[var(--stoa-text-muted)] italic">
+              {t('projects.deletedBadge')}
             </span>
           )}
         </div>

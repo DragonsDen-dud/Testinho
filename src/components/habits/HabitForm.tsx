@@ -6,6 +6,8 @@ import { Button } from '../ui/Button'
 import { Chip } from '../ui/Chip'
 import { useDomains } from '../../state/useDomains'
 import { useTimeBlocks } from '../../state/useTimeBlocks'
+import { wouldCreateCycle } from '../../lib/habitDependencies'
+import { todayKey } from '../../lib/date'
 import type { Habit, HabitType, ScheduleType } from '../../db/types'
 import type { NewHabitInput } from '../../data/habits'
 
@@ -14,17 +16,23 @@ const WEEKDAY_KEYS = [0, 1, 2, 3, 4, 5, 6]
 export function HabitForm({
   spaceId,
   initial,
+  allHabits = [],
   onSave,
   onClose,
   onArchive,
   onDelete,
+  onPause,
+  onResume,
 }: {
   spaceId: string
   initial?: Habit
+  allHabits?: Habit[]
   onSave: (data: NewHabitInput) => void
   onClose: () => void
   onArchive?: () => void
   onDelete?: () => void
+  onPause?: (until: string) => void
+  onResume?: () => void
 }) {
   const { t, i18n } = useTranslation()
   const domains = useDomains(spaceId)
@@ -48,7 +56,13 @@ export function HabitForm({
   )
   const [stakeTriggerValue, setStakeTriggerValue] = useState(initial?.stake?.triggerValue ?? 3)
   const [stakePenaltyText, setStakePenaltyText] = useState(initial?.stake?.penaltyText ?? '')
+  const [dependsOnHabitIds, setDependsOnHabitIds] = useState<string[]>(initial?.dependsOnHabitIds ?? [])
+  const [dependencyError, setDependencyError] = useState<string | null>(null)
   const [note, setNote] = useState(initial?.note ?? '')
+  const [pauseUntilDraft, setPauseUntilDraft] = useState('')
+
+  const isPaused = !!(initial?.pausedFrom && initial?.pausedUntil)
+  const candidateDependencies = allHabits.filter((h) => h.id !== initial?.id)
 
   const weekdayFormatter = new Intl.DateTimeFormat(i18n.language, { weekday: 'short' })
   function weekdayLabel(dow: number) {
@@ -58,6 +72,11 @@ export function HabitForm({
 
   function submit() {
     if (!name.trim()) return
+    if (initial && dependsOnHabitIds.length > 0 && wouldCreateCycle(initial.id, dependsOnHabitIds, allHabits)) {
+      setDependencyError(t('habits.dependencyCycleError'))
+      return
+    }
+    setDependencyError(null)
     const data: NewHabitInput = {
       spaceId,
       name: name.trim(),
@@ -79,6 +98,7 @@ export function HabitForm({
       stake: stakeEnabled
         ? { triggerType: stakeTriggerType, triggerValue: stakeTriggerValue, penaltyText: stakePenaltyText.trim() }
         : undefined,
+      dependsOnHabitIds: dependsOnHabitIds.length ? dependsOnHabitIds : undefined,
       note: note.trim() || undefined,
     }
     onSave(data)
@@ -257,6 +277,66 @@ export function HabitForm({
               <Input value={stakePenaltyText} onChange={(e) => setStakePenaltyText(e.target.value)} />
             </Field>
           </div>
+        )}
+
+        {candidateDependencies.length > 0 && (
+          <Field label={t('habits.dependsOn')}>
+            <div className="flex flex-col gap-1.5">
+              {candidateDependencies.map((h) => (
+                <label key={h.id} className="flex items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={dependsOnHabitIds.includes(h.id)}
+                    onChange={(e) => {
+                      setDependencyError(null)
+                      setDependsOnHabitIds((prev) =>
+                        e.target.checked ? [...prev, h.id] : prev.filter((id) => id !== h.id),
+                      )
+                    }}
+                  />
+                  {h.name}
+                </label>
+              ))}
+            </div>
+            {dependencyError && <p className="text-xs text-[var(--stoa-danger)] mt-1">{dependencyError}</p>}
+          </Field>
+        )}
+
+        {initial && (onPause || onResume) && (
+          <Field label={t('habits.pause')}>
+            {isPaused ? (
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-sm text-[var(--stoa-text-muted)]">
+                  {t('habits.pausedUntilLabel', { date: initial.pausedUntil })}
+                </span>
+                {onResume && (
+                  <Button type="button" variant="secondary" onClick={onResume}>
+                    {t('habits.resumeNow')}
+                  </Button>
+                )}
+              </div>
+            ) : (
+              onPause && (
+                <div className="flex items-center gap-2">
+                  <Input
+                    type="date"
+                    min={todayKey()}
+                    value={pauseUntilDraft}
+                    onChange={(e) => setPauseUntilDraft(e.target.value)}
+                    className="flex-1"
+                  />
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    disabled={!pauseUntilDraft}
+                    onClick={() => onPause(pauseUntilDraft)}
+                  >
+                    {t('habits.pauseAction')}
+                  </Button>
+                </div>
+              )
+            )}
+          </Field>
         )}
 
         <Field label={t('habits.note')}>

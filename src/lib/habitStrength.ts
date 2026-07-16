@@ -3,7 +3,14 @@ import { addDays, todayKey, weekdayOf, weekKeyOf } from './date'
 
 const GROWTH_RATE = 0.15
 
+/** Article 21 — true while dateKey falls within the habit's pause window. */
+export function isPausedOnDate(habit: Habit, dateKey: string): boolean {
+  if (!habit.pausedFrom || !habit.pausedUntil) return false
+  return dateKey >= habit.pausedFrom && dateKey <= habit.pausedUntil
+}
+
 export function isScheduledOnDate(habit: Habit, dateKey: string): boolean {
+  if (isPausedOnDate(habit, dateKey)) return false
   const { type, params } = habit.schedule
   if (type === 'specific_weekdays') {
     return (params.weekdays ?? []).includes(weekdayOf(dateKey))
@@ -22,8 +29,8 @@ function logByDate(logs: HabitLog[]): Map<string, HabitLog> {
 /**
  * Proportional decaying Habit Strength (0-100), per Article A/21.
  * Grows toward 100 on completed scheduled days, decays toward 0 on missed
- * scheduled days. Paused/skip days are excluded (Article 21 groundwork —
- * pause fields aren't populated in this MVP pass, so this is a no-op today).
+ * scheduled days. Paused and skip days are excluded entirely, so Strength
+ * stays frozen at its last value for the duration of a pause (Article 21).
  */
 export function computeHabitStrength(habit: Habit, logs: HabitLog[], asOfDate: string = todayKey()): number {
   const byDate = logByDate(logs)
@@ -34,6 +41,12 @@ export function computeHabitStrength(habit: Habit, logs: HabitLog[], asOfDate: s
     const weeks = new Map<string, { done: number; days: string[] }>()
     let cursor = habit.createdAt.slice(0, 10)
     while (cursor <= asOfDate) {
+      if (isPausedOnDate(habit, cursor)) {
+        // Excluded entirely (Article 21) — a week made up only of paused
+        // days never gets a bucket, so it can't move strength at all.
+        cursor = addDays(cursor, 1)
+        continue
+      }
       const wk = weekKeyOf(cursor)
       if (!weeks.has(wk)) weeks.set(wk, { done: 0, days: [] })
       const bucket = weeks.get(wk)!

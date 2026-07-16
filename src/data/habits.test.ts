@@ -9,6 +9,9 @@ import {
   purgeHabit,
   purgeExpiredHabits,
   logHabit,
+  logMeasurableEntry,
+  pauseHabit,
+  resumeHabit,
 } from './habits'
 import type { NewHabitInput } from './habits'
 
@@ -84,5 +87,68 @@ describe('soft-delete (Article 20) — habits', () => {
     expect(purgedCount).toBe(1)
     expect(await db.habits.get(stale.id)).toBeUndefined()
     expect(await db.habits.get(fresh.id)).toBeDefined()
+  })
+})
+
+describe('pause/resume (Article 21)', () => {
+  it('pauseHabit sets pausedFrom to today and pausedUntil to the given date', async () => {
+    const habit = await createHabit(habitInput('Run'))
+    await pauseHabit(habit.id, '2099-01-01')
+
+    const reloaded = await db.habits.get(habit.id)
+    expect(reloaded?.pausedUntil).toBe('2099-01-01')
+    expect(reloaded?.pausedFrom).toBeDefined()
+  })
+
+  it('resumeHabit clears both pause fields', async () => {
+    const habit = await createHabit(habitInput('Run'))
+    await pauseHabit(habit.id, '2099-01-01')
+    await resumeHabit(habit.id)
+
+    const reloaded = await db.habits.get(habit.id)
+    expect(reloaded?.pausedFrom).toBeUndefined()
+    expect(reloaded?.pausedUntil).toBeUndefined()
+  })
+})
+
+describe('logMeasurableEntry (Article 24 — multiple entries/day, neutral bonus flag)', () => {
+  it('a single entry marks the day done, with no bonus', async () => {
+    const habit = await createHabit({ ...habitInput('Read'), measurable: { targetValue: 10, unit: 'pages' } })
+    await logMeasurableEntry(habit.id, '2026-07-01', 5)
+
+    const log = await db.habitLogs.where('[habitId+date]').equals([habit.id, '2026-07-01']).first()
+    expect(log?.status).toBe('done')
+    expect(log?.entries).toHaveLength(1)
+    expect(log?.entries?.[0].value).toBe(5)
+    expect(log?.bonus).toBe(false)
+  })
+
+  it('is done from the first entry regardless of whether targetValue is reached', async () => {
+    const habit = await createHabit({ ...habitInput('Read'), measurable: { targetValue: 100, unit: 'pages' } })
+    await logMeasurableEntry(habit.id, '2026-07-01', 1) // far under target
+
+    const log = await db.habitLogs.where('[habitId+date]').equals([habit.id, '2026-07-01']).first()
+    expect(log?.status).toBe('done')
+  })
+
+  it('a second entry the same day sets bonus=true and appends rather than overwriting', async () => {
+    const habit = await createHabit({ ...habitInput('Drink water'), measurable: { targetValue: 8, unit: 'glasses' } })
+    await logMeasurableEntry(habit.id, '2026-07-01', 1)
+    await logMeasurableEntry(habit.id, '2026-07-01', 1)
+
+    const log = await db.habitLogs.where('[habitId+date]').equals([habit.id, '2026-07-01']).first()
+    expect(log?.entries).toHaveLength(2)
+    expect(log?.bonus).toBe(true)
+  })
+
+  it('entries on different dates stay independent', async () => {
+    const habit = await createHabit({ ...habitInput('Drink water'), measurable: { targetValue: 8, unit: 'glasses' } })
+    await logMeasurableEntry(habit.id, '2026-07-01', 1)
+    await logMeasurableEntry(habit.id, '2026-07-02', 1)
+
+    const day1 = await db.habitLogs.where('[habitId+date]').equals([habit.id, '2026-07-01']).first()
+    const day2 = await db.habitLogs.where('[habitId+date]').equals([habit.id, '2026-07-02']).first()
+    expect(day1?.entries).toHaveLength(1)
+    expect(day2?.entries).toHaveLength(1)
   })
 })

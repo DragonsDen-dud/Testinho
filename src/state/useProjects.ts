@@ -1,4 +1,5 @@
 import { useLiveQuery } from 'dexie-react-hooks'
+import { db } from '../db/db'
 import { listActiveProjects } from '../data/projects'
 import type { Project, Todo } from '../db/types'
 
@@ -10,6 +11,16 @@ export function useProjects(spaceId: string | null | undefined): Project[] {
       return rows.sort((a, b) => a.createdAt.localeCompare(b.createdAt))
     }, [spaceId]) ?? []
   )
+}
+
+/**
+ * Looks up a single Project by id regardless of trashed state — a
+ * soft-deleted Project still resolves here (only purge removes the row),
+ * so callers can tell "trashed, restorable" apart from "gone for good"
+ * and render accordingly (e.g. a Todo's "Project deleted" badge).
+ */
+export function useProject(projectId: string | null | undefined): Project | undefined {
+  return useLiveQuery(() => (projectId ? db.projects.get(projectId) : undefined), [projectId])
 }
 
 /** % of a project's active (non-archived, non-trashed) todos that are done. */

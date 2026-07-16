@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useAppSettings } from '../state/useAppSettings'
 import { useHabits, useLogsForDate } from '../state/useHabits'
-import { createHabit, updateHabit, archiveHabit, deleteHabit } from '../data/habits'
+import { createHabit, updateHabit, archiveHabit, deleteHabit, pauseHabit, resumeHabit } from '../data/habits'
 import { HabitForm } from '../components/habits/HabitForm'
 import { HabitCard } from '../components/habits/HabitCard'
 import { Button } from '../components/ui/Button'
@@ -41,7 +41,7 @@ export function HabitsPage() {
 
       <div className="flex flex-col gap-3">
         {habits.map((habit) => (
-          <HabitCard key={habit.id} habit={habit} todayLog={logsToday.get(habit.id)} />
+          <HabitCard key={habit.id} habit={habit} todayLog={logsToday.get(habit.id)} allHabits={habits} logsToday={logsToday} />
         ))}
       </div>
 
@@ -49,6 +49,7 @@ export function HabitsPage() {
         <HabitForm
           spaceId={settings.activeSpaceId}
           initial={editingHabit}
+          allHabits={habits}
           onClose={closeForm}
           onSave={async (data) => {
             if (editingHabit) {
@@ -71,6 +72,20 @@ export function HabitsPage() {
               ? async () => {
                   await deleteHabit(editingHabit.id)
                   closeForm()
+                }
+              : undefined
+          }
+          onPause={
+            editingHabit
+              ? async (until) => {
+                  await pauseHabit(editingHabit.id, until)
+                }
+              : undefined
+          }
+          onResume={
+            editingHabit
+              ? async () => {
+                  await resumeHabit(editingHabit.id)
                 }
               : undefined
           }
