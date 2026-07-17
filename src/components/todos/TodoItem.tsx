@@ -5,6 +5,7 @@ import { todayKey } from '../../lib/date'
 import { usePriorityLevels } from '../../state/useTimeBlocks'
 import { useProject } from '../../state/useProjects'
 import { RescheduleMenu } from './RescheduleMenu'
+import { ActiveReminderRow } from '../reminders/ActiveReminderRow'
 
 export function TodoItem({ todo, onOpen }: { todo: Todo; onOpen: () => void }) {
   const { t, i18n } = useTranslation()
@@ -63,6 +64,11 @@ export function TodoItem({ todo, onOpen }: { todo: Todo; onOpen: () => void }) {
           </div>
         </button>
       </div>
+      {todo.dueDate && todo.status === 'open' && (
+        <div className="pl-8">
+          <ActiveReminderRow entityType="todo" entityId={todo.id} date={todo.dueDate} />
+        </div>
+      )}
       {isOverdue && (
         <div className="pl-8">
           <RescheduleMenu onReschedule={(newDueDate) => rescheduleTodo(todo.id, newDueDate)} />

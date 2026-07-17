@@ -2,6 +2,7 @@ import { db } from '../db/db'
 import { newId } from '../lib/id'
 import { excludeTrashed, onlyTrashed, isExpired } from '../lib/trash'
 import { computeNextDueDate } from '../lib/todoRecurrence'
+import { acknowledgeReminder } from './reminderActions'
 import type { Todo, TodoStatus } from '../db/types'
 
 export type NewTodoInput = Omit<Todo, 'id' | 'createdAt' | 'status' | 'completedAt' | 'deletedAt'>
@@ -36,6 +37,10 @@ export async function updateTodo(id: string, patch: Partial<Todo>): Promise<void
 export async function markTodoDone(id: string): Promise<Todo | undefined> {
   const current = await db.todos.get(id)
   await db.todos.update(id, { status: 'done', completedAt: new Date().toISOString() })
+  // Article 40 — completing the todo is what stops escalation; no separate
+  // "acknowledge" tap needed. A todo with no dueDate never had a reminder to
+  // acknowledge, so this is a safe no-op in that case.
+  if (current?.dueDate) await acknowledgeReminder('todo', id, current.dueDate)
   if (!current?.recurrence || !current.dueDate) return undefined
 
   const next: Todo = {

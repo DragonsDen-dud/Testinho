@@ -1,6 +1,6 @@
 import { db } from '../db/db'
 import { newId } from '../lib/id'
-import { todayKey, weekBoundsOf } from '../lib/date'
+import { todayKey, weekBoundsOf, monthBoundsOf } from '../lib/date'
 import { computeWeekdayPattern, computeTimeOfDayPattern } from '../lib/habitPatterns'
 import { computeMoodCorrelation } from '../lib/moodCorrelation'
 import { listActiveHabits } from './habits'
@@ -12,14 +12,7 @@ export interface HabitAutoStats {
   moodCorrelation: ReturnType<typeof computeMoodCorrelation>
 }
 
-/**
- * Articles 26/35 — computes local pattern insights + mood correlation for
- * every active habit in a Space and upserts one DiagnosticEntry per
- * Space+week, so the future Scheduled AI Report can read autoStats as given
- * facts instead of re-deriving them. Pure local computation, no AI call.
- */
-export async function upsertWeeklyAutoStats(spaceId: string, asOfDate: string = todayKey()): Promise<DiagnosticEntry> {
-  const { start: periodStart, end: periodEnd } = weekBoundsOf(asOfDate)
+async function computeAutoStatsForHabits(spaceId: string, asOfDate: string): Promise<Record<string, HabitAutoStats>> {
   const habits = await listActiveHabits(spaceId)
   const timeBlocks = await db.timeBlocks.where('spaceId').equals(spaceId).toArray()
 
@@ -32,10 +25,31 @@ export async function upsertWeeklyAutoStats(spaceId: string, asOfDate: string = 
       moodCorrelation: computeMoodCorrelation(logs),
     }
   }
+  return autoStats
+}
+
+/**
+ * Articles 26/35 — computes local pattern insights + mood correlation for
+ * every active habit in a Space and upserts one DiagnosticEntry per
+ * Space+period+scope, so the Scheduled AI Report can read autoStats as
+ * given facts instead of re-deriving them. Pure local computation, no AI
+ * call. The underlying pattern/correlation functions always look at their
+ * own fixed windows (trailing 8 weeks / all mood-tagged logs) regardless of
+ * scope — what differs between week and month here is only the reporting
+ * period recorded (periodStart/periodEnd) and how often it gets refreshed.
+ */
+async function upsertAutoStats(
+  spaceId: string,
+  scope: 'week' | 'month',
+  periodStart: string,
+  periodEnd: string,
+  asOfDate: string,
+): Promise<DiagnosticEntry> {
+  const autoStats = await computeAutoStatsForHabits(spaceId, asOfDate)
 
   const existing = await db.diagnosticEntries
     .where('[spaceId+periodStart+scope]')
-    .equals([spaceId, periodStart, 'week'])
+    .equals([spaceId, periodStart, scope])
     .first()
 
   const entry: DiagnosticEntry = {
@@ -43,7 +57,7 @@ export async function upsertWeeklyAutoStats(spaceId: string, asOfDate: string = 
     spaceId,
     periodStart,
     periodEnd,
-    scope: 'week',
+    scope,
     autoStats,
     userFeedback: existing?.userFeedback ?? '',
     aiInsight: existing?.aiInsight,
@@ -53,4 +67,14 @@ export async function upsertWeeklyAutoStats(spaceId: string, asOfDate: string = 
   }
   await db.diagnosticEntries.put(entry)
   return entry
+}
+
+export async function upsertWeeklyAutoStats(spaceId: string, asOfDate: string = todayKey()): Promise<DiagnosticEntry> {
+  const { start, end } = weekBoundsOf(asOfDate)
+  return upsertAutoStats(spaceId, 'week', start, end, asOfDate)
+}
+
+export async function upsertMonthlyAutoStats(spaceId: string, asOfDate: string = todayKey()): Promise<DiagnosticEntry> {
+  const { start, end } = monthBoundsOf(asOfDate)
+  return upsertAutoStats(spaceId, 'month', start, end, asOfDate)
 }

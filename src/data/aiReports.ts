@@ -3,10 +3,10 @@ import { newId } from '../lib/id'
 import { todayKey, weekBoundsOf } from '../lib/date'
 import { resolveModelId } from '../lib/aiModels'
 import { callAiProxy, checkAiHealth } from '../lib/aiClient'
-import { isScheduledReportDue } from '../lib/scheduledReport'
+import { isWeeklyScheduledReportDue, isMonthlyScheduledReportDue } from '../lib/scheduledReport'
 import { recordAiUsage } from './ai'
-import { upsertWeeklyAutoStats } from './diagnostics'
-import type { DiagnosticEntry } from '../db/types'
+import { upsertWeeklyAutoStats, upsertMonthlyAutoStats } from './diagnostics'
+import type { AppSettings, DiagnosticEntry } from '../db/types'
 
 export type FreeformQueryResult = { ok: true; text: string } | { ok: false; error: string }
 
@@ -70,14 +70,56 @@ export async function runFreeformQuery(params: {
   return { ok: true, text: result.text }
 }
 
+async function lastScheduledPeriodEndFor(spaceId: string, scope: 'week' | 'month'): Promise<string | undefined> {
+  const entries = await db.diagnosticEntries
+    .where('spaceId')
+    .equals(spaceId)
+    .filter((e) => e.scope === scope && e.reportType === 'scheduled_template' && !!e.aiInsight)
+    .toArray()
+  return entries
+    .map((e) => e.periodEnd)
+    .sort()
+    .at(-1)
+}
+
+/** Shared tail once a scope's due-check has already passed: refresh autoStats, call the AI, save. */
+async function generateScheduledReport(
+  spaceId: string,
+  today: string,
+  upsertAutoStats: (spaceId: string, asOfDate: string) => Promise<DiagnosticEntry>,
+  settings: AppSettings,
+): Promise<DiagnosticEntry | null> {
+  const entry = await upsertAutoStats(spaceId, today)
+  const model = resolveModelId(settings.aiModelPreference?.scheduledReport ?? 'haiku')
+  const result = await callAiProxy({
+    reportType: 'scheduled_template',
+    autoStats: entry.autoStats,
+    apiKey: settings.claudeApiKey!,
+    model,
+  })
+  if (!result.ok) return null
+
+  await recordAiUsage()
+
+  const updated: DiagnosticEntry = {
+    ...entry,
+    aiInsight: result.text,
+    reportType: 'scheduled_template',
+    generatedBy: 'scheduled',
+    includedNorthStarContext: false,
+  }
+  await db.diagnosticEntries.put(updated)
+  return updated
+}
+
 /**
- * Article 12 — "check-on-open" scheduled report. Silent no-op (returns
- * null) whenever the pre-conditions aren't met or the call itself fails —
- * this runs unattended on app open, so there's no error toast to show and
- * nowhere to show it; it simply gets picked up again next time the app
- * opens on or after the configured day.
+ * Article 12 — "check-on-open" week-scope scheduled report. Silent no-op
+ * (returns null) whenever the pre-conditions aren't met or the call itself
+ * fails — this runs unattended on app open, so there's no error toast to
+ * show and nowhere to show it; it simply gets picked up again next time the
+ * app opens on or after the configured day.
  */
-export async function runScheduledReportIfDue(
+export async function runWeeklyScheduledReportIfDue(
   spaceId: string,
   today: string = todayKey(),
 ): Promise<DiagnosticEntry | null> {
@@ -87,45 +129,47 @@ export async function runScheduledReportIfDue(
   const reachable = await checkAiHealth()
   if (!reachable) return null
 
-  const scheduledEntries = await db.diagnosticEntries
-    .where('spaceId')
-    .equals(spaceId)
-    .filter((e) => e.scope === 'week' && e.reportType === 'scheduled_template' && !!e.aiInsight)
-    .toArray()
-  const lastScheduledPeriodEnd = scheduledEntries
-    .map((e) => e.periodEnd)
-    .sort()
-    .at(-1)
-
-  const due = isScheduledReportDue(
-    settings.scheduledReportEnabled,
-    settings.scheduledReportDayOfWeek,
-    true,
-    reachable,
-    lastScheduledPeriodEnd,
-    today,
-  )
+  const lastPeriodEnd = await lastScheduledPeriodEndFor(spaceId, 'week')
+  const weekSettings = settings.scheduledAiReport?.week
+  const due = isWeeklyScheduledReportDue(weekSettings?.enabled, weekSettings?.dayOfWeek, true, reachable, lastPeriodEnd, today)
   if (!due) return null
 
-  const weekEntry = await upsertWeeklyAutoStats(spaceId, today)
-  const model = resolveModelId(settings.aiModelPreference?.scheduledReport ?? 'haiku')
-  const result = await callAiProxy({
-    reportType: 'scheduled_template',
-    autoStats: weekEntry.autoStats,
-    apiKey: settings.claudeApiKey,
-    model,
-  })
-  if (!result.ok) return null
+  return generateScheduledReport(spaceId, today, upsertWeeklyAutoStats, settings)
+}
 
-  await recordAiUsage()
+/**
+ * Article 12 — "check-on-open" month-scope scheduled report. Independently
+ * schedulable from the weekly one: its own enabled flag, its own ~30-day
+ * elapsed check, its own DiagnosticEntry row (scope: 'month'), so it can
+ * never starve or clobber the weekly report even when both are due on the
+ * same app-open.
+ */
+export async function runMonthlyScheduledReportIfDue(
+  spaceId: string,
+  today: string = todayKey(),
+): Promise<DiagnosticEntry | null> {
+  const settings = await db.appSettings.get('singleton')
+  if (!settings?.claudeApiKey) return null
 
-  const updated: DiagnosticEntry = {
-    ...weekEntry,
-    aiInsight: result.text,
-    reportType: 'scheduled_template',
-    generatedBy: 'scheduled',
-    includedNorthStarContext: false,
-  }
-  await db.diagnosticEntries.put(updated)
-  return updated
+  const reachable = await checkAiHealth()
+  if (!reachable) return null
+
+  const lastPeriodEnd = await lastScheduledPeriodEndFor(spaceId, 'month')
+  const monthSettings = settings.scheduledAiReport?.month
+  const due = isMonthlyScheduledReportDue(monthSettings?.enabled, true, reachable, lastPeriodEnd, today)
+  if (!due) return null
+
+  return generateScheduledReport(spaceId, today, upsertMonthlyAutoStats, settings)
+}
+
+/** Runs both cadence checks for a Space's check-on-open pass. Each scope is
+ * fully independent — one failing, being disabled, or not being due has no
+ * effect on the other. */
+export async function runScheduledReportsIfDue(
+  spaceId: string,
+  today: string = todayKey(),
+): Promise<{ week: DiagnosticEntry | null; month: DiagnosticEntry | null }> {
+  const week = await runWeeklyScheduledReportIfDue(spaceId, today)
+  const month = await runMonthlyScheduledReportIfDue(spaceId, today)
+  return { week, month }
 }

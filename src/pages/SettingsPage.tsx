@@ -4,6 +4,7 @@ import { useAppSettings, updateAppSettings } from '../state/useAppSettings'
 import { useSpaces } from '../state/useSpaces'
 import { Select } from '../components/ui/Input'
 import { AiSettingsSection } from '../components/settings/AiSettingsSection'
+import { RemindersSettingsSection } from '../components/settings/RemindersSettingsSection'
 import type { Language, ThemePreset } from '../db/types'
 
 export function SettingsPage() {
@@ -93,6 +94,8 @@ export function SettingsPage() {
       >
         {t('settings.manageTrash')} →
       </button>
+
+      <RemindersSettingsSection />
 
       <AiSettingsSection />
 

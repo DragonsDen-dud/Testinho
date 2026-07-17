@@ -37,6 +37,9 @@ export function AiSettingsSection() {
   const modelPref = settings?.aiModelPreference ?? { scheduledReport: 'haiku', freeformQuery: 'haiku' }
   const usageCount = settings?.aiUsage?.callCount ?? 0
   const showCaveat = !settings?.scheduledReportCaveatDismissed
+  const weekReport = settings?.scheduledAiReport?.week
+  const monthReport = settings?.scheduledAiReport?.month
+  const defaultScheduledAiReport = { week: { enabled: true, dayOfWeek: 1 }, month: { enabled: true } }
 
   return (
     <div className="flex flex-col gap-4 border-t border-[var(--stoa-border)] pt-4">
@@ -102,20 +105,37 @@ export function AiSettingsSection() {
         </Field>
       </div>
 
+      {/* Article 12 — week and month cadences are independently toggleable, not one flag governing both. */}
       <label className="flex items-center gap-2 text-sm">
         <input
           type="checkbox"
-          checked={settings?.scheduledReportEnabled !== false}
-          onChange={(e) => updateAppSettings({ scheduledReportEnabled: e.target.checked })}
+          checked={weekReport?.enabled !== false}
+          onChange={(e) =>
+            updateAppSettings({
+              scheduledAiReport: {
+                ...defaultScheduledAiReport,
+                ...settings?.scheduledAiReport,
+                week: { ...defaultScheduledAiReport.week, ...weekReport, enabled: e.target.checked },
+              },
+            })
+          }
         />
-        {t('settings.scheduledReportEnabled')}
+        {t('settings.scheduledReportWeekEnabled')}
       </label>
 
-      {settings?.scheduledReportEnabled !== false && (
+      {weekReport?.enabled !== false && (
         <Field label={t('settings.scheduledReportDayOfWeek')}>
           <Select
-            value={String(settings?.scheduledReportDayOfWeek ?? 1)}
-            onChange={(e) => updateAppSettings({ scheduledReportDayOfWeek: Number(e.target.value) })}
+            value={String(weekReport?.dayOfWeek ?? 1)}
+            onChange={(e) =>
+              updateAppSettings({
+                scheduledAiReport: {
+                  ...defaultScheduledAiReport,
+                  ...settings?.scheduledAiReport,
+                  week: { ...defaultScheduledAiReport.week, ...weekReport, dayOfWeek: Number(e.target.value) },
+                },
+              })
+            }
           >
             {WEEKDAY_KEYS.map((dow) => (
               <option key={dow} value={dow}>
@@ -125,6 +145,23 @@ export function AiSettingsSection() {
           </Select>
         </Field>
       )}
+
+      <label className="flex items-center gap-2 text-sm">
+        <input
+          type="checkbox"
+          checked={monthReport?.enabled !== false}
+          onChange={(e) =>
+            updateAppSettings({
+              scheduledAiReport: {
+                ...defaultScheduledAiReport,
+                ...settings?.scheduledAiReport,
+                month: { enabled: e.target.checked },
+              },
+            })
+          }
+        />
+        {t('settings.scheduledReportMonthEnabled')}
+      </label>
 
       {showCaveat && (
         <div className="rounded-xl bg-[var(--stoa-surface)] border border-[var(--stoa-border)] px-3.5 py-2.5 text-xs flex items-start justify-between gap-2">

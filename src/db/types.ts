@@ -30,10 +30,23 @@ export interface AppSettings {
   claudeApiKey?: string
   aiUsage?: { callCount: number; currentPeriodStart: string; softCapWarningThreshold?: number }
   aiModelPreference?: { scheduledReport: ClaudeModelChoice; freeformQuery: ClaudeModelChoice }
-  // Article 12 — week-scope Scheduled AI Report cadence.
-  scheduledReportEnabled?: boolean
-  scheduledReportDayOfWeek?: number // 0=Sun..6=Sat
+  // Article 12 — week and month Scheduled AI Report cadences, independently
+  // enabled/configured — not a single either/or toggle.
+  scheduledAiReport?: ScheduledAiReportSettings
   scheduledReportCaveatDismissed?: boolean
+  // Article 41 — any notification (push or Telegram) that would fire inside
+  // this window is queued and delivered right at its end, never dropped
+  // outright, unless the originally-scheduled day is already over.
+  quietHours?: { enabled: boolean; start: string; end: string } // HH:mm, may wrap midnight
+  // Article 42 — independent of, and in addition to, individual
+  // reminderTimes/scheduledTime reminders. Neither toggle silences the other.
+  morningDigest?: { enabled: boolean; time: string } // HH:mm
+  morningDigestLastDeliveredDate?: string
+}
+
+export interface ScheduledAiReportSettings {
+  week: { enabled: boolean; dayOfWeek: number } // 0=Sun..6=Sat
+  month: { enabled: boolean }
 }
 
 export interface Space {
@@ -206,8 +219,8 @@ export interface JournalEntry {
 }
 
 /** Articles 12/16/26/35 — autoStats is populated locally (no AI) so the
- * future Scheduled AI Report step can reference these as given facts
- * instead of re-deriving them. Nothing else here is wired up yet. */
+ * Scheduled AI Report and freeform queries can reference these as given
+ * facts instead of re-deriving them. One row per Space+period+scope. */
 export interface DiagnosticEntry {
   id: string
   spaceId: string
@@ -220,4 +233,23 @@ export interface DiagnosticEntry {
   reportType?: 'scheduled_template' | 'freeform_query'
   includedNorthStarContext: boolean
   generatedBy: 'manual' | 'scheduled'
+}
+
+export type ReminderEntityType = 'habit' | 'todo'
+export type ReminderStateValue = 'sent' | 'acknowledged' | 'snoozed' | 'dismissed' | 'lapsed_for_day'
+
+/** Article 40 — one row per entity per day; a fresh day starts a fresh
+ * escalation cycle. `followUpSent` is the hard-cap tracker: once true, no
+ * further nudges are ever sent for this entity today, no matter what else
+ * happens (snoozing again, dismissing, etc.). */
+export interface ReminderState {
+  id: string
+  entityType: ReminderEntityType
+  entityId: string
+  date: string // YYYY-MM-DD
+  state: ReminderStateValue
+  sentAt: string // ISO — anchors the escalation window for the initial reminder
+  followUpSent: boolean
+  lastActionAt?: string // ISO — last explicit user action (acknowledge/snooze/dismiss)
+  snoozeUntil?: string // ISO — only meaningful while state === 'snoozed'
 }

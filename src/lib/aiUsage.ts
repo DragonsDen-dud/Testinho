@@ -1,13 +1,9 @@
 import type { AppSettings } from '../db/types'
+import { daysBetween } from './date'
 
 type AiUsage = NonNullable<AppSettings['aiUsage']>
 
-const MS_PER_DAY = 86400000
 const PERIOD_DAYS = 30
-
-function daysBetween(a: string, b: string): number {
-  return Math.floor((new Date(b).getTime() - new Date(a).getTime()) / MS_PER_DAY)
-}
 
 /**
  * Article 38 — a rolling 30-day usage period, not a calendar month, so

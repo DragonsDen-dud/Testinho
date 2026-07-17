@@ -2,6 +2,7 @@ import { db } from '../db/db'
 import { newId } from '../lib/id'
 import { excludeTrashed, onlyTrashed, isExpired } from '../lib/trash'
 import { todayKey } from '../lib/date'
+import { acknowledgeReminder } from './reminderActions'
 import type { Habit, HabitLog, HabitLogStatus } from '../db/types'
 
 export type NewHabitInput = Omit<Habit, 'id' | 'createdAt' | 'archivedAt' | 'deletedAt'>
@@ -84,6 +85,9 @@ export async function logHabit(
     mood: extra?.mood ?? existing?.mood,
   }
   await db.habitLogs.put(record)
+  // Article 40 — any check-in (even not_done/skip) means the user engaged
+  // with the reminder; nudging further about it would be pointless.
+  await acknowledgeReminder('habit', habitId, date)
 }
 
 /**
@@ -111,6 +115,7 @@ export async function logMeasurableEntry(
     mood: extra?.mood ?? existing?.mood,
   }
   await db.habitLogs.put(record)
+  await acknowledgeReminder('habit', habitId, date)
 }
 
 /**

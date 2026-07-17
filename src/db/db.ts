@@ -13,6 +13,7 @@ import type {
   JournalPrompt,
   JournalEntry,
   DiagnosticEntry,
+  ReminderState,
 } from './types'
 
 export class StoaDatabase extends Dexie {
@@ -29,6 +30,7 @@ export class StoaDatabase extends Dexie {
   journalPrompts!: Table<JournalPrompt, string>
   journalEntries!: Table<JournalEntry, string>
   diagnosticEntries!: Table<DiagnosticEntry, string>
+  reminderStates!: Table<ReminderState, string>
 
   constructor() {
     super('stoa')
@@ -70,6 +72,26 @@ export class StoaDatabase extends Dexie {
     this.version(4).stores({
       diagnosticEntries: 'id, spaceId, scope, [spaceId+periodStart+scope]',
     })
+    // v5: Article 12 — week and month Scheduled AI Report cadences are now
+    // independently configurable (scheduledAiReport.week/.month) instead of
+    // a single flat toggle that only ever covered week scope; migrate any
+    // existing user's week-scope choice forward rather than silently
+    // resetting it. Article 40's ReminderState is new in this version too.
+    this.version(5)
+      .stores({
+        reminderStates: 'id, entityType, entityId, date, [entityType+entityId+date]',
+      })
+      .upgrade(async (tx) => {
+        const settings = await tx.table('appSettings').get('singleton')
+        if (settings && !settings.scheduledAiReport) {
+          await tx.table('appSettings').update('singleton', {
+            scheduledAiReport: {
+              week: { enabled: settings.scheduledReportEnabled ?? true, dayOfWeek: settings.scheduledReportDayOfWeek ?? 1 },
+              month: { enabled: true },
+            },
+          })
+        }
+      })
   }
 }
 
@@ -88,8 +110,12 @@ export async function ensureAppSettings(): Promise<AppSettings> {
     trashRetentionDays: 30,
     moodCaptureEnabled: true,
     aiModelPreference: { scheduledReport: 'haiku', freeformQuery: 'haiku' },
-    scheduledReportEnabled: true,
-    scheduledReportDayOfWeek: 1, // Monday
+    scheduledAiReport: {
+      week: { enabled: true, dayOfWeek: 1 }, // Monday
+      month: { enabled: true },
+    },
+    quietHours: { enabled: false, start: '22:00', end: '07:00' },
+    morningDigest: { enabled: false, time: '08:00' },
   }
   await db.appSettings.put(defaults)
   return defaults

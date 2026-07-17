@@ -5,7 +5,8 @@ import { useAppSettings } from './state/useAppSettings'
 import { ensureAppSettings } from './db/db'
 import { purgeExpiredTrash } from './data/trash'
 import { upsertWeeklyAutoStats } from './data/diagnostics'
-import { runScheduledReportIfDue } from './data/aiReports'
+import { runScheduledReportsIfDue } from './data/aiReports'
+import { tickReminders } from './data/reminders'
 import { AppShell } from './components/layout/AppShell'
 import { OnboardingPage } from './pages/OnboardingPage'
 import { DashboardPage } from './pages/DashboardPage'
@@ -37,7 +38,19 @@ function App() {
     const spaceId = settings?.activeSpaceId
     if (!spaceId || autoStatsSpaceRef.current === spaceId) return
     autoStatsSpaceRef.current = spaceId
-    upsertWeeklyAutoStats(spaceId).then(() => runScheduledReportIfDue(spaceId))
+    upsertWeeklyAutoStats(spaceId).then(() => runScheduledReportsIfDue(spaceId))
+  }, [settings?.activeSpaceId])
+
+  // Articles 40/41/42 — foreground-only reminder poller. This app is
+  // local-first with no push-notification backend (see lib/notify.ts), so
+  // reminders/escalation/digest only progress while the app is actually
+  // open: once on activating a Space, then every minute after.
+  useEffect(() => {
+    const spaceId = settings?.activeSpaceId
+    if (!spaceId) return
+    tickReminders(spaceId)
+    const interval = setInterval(() => tickReminders(spaceId), 60000)
+    return () => clearInterval(interval)
   }, [settings?.activeSpaceId])
 
   useEffect(() => {

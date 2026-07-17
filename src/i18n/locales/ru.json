@@ -74,7 +74,8 @@
     "overdueBanner_many": "{{count}} просроченных задач",
     "overdueBanner_other": "{{count}} просроченных задач",
     "reviewOverdue": "Разобрать",
-    "scheduledReportTitle": "Отчёт за эту неделю"
+    "scheduledReportTitleWeek": "Отчёт за эту неделю",
+    "scheduledReportTitleMonth": "Отчёт за этот месяц"
   },
   "habits": {
     "title": "Привычки",
@@ -250,9 +251,10 @@
     "modelForFreeformQuery": "Модель для вопросов",
     "modelHaiku": "Haiku (быстрее, дешевле)",
     "modelSonnet": "Sonnet (более мощная)",
-    "scheduledReportEnabled": "Формировать еженедельный отчёт автоматически",
+    "scheduledReportWeekEnabled": "Формировать еженедельный отчёт автоматически",
+    "scheduledReportMonthEnabled": "Формировать ежемесячный отчёт автоматически",
     "scheduledReportDayOfWeek": "В этот день или после",
-    "scheduledReportCaveat": "Отчёт формируется при следующем открытии приложения в этот день или позже, а не точно в это время в сам день."
+    "scheduledReportCaveat": "Еженедельный отчёт формируется при следующем открытии приложения в выбранный день или позже; ежемесячный — при следующем открытии примерно через 30 дней. Ни один из них не формируется точно в указанное время."
   },
   "timeBlocks": {
     "title": "Время дня",
@@ -301,5 +303,31 @@
     "active": "Активен",
     "newPromptPlaceholder": "Добавьте свой промпт",
     "deletePromptConfirm": "Удалить этот промпт? Прошлые записи по нему не пострадают."
+  },
+  "reminders": {
+    "title": "Напоминания",
+    "habitBody": "Пора отметиться.",
+    "todoBody": "Срок сегодня.",
+    "followUpBody": "Напоминаем — вы уже это сделали?",
+    "digestTitle": "Сегодня: {{habits}}, {{tasks}}",
+    "digestHabitCount_one": "{{count}} привычка",
+    "digestHabitCount_few": "{{count}} привычки",
+    "digestHabitCount_many": "{{count}} привычек",
+    "digestHabitCount_other": "{{count}} привычки",
+    "digestTodoCount_one": "{{count}} задача",
+    "digestTodoCount_few": "{{count}} задачи",
+    "digestTodoCount_many": "{{count}} задач",
+    "digestTodoCount_other": "{{count}} задачи",
+    "activeReminderLabel": "Напоминание отправлено",
+    "snooze30": "+30 мин",
+    "snooze60": "+1 час",
+    "dismiss": "Не сейчас",
+    "enableNotifications": "Включить уведомления",
+    "notificationsBlocked": "Уведомления заблокированы в настройках браузера.",
+    "quietHours": "Тихие часы",
+    "quietHoursHint": "Напоминания, которые должны сработать в это время, доставляются сразу после его окончания.",
+    "morningDigest": "Утренняя сводка",
+    "morningDigestTimeLabel": "Время",
+    "morningDigestHint": "Одна ежедневная сводка, отдельно от отдельных напоминаний — отключение не влияет на них."
   }
 }

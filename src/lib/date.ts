@@ -43,6 +43,20 @@ export function weekBoundsOf(dateKey: string): { start: string; end: string } {
   return { start, end }
 }
 
+/** First-to-last-day-of-calendar-month bounds of the month containing dateKey. */
+export function monthBoundsOf(dateKey: string): { start: string; end: string } {
+  const [y, m] = dateKey.split('-').map(Number)
+  const start = `${y}-${String(m).padStart(2, '0')}-01`
+  const lastDay = new Date(y, m, 0).getDate() // day 0 of next month = last day of this month
+  const end = `${y}-${String(m).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`
+  return { start, end }
+}
+
+/** Whole days elapsed from date/time string a to b (b - a), floored. */
+export function daysBetween(a: string, b: string): number {
+  return Math.floor((new Date(b).getTime() - new Date(a).getTime()) / 86400000)
+}
+
 /** Full weekday name (e.g. "Tuesday") for a 0=Sun..6=Sat index, locale-aware. */
 export function weekdayName(dow: number, locale: string): string {
   // 2024-01-07 is a Sunday, so adding dow gives the matching weekday name.

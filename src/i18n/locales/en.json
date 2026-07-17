@@ -72,7 +72,8 @@
     "overdueBanner_one": "{{count}} overdue task",
     "overdueBanner_other": "{{count}} overdue tasks",
     "reviewOverdue": "Review",
-    "scheduledReportTitle": "This week's report"
+    "scheduledReportTitleWeek": "This week's report",
+    "scheduledReportTitleMonth": "This month's report"
   },
   "habits": {
     "title": "Habits",
@@ -240,9 +241,10 @@
     "modelForFreeformQuery": "Model for questions",
     "modelHaiku": "Haiku (faster, cheaper)",
     "modelSonnet": "Sonnet (more capable)",
-    "scheduledReportEnabled": "Generate a weekly report automatically",
+    "scheduledReportWeekEnabled": "Generate a weekly report automatically",
+    "scheduledReportMonthEnabled": "Generate a monthly report automatically",
     "scheduledReportDayOfWeek": "On or after",
-    "scheduledReportCaveat": "This runs the next time you open the app on or after that day, not at an exact time on the day itself."
+    "scheduledReportCaveat": "Weekly reports run the next time you open the app on or after your chosen day; monthly reports run the next time you open the app once about 30 days have passed. Neither fires at an exact moment."
   },
   "timeBlocks": {
     "title": "Time Blocks",
@@ -291,5 +293,27 @@
     "active": "Active",
     "newPromptPlaceholder": "Add your own prompt",
     "deletePromptConfirm": "Delete this prompt? Past entries written from it are unaffected."
+  },
+  "reminders": {
+    "title": "Reminders",
+    "habitBody": "Time to check in.",
+    "todoBody": "This is due today.",
+    "followUpBody": "Just checking — did you get to this?",
+    "digestTitle": "Today: {{habits}}, {{tasks}}",
+    "digestHabitCount_one": "{{count}} habit",
+    "digestHabitCount_other": "{{count}} habits",
+    "digestTodoCount_one": "{{count}} task",
+    "digestTodoCount_other": "{{count}} tasks",
+    "activeReminderLabel": "Reminder sent",
+    "snooze30": "+30 min",
+    "snooze60": "+1 hr",
+    "dismiss": "Not now",
+    "enableNotifications": "Enable notifications",
+    "notificationsBlocked": "Notifications are blocked in your browser settings.",
+    "quietHours": "Quiet hours",
+    "quietHoursHint": "Reminders that would fire in this window are delivered right after it ends instead.",
+    "morningDigest": "Morning digest",
+    "morningDigestTimeLabel": "Time",
+    "morningDigestHint": "One daily summary, separate from individual reminders — turning this off doesn't silence them."
   }
 }

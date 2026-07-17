@@ -11,6 +11,7 @@ import { computeMoodCorrelation, formatSignedMood } from '../../lib/moodCorrelat
 import { logHabit, logMeasurableEntry, resumeHabit, setHabitLogMood } from '../../data/habits'
 import { todayKey, weekdayName } from '../../lib/date'
 import { useAppSettings } from '../../state/useAppSettings'
+import { ActiveReminderRow } from '../reminders/ActiveReminderRow'
 import { Button } from '../ui/Button'
 import { Input } from '../ui/Input'
 import { ProgressBar } from '../ui/ProgressBar'
@@ -100,6 +101,8 @@ export function HabitCard({
           <ProgressBar percent={strength} />
         </div>
       </div>
+
+      <ActiveReminderRow entityType="habit" entityId={habit.id} date={date} />
 
       {(weekdayPattern || timeOfDayPattern || moodCorrelation) && (
         <div className="flex flex-col gap-0.5 -mt-1">
