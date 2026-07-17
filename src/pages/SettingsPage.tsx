@@ -73,6 +73,12 @@ export function SettingsPage() {
       </button>
       <button
         className="text-left text-sm py-2.5 border-t border-[var(--stoa-border)]"
+        onClick={() => navigate('/settings/time-blocks')}
+      >
+        {t('settings.manageTimeBlocks')} →
+      </button>
+      <button
+        className="text-left text-sm py-2.5 border-t border-[var(--stoa-border)]"
         onClick={() => navigate('/settings/trash')}
       >
         {t('settings.manageTrash')} →

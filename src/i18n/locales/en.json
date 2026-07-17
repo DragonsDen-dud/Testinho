@@ -15,7 +15,8 @@
     "archive": "Archive",
     "confirmDelete": "Delete this? This can't be undone.",
     "yes": "Yes",
-    "no": "No"
+    "no": "No",
+    "clear": "Clear"
   },
   "nav": {
     "dashboard": "Today",
@@ -126,7 +127,11 @@
     "pause": "Pause",
     "pauseAction": "Pause",
     "pausedUntilLabel": "Paused until {{date}}",
-    "resumeNow": "Resume now"
+    "resumeNow": "Resume now",
+    "weakDayLabel": "Usually dips on {{day}}",
+    "strongTimeLabel": "Goes best during {{name}}",
+    "moodCorrelationBuild": "Mood is {{value}} on days you do this vs. days you don't",
+    "moodCorrelationAvoid": "Mood is {{value}} on days you stay clean vs. days you slip"
   },
   "todos": {
     "title": "Tasks",
@@ -206,9 +211,18 @@
     "activeSpace": "Active Space",
     "manageSpaces": "Manage Spaces",
     "manageDomains": "Manage life domains",
+    "manageTimeBlocks": "Time Blocks",
     "manageTrash": "Trash",
     "about": "About",
     "aboutText": "STOA keeps everything on this device. No account, no cloud sync."
+  },
+  "timeBlocks": {
+    "title": "Time Blocks",
+    "empty": "No time blocks yet.",
+    "newPlaceholder": "e.g. Late night",
+    "to": "to",
+    "deleteConfirm": "Delete this time block? Habits using it will just show no time of day.",
+    "rangeHint": "Add approximate times to your blocks to see a merged daily timeline in Planning."
   },
   "trash": {
     "title": "Trash",

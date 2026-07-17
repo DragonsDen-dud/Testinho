@@ -19,6 +19,7 @@ export interface AppSettings {
   onboardingComplete: boolean
   trashRetentionDays: number
   overdueBannerLastShownDate?: string
+  timeBlockRangeHintDismissed?: boolean
 }
 
 export interface Space {
@@ -42,12 +43,17 @@ export interface LifeDomain {
   archivedAt?: string
 }
 
+export interface TimeBlockRange {
+  start: string // HH:mm
+  end: string // HH:mm; end <= start means the range wraps past midnight
+}
+
 export interface TimeBlock {
   id: string
   spaceId: string
   name: string
   sortOrder: number
-  approxTimeRange?: string
+  approxTimeRange?: TimeBlockRange
 }
 
 export interface PriorityLevel {
@@ -178,4 +184,21 @@ export interface JournalEntry {
   text: string
   mood?: number
   createdAt: string
+}
+
+/** Articles 12/16/26/35 — autoStats is populated locally (no AI) so the
+ * future Scheduled AI Report step can reference these as given facts
+ * instead of re-deriving them. Nothing else here is wired up yet. */
+export interface DiagnosticEntry {
+  id: string
+  spaceId: string
+  periodStart: string
+  periodEnd: string
+  scope: 'week' | 'month'
+  autoStats: Record<string, unknown>
+  userFeedback: string
+  aiInsight?: string
+  reportType?: 'scheduled_template' | 'freeform_query'
+  includedNorthStarContext: boolean
+  generatedBy: 'manual' | 'scheduled'
 }

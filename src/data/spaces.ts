@@ -2,9 +2,21 @@ import { db } from '../db/db'
 import { newId } from '../lib/id'
 import type { Space, Language } from '../db/types'
 
-const DEFAULT_TIME_BLOCKS: Record<Language, string[]> = {
-  en: ['Morning', 'Afternoon', 'Evening'],
-  ru: ['Утро', 'День', 'Вечер'],
+// Structured start/end (HH:mm) from day one, covering the full 24h with no
+// gaps — Evening wraps past midnight. Seeding these by default means a new
+// Space gets the merged Planning timeline (Article 29) without the user
+// having to visit Settings > Time Blocks first.
+const DEFAULT_TIME_BLOCKS: Record<Language, { name: string; start: string; end: string }[]> = {
+  en: [
+    { name: 'Morning', start: '06:00', end: '12:00' },
+    { name: 'Afternoon', start: '12:00', end: '18:00' },
+    { name: 'Evening', start: '18:00', end: '06:00' },
+  ],
+  ru: [
+    { name: 'Утро', start: '06:00', end: '12:00' },
+    { name: 'День', start: '12:00', end: '18:00' },
+    { name: 'Вечер', start: '18:00', end: '06:00' },
+  ],
 }
 
 const DEFAULT_PRIORITIES: Record<Language, string[]> = {
@@ -47,11 +59,12 @@ export async function createSpace(
   await db.spaces.add(space)
 
   await db.timeBlocks.bulkAdd(
-    DEFAULT_TIME_BLOCKS[language].map((name, i) => ({
+    DEFAULT_TIME_BLOCKS[language].map((block, i) => ({
       id: newId(),
       spaceId: space.id,
-      name,
+      name: block.name,
       sortOrder: i,
+      approxTimeRange: { start: block.start, end: block.end },
     })),
   )
   await db.priorityLevels.bulkAdd(

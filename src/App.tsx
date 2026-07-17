@@ -1,9 +1,10 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAppSettings } from './state/useAppSettings'
 import { ensureAppSettings } from './db/db'
 import { purgeExpiredTrash } from './data/trash'
+import { upsertWeeklyAutoStats } from './data/diagnostics'
 import { AppShell } from './components/layout/AppShell'
 import { OnboardingPage } from './pages/OnboardingPage'
 import { DashboardPage } from './pages/DashboardPage'
@@ -18,6 +19,7 @@ import { ProjectsPage } from './pages/ProjectsPage'
 import { ProjectDetailPage } from './pages/ProjectDetailPage'
 import { JournalPage } from './pages/JournalPage'
 import { OverdueTriagePage } from './pages/OverdueTriagePage'
+import { TimeBlocksPage } from './pages/TimeBlocksPage'
 
 function App() {
   const { i18n } = useTranslation()
@@ -26,6 +28,16 @@ function App() {
   useEffect(() => {
     ensureAppSettings().then(() => purgeExpiredTrash())
   }, [])
+
+  // Articles 26/35 — refresh this week's local pattern/mood autoStats once
+  // per active Space per session, not on every render.
+  const autoStatsSpaceRef = useRef<string | null>(null)
+  useEffect(() => {
+    const spaceId = settings?.activeSpaceId
+    if (!spaceId || autoStatsSpaceRef.current === spaceId) return
+    autoStatsSpaceRef.current = spaceId
+    upsertWeeklyAutoStats(spaceId)
+  }, [settings?.activeSpaceId])
 
   useEffect(() => {
     if (!settings) return
@@ -63,6 +75,7 @@ function App() {
           <Route path="/settings/spaces" element={<SpacesPage />} />
           <Route path="/settings/domains" element={<DomainsPage />} />
           <Route path="/settings/trash" element={<TrashPage />} />
+          <Route path="/settings/time-blocks" element={<TimeBlocksPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>

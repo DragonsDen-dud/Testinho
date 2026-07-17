@@ -34,6 +34,21 @@ export function weekKeyOf(dateKey: string): string {
   return `${date.getUTCFullYear()}-W${String(weekNum).padStart(2, '0')}`
 }
 
+/** Monday-Sunday bounds of the week containing dateKey. */
+export function weekBoundsOf(dateKey: string): { start: string; end: string } {
+  const dow = weekdayOf(dateKey) // 0=Sun..6=Sat
+  const mondayOffset = dow === 0 ? -6 : 1 - dow
+  const start = addDays(dateKey, mondayOffset)
+  const end = addDays(start, 6)
+  return { start, end }
+}
+
+/** Full weekday name (e.g. "Tuesday") for a 0=Sun..6=Sat index, locale-aware. */
+export function weekdayName(dow: number, locale: string): string {
+  // 2024-01-07 is a Sunday, so adding dow gives the matching weekday name.
+  return new Date(2024, 0, 7 + dow).toLocaleDateString(locale, { weekday: 'long' })
+}
+
 export function formatHumanDate(dateKey: string, locale: string): string {
   const [y, m, d] = dateKey.split('-').map(Number)
   return new Date(y, m - 1, d).toLocaleDateString(locale, {

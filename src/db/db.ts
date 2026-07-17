@@ -12,6 +12,7 @@ import type {
   Project,
   JournalPrompt,
   JournalEntry,
+  DiagnosticEntry,
 } from './types'
 
 export class StoaDatabase extends Dexie {
@@ -27,6 +28,7 @@ export class StoaDatabase extends Dexie {
   projects!: Table<Project, string>
   journalPrompts!: Table<JournalPrompt, string>
   journalEntries!: Table<JournalEntry, string>
+  diagnosticEntries!: Table<DiagnosticEntry, string>
 
   constructor() {
     super('stoa')
@@ -62,6 +64,11 @@ export class StoaDatabase extends Dexie {
       projects: 'id, spaceId, domainId, archivedAt, deletedAt',
       journalPrompts: 'id, spaceId, sortOrder, active',
       journalEntries: 'id, spaceId, date, promptId',
+    })
+    // v4: Articles 26/35 local pattern insights + mood correlation feed
+    // DiagnosticEntry.autoStats for the future Scheduled AI Report step.
+    this.version(4).stores({
+      diagnosticEntries: 'id, spaceId, scope, [spaceId+periodStart+scope]',
     })
   }
 }

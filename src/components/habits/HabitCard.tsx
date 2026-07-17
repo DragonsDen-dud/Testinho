@@ -3,10 +3,13 @@ import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import type { Habit, HabitLog } from '../../db/types'
 import { useHabitLogs } from '../../state/useHabits'
+import { useTimeBlocks } from '../../state/useTimeBlocks'
 import { computeHabitStrength, computeBuildStreak, computeAvoidStreak, isPausedOnDate } from '../../lib/habitStrength'
 import { unmetDependencyNames } from '../../lib/habitDependencies'
+import { computeWeekdayPattern, computeTimeOfDayPattern } from '../../lib/habitPatterns'
+import { computeMoodCorrelation, formatSignedMood } from '../../lib/moodCorrelation'
 import { logHabit, logMeasurableEntry, resumeHabit } from '../../data/habits'
-import { todayKey } from '../../lib/date'
+import { todayKey, weekdayName } from '../../lib/date'
 import { Button } from '../ui/Button'
 import { Input } from '../ui/Input'
 import { ProgressBar } from '../ui/ProgressBar'
@@ -22,9 +25,10 @@ export function HabitCard({
   allHabits?: Habit[]
   logsToday?: Map<string, HabitLog>
 }) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const navigate = useNavigate()
   const allLogs = useHabitLogs(habit.id)
+  const timeBlocks = useTimeBlocks(habit.spaceId)
   const [loggingValue, setLoggingValue] = useState(false)
   const [value, setValue] = useState(habit.measurable?.targetValue ?? 0)
 
@@ -34,6 +38,13 @@ export function HabitCard({
   const paused = isPausedOnDate(habit, date)
   const blockedBy = paused ? [] : unmetDependencyNames(habit, allHabits, logsToday)
   const entryCount = todayLog?.entries?.length ?? 0
+
+  // Articles 26/35 — pure local computation, no AI. Absent entirely (no
+  // line rendered) whenever the underlying data doesn't clear each
+  // function's own minimum-sample threshold.
+  const weekdayPattern = computeWeekdayPattern(habit, allLogs)
+  const timeOfDayPattern = computeTimeOfDayPattern(habit, allLogs, timeBlocks)
+  const moodCorrelation = computeMoodCorrelation(allLogs)
 
   const primaryStat =
     habit.habitType === 'avoid' ? (
@@ -76,6 +87,28 @@ export function HabitCard({
           <ProgressBar percent={strength} />
         </div>
       </div>
+
+      {(weekdayPattern || timeOfDayPattern || moodCorrelation) && (
+        <div className="flex flex-col gap-0.5 -mt-1">
+          {weekdayPattern && (
+            <div className="text-xs text-[var(--stoa-text-muted)]">
+              {t('habits.weakDayLabel', { day: weekdayName(weekdayPattern.weekday, i18n.language) })}
+            </div>
+          )}
+          {timeOfDayPattern && (
+            <div className="text-xs text-[var(--stoa-text-muted)]">
+              {t('habits.strongTimeLabel', { name: timeOfDayPattern.timeBlockName })}
+            </div>
+          )}
+          {moodCorrelation && (
+            <div className="text-xs text-[var(--stoa-text-muted)]">
+              {t(habit.habitType === 'avoid' ? 'habits.moodCorrelationAvoid' : 'habits.moodCorrelationBuild', {
+                value: formatSignedMood(moodCorrelation.value),
+              })}
+            </div>
+          )}
+        </div>
+      )}
 
       {blockedBy.length > 0 ? (
         <div className="text-xs text-[var(--stoa-text-muted)] italic px-1">
