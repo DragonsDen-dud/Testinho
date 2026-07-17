@@ -9,6 +9,8 @@ import { useProjects } from '../../state/useProjects'
 import type { Todo, TodoSubtask, TodoRecurrenceType } from '../../db/types'
 import type { NewTodoInput } from '../../data/todos'
 import { newId } from '../../lib/id'
+import { AddToCalendarButton } from '../calendar/AddToCalendarButton'
+import { buildTodoIcs } from '../../lib/ics'
 
 export function TodoForm({
   spaceId,
@@ -208,6 +210,8 @@ export function TodoForm({
           />
           {t('todos.criticalReminder')}
         </label>
+
+        {initial && initial.criticalReminder && <AddToCalendarButton build={buildTodoIcs(initial)} />}
 
         <div className="flex gap-2 justify-between mt-2 flex-wrap">
           {initial && (onArchive || onDelete || onMoveToSomeday) ? (

@@ -315,5 +315,12 @@
     "morningDigest": "Morning digest",
     "morningDigestTimeLabel": "Time",
     "morningDigestHint": "One daily summary, separate from individual reminders — turning this off doesn't silence them."
+  },
+  "calendar": {
+    "addToCalendar": "Add to Calendar",
+    "oneWayHint": "This creates a one-time calendar file. Editing this later won't update anything you've already added — export again to pick up changes.",
+    "unmappableSchedule": "This schedule (\"N times a week\" or custom) doesn't have a fixed pattern of days, so it can't be turned into a calendar repeat — pick specific weekdays or daily if you'd like a calendar reminder.",
+    "noReminderTimes": "Add at least one reminder time to export this to your calendar.",
+    "noDueDate": "Add a due date to export this to your calendar."
   }
 }
