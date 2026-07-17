@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAppSettings, updateAppSettings } from '../state/useAppSettings'
 import { useSpaces } from '../state/useSpaces'
 import { Select } from '../components/ui/Input'
+import { AiSettingsSection } from '../components/settings/AiSettingsSection'
 import type { Language, ThemePreset } from '../db/types'
 
 export function SettingsPage() {
@@ -59,6 +60,15 @@ export function SettingsPage() {
         </Select>
       </div>
 
+      <label className="flex items-center gap-2 text-sm">
+        <input
+          type="checkbox"
+          checked={settings?.moodCaptureEnabled !== false}
+          onChange={(e) => updateAppSettings({ moodCaptureEnabled: e.target.checked })}
+        />
+        {t('settings.moodCaptureEnabled')}
+      </label>
+
       <button
         className="text-left text-sm py-2.5 border-t border-[var(--stoa-border)]"
         onClick={() => navigate('/settings/spaces')}
@@ -83,6 +93,8 @@ export function SettingsPage() {
       >
         {t('settings.manageTrash')} →
       </button>
+
+      <AiSettingsSection />
 
       <div className="border-t border-[var(--stoa-border)] pt-4 text-xs text-[var(--stoa-text-muted)]">
         <div className="font-medium mb-1">{t('settings.about')}</div>

@@ -86,6 +86,10 @@ export async function ensureAppSettings(): Promise<AppSettings> {
     homeScreenModuleOrder: ['habits', 'todos'],
     onboardingComplete: false,
     trashRetentionDays: 30,
+    moodCaptureEnabled: true,
+    aiModelPreference: { scheduledReport: 'haiku', freeformQuery: 'haiku' },
+    scheduledReportEnabled: true,
+    scheduledReportDayOfWeek: 1, // Monday
   }
   await db.appSettings.put(defaults)
   return defaults

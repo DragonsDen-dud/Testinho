@@ -12,6 +12,7 @@ import {
   logMeasurableEntry,
   pauseHabit,
   resumeHabit,
+  setHabitLogMood,
 } from './habits'
 import type { NewHabitInput } from './habits'
 
@@ -150,5 +151,46 @@ describe('logMeasurableEntry (Article 24 — multiple entries/day, neutral bonus
     const day2 = await db.habitLogs.where('[habitId+date]').equals([habit.id, '2026-07-02']).first()
     expect(day1?.entries).toHaveLength(1)
     expect(day2?.entries).toHaveLength(1)
+  })
+})
+
+describe('setHabitLogMood (Article 35 capture) — purely additive, never blocks the check-in itself', () => {
+  it('is a no-op when there is no log for that day yet', async () => {
+    const habit = await createHabit(habitInput('Read'))
+    await setHabitLogMood(habit.id, '2026-07-01', 2)
+
+    const log = await db.habitLogs.where('[habitId+date]').equals([habit.id, '2026-07-01']).first()
+    expect(log).toBeUndefined()
+  })
+
+  it('attaches mood to an already-saved check-in without touching its status', async () => {
+    const habit = await createHabit(habitInput('Read'))
+    await logHabit(habit.id, '2026-07-01', 'done')
+    await setHabitLogMood(habit.id, '2026-07-01', 1)
+
+    const log = await db.habitLogs.where('[habitId+date]').equals([habit.id, '2026-07-01']).first()
+    expect(log?.status).toBe('done')
+    expect(log?.mood).toBe(1)
+  })
+
+  it('tapping the same mood again (undefined) clears it', async () => {
+    const habit = await createHabit(habitInput('Read'))
+    await logHabit(habit.id, '2026-07-01', 'done')
+    await setHabitLogMood(habit.id, '2026-07-01', 1)
+    await setHabitLogMood(habit.id, '2026-07-01', undefined)
+
+    const log = await db.habitLogs.where('[habitId+date]').equals([habit.id, '2026-07-01']).first()
+    expect(log?.mood).toBeUndefined()
+  })
+
+  it('logging done/not_done again after setting mood does not clear the mood (extra param defaults to preserving it)', async () => {
+    const habit = await createHabit(habitInput('Read'))
+    await logHabit(habit.id, '2026-07-01', 'done')
+    await setHabitLogMood(habit.id, '2026-07-01', 2)
+    await logHabit(habit.id, '2026-07-01', 'not_done')
+
+    const log = await db.habitLogs.where('[habitId+date]').equals([habit.id, '2026-07-01']).first()
+    expect(log?.status).toBe('not_done')
+    expect(log?.mood).toBe(2)
   })
 })

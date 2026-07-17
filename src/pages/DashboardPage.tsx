@@ -5,6 +5,7 @@ import { useAppSettings, updateAppSettings } from '../state/useAppSettings'
 import { useSpaces } from '../state/useSpaces'
 import { useHabits, useLogsForDate } from '../state/useHabits'
 import { useOpenTodosToday } from '../state/useTodos'
+import { useCurrentWeekScheduledReport } from '../state/useDiagnostics'
 import { HabitCard } from '../components/habits/HabitCard'
 import { TodoItem } from '../components/todos/TodoItem'
 import { EmptyState } from '../components/ui/EmptyState'
@@ -29,6 +30,8 @@ export function DashboardPage() {
     date,
   )
   const { today: todosToday, overdue, loaded: todosLoaded } = useOpenTodosToday(settings?.activeSpaceId)
+  const scheduledReport = useCurrentWeekScheduledReport(settings?.activeSpaceId)
+  const [reportDismissed, setReportDismissed] = useState(false)
 
   // Article 30 — once per calendar day. Deliberately does NOT latch on a
   // negative result: useOpenTodosToday's live query can resolve once for
@@ -105,6 +108,22 @@ export function DashboardPage() {
           >
             ×
           </button>
+        </div>
+      )}
+
+      {scheduledReport && !reportDismissed && (
+        <div className="rounded-xl bg-[var(--stoa-accent-soft)] px-3.5 py-2.5 text-sm flex flex-col gap-1.5">
+          <div className="flex items-start justify-between gap-2">
+            <span className="font-medium">{t('dashboard.scheduledReportTitle')}</span>
+            <button
+              aria-label={t('common.close')}
+              className="text-[var(--stoa-text-muted)] px-1 shrink-0"
+              onClick={() => setReportDismissed(true)}
+            >
+              ×
+            </button>
+          </div>
+          <p className="whitespace-pre-wrap text-[var(--stoa-text)]">{scheduledReport.aiInsight}</p>
         </div>
       )}
 

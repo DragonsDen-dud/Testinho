@@ -44,7 +44,7 @@ const DEFAULT_JOURNAL_PROMPTS: Record<Language, string[]> = {
 }
 
 export async function createSpace(
-  data: { name: string; color: string; icon: string },
+  data: { name: string; color: string; icon: string; northStar?: string },
   language: Language = 'en',
 ): Promise<Space> {
   const count = await db.spaces.count()
@@ -53,6 +53,7 @@ export async function createSpace(
     name: data.name,
     color: data.color,
     icon: data.icon,
+    northStar: data.northStar,
     sortOrder: count,
     createdAt: new Date().toISOString(),
   }

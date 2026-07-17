@@ -8,11 +8,23 @@ import { computeHabitStrength, computeBuildStreak, computeAvoidStreak, isPausedO
 import { unmetDependencyNames } from '../../lib/habitDependencies'
 import { computeWeekdayPattern, computeTimeOfDayPattern } from '../../lib/habitPatterns'
 import { computeMoodCorrelation, formatSignedMood } from '../../lib/moodCorrelation'
-import { logHabit, logMeasurableEntry, resumeHabit } from '../../data/habits'
+import { logHabit, logMeasurableEntry, resumeHabit, setHabitLogMood } from '../../data/habits'
 import { todayKey, weekdayName } from '../../lib/date'
+import { useAppSettings } from '../../state/useAppSettings'
 import { Button } from '../ui/Button'
 import { Input } from '../ui/Input'
 import { ProgressBar } from '../ui/ProgressBar'
+
+// Article 35 support — 5-point scale mapped to -2..+2, matching the sign
+// mood correlation expects (positive = better mood). Purely additive: tapping
+// a mood never blocks or re-triggers the check-in save that already happened.
+const MOOD_OPTIONS: { value: number; emoji: string }[] = [
+  { value: -2, emoji: '😞' },
+  { value: -1, emoji: '😕' },
+  { value: 0, emoji: '😐' },
+  { value: 1, emoji: '🙂' },
+  { value: 2, emoji: '😊' },
+]
 
 export function HabitCard({
   habit,
@@ -27,6 +39,7 @@ export function HabitCard({
 }) {
   const { t, i18n } = useTranslation()
   const navigate = useNavigate()
+  const settings = useAppSettings()
   const allLogs = useHabitLogs(habit.id)
   const timeBlocks = useTimeBlocks(habit.spaceId)
   const [loggingValue, setLoggingValue] = useState(false)
@@ -148,28 +161,50 @@ export function HabitCard({
           </div>
         )
       ) : (
-        <div className="flex gap-2">
-          <Button
-            variant={todayLog?.status === 'done' ? 'primary' : 'secondary'}
-            className="flex-1"
-            onClick={() => logHabit(habit.id, date, 'done')}
-          >
-            {t('habits.markDone')}
-          </Button>
-          <Button
-            variant={todayLog?.status === 'not_done' ? 'danger' : 'secondary'}
-            className="flex-1"
-            onClick={() => logHabit(habit.id, date, 'not_done')}
-          >
-            {t('habits.markNotDone')}
-          </Button>
-          <Button
-            variant={todayLog?.status === 'skip' ? 'secondary' : 'ghost'}
-            onClick={() => logHabit(habit.id, date, 'skip')}
-          >
-            {t('habits.markSkip')}
-          </Button>
-        </div>
+        <>
+          <div className="flex gap-2">
+            <Button
+              variant={todayLog?.status === 'done' ? 'primary' : 'secondary'}
+              className="flex-1"
+              onClick={() => logHabit(habit.id, date, 'done')}
+            >
+              {t('habits.markDone')}
+            </Button>
+            <Button
+              variant={todayLog?.status === 'not_done' ? 'danger' : 'secondary'}
+              className="flex-1"
+              onClick={() => logHabit(habit.id, date, 'not_done')}
+            >
+              {t('habits.markNotDone')}
+            </Button>
+            <Button
+              variant={todayLog?.status === 'skip' ? 'secondary' : 'ghost'}
+              onClick={() => logHabit(habit.id, date, 'skip')}
+            >
+              {t('habits.markSkip')}
+            </Button>
+          </div>
+
+          {todayLog && settings?.moodCaptureEnabled !== false && (
+            <div className="flex gap-1.5 items-center -mt-1">
+              {MOOD_OPTIONS.map((m) => (
+                <button
+                  key={m.value}
+                  type="button"
+                  aria-label={t('habits.moodOptionLabel', { value: m.value })}
+                  onClick={() => setHabitLogMood(habit.id, date, todayLog.mood === m.value ? undefined : m.value)}
+                  className={`text-base w-7 h-7 rounded-full border transition-transform ${
+                    todayLog.mood === m.value
+                      ? 'border-[var(--stoa-accent)] scale-110'
+                      : 'border-transparent opacity-60'
+                  }`}
+                >
+                  {m.emoji}
+                </button>
+              ))}
+            </div>
+          )}
+        </>
       )}
     </div>
   )

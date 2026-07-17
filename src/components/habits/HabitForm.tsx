@@ -8,6 +8,7 @@ import { useDomains } from '../../state/useDomains'
 import { useTimeBlocks } from '../../state/useTimeBlocks'
 import { wouldCreateCycle } from '../../lib/habitDependencies'
 import { todayKey } from '../../lib/date'
+import { AskAiHabitPanel } from './AskAiHabitPanel'
 import type { Habit, HabitType, ScheduleType } from '../../db/types'
 import type { NewHabitInput } from '../../data/habits'
 
@@ -347,6 +348,8 @@ export function HabitForm({
             rows={2}
           />
         </Field>
+
+        {initial && <AskAiHabitPanel habit={initial} />}
 
         <div className="flex gap-2 justify-between mt-2">
           {initial && (onArchive || onDelete) ? (

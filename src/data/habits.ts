@@ -113,6 +113,19 @@ export async function logMeasurableEntry(
   await db.habitLogs.put(record)
 }
 
+/**
+ * Attaches (or clears, when `mood` is undefined) a mood value to an
+ * already-saved check-in. Deliberately separate from logHabit/
+ * logMeasurableEntry — the status is saved the instant Done/Not done/Skip
+ * is tapped, and mood is a purely additive follow-up tap that never blocks
+ * or re-triggers that save. No-ops if there's no log for the day yet.
+ */
+export async function setHabitLogMood(habitId: string, date: string, mood: number | undefined): Promise<void> {
+  const existing = await db.habitLogs.where('[habitId+date]').equals([habitId, date]).first()
+  if (!existing) return
+  await db.habitLogs.update(existing.id, { mood })
+}
+
 export async function clearHabitLog(habitId: string, date: string): Promise<void> {
   const existing = await db.habitLogs.where('[habitId+date]').equals([habitId, date]).first()
   if (existing) await db.habitLogs.delete(existing.id)

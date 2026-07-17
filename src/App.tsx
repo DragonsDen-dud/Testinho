@@ -5,6 +5,7 @@ import { useAppSettings } from './state/useAppSettings'
 import { ensureAppSettings } from './db/db'
 import { purgeExpiredTrash } from './data/trash'
 import { upsertWeeklyAutoStats } from './data/diagnostics'
+import { runScheduledReportIfDue } from './data/aiReports'
 import { AppShell } from './components/layout/AppShell'
 import { OnboardingPage } from './pages/OnboardingPage'
 import { DashboardPage } from './pages/DashboardPage'
@@ -36,7 +37,7 @@ function App() {
     const spaceId = settings?.activeSpaceId
     if (!spaceId || autoStatsSpaceRef.current === spaceId) return
     autoStatsSpaceRef.current = spaceId
-    upsertWeeklyAutoStats(spaceId)
+    upsertWeeklyAutoStats(spaceId).then(() => runScheduledReportIfDue(spaceId))
   }, [settings?.activeSpaceId])
 
   useEffect(() => {

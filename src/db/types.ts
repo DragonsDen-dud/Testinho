@@ -9,6 +9,7 @@ export type HabitLogStatus = 'done' | 'not_done' | 'skip'
 export type TodoStatus = 'open' | 'done' | 'archived' | 'someday'
 export type TodoRecurrenceType = 'daily' | 'weekly' | 'monthly' | 'custom'
 export type ScheduleType = 'daily' | 'weekly_n_times' | 'specific_weekdays' | 'custom'
+export type ClaudeModelChoice = 'haiku' | 'sonnet'
 
 export interface AppSettings {
   id: 'singleton'
@@ -20,6 +21,19 @@ export interface AppSettings {
   trashRetentionDays: number
   overdueBannerLastShownDate?: string
   timeBlockRangeHintDismissed?: boolean
+  // Article 35 support — optional per check-in, never blocks saving a log.
+  // Undefined means enabled (existing installs predate this field).
+  moodCaptureEnabled?: boolean
+  // Article 38 — stored locally only (IndexedDB), never hardcoded, never
+  // logged. Sent per-request to our own proxy (see api/), which forwards it
+  // to Anthropic and never persists it server-side.
+  claudeApiKey?: string
+  aiUsage?: { callCount: number; currentPeriodStart: string; softCapWarningThreshold?: number }
+  aiModelPreference?: { scheduledReport: ClaudeModelChoice; freeformQuery: ClaudeModelChoice }
+  // Article 12 — week-scope Scheduled AI Report cadence.
+  scheduledReportEnabled?: boolean
+  scheduledReportDayOfWeek?: number // 0=Sun..6=Sat
+  scheduledReportCaveatDismissed?: boolean
 }
 
 export interface Space {
@@ -30,6 +44,11 @@ export interface Space {
   sortOrder: number
   createdAt: string
   archivedAt?: string
+  // A short personal mission/goal statement, entirely optional. Exists so
+  // DiagnosticEntry.includedNorthStarContext (Article 16) has real content
+  // to opt into attaching — never sent to the AI unless the user explicitly
+  // checks the "include North Star" box for that specific call.
+  northStar?: string
 }
 
 export interface LifeDomain {

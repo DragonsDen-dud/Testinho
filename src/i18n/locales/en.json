@@ -52,7 +52,9 @@
     "color": "Color",
     "icon": "Icon",
     "archiveConfirm": "Archive this Space? You can still see it later, it just won't show in the switcher.",
-    "empty": "No Spaces yet."
+    "empty": "No Spaces yet.",
+    "northStar": "North Star (optional)",
+    "northStarPlaceholder": "A short reminder of what this Space is really for"
   },
   "domains": {
     "title": "Life domains",
@@ -69,7 +71,8 @@
     "noTodosToday": "Nothing due today.",
     "overdueBanner_one": "{{count}} overdue task",
     "overdueBanner_other": "{{count}} overdue tasks",
-    "reviewOverdue": "Review"
+    "reviewOverdue": "Review",
+    "scheduledReportTitle": "This week's report"
   },
   "habits": {
     "title": "Habits",
@@ -131,7 +134,15 @@
     "weakDayLabel": "Usually dips on {{day}}",
     "strongTimeLabel": "Goes best during {{name}}",
     "moodCorrelationBuild": "Mood is {{value}} on days you do this vs. days you don't",
-    "moodCorrelationAvoid": "Mood is {{value}} on days you stay clean vs. days you slip"
+    "moodCorrelationAvoid": "Mood is {{value}} on days you stay clean vs. days you slip",
+    "moodOptionLabel": "Mood {{value}}",
+    "askAi": "Ask about this habit",
+    "askAiPlaceholder": "e.g. Why do I keep missing Tuesdays?",
+    "askAiSubmit": "Ask",
+    "askAiNoKey": "Add a Claude API key in Settings to ask questions about your habits.",
+    "askAiIncludeNorthStar": "Include my North Star",
+    "askAiThinking": "Thinking…",
+    "askAiError": "Couldn't reach the AI service. Try again in a moment."
   },
   "todos": {
     "title": "Tasks",
@@ -213,8 +224,25 @@
     "manageDomains": "Manage life domains",
     "manageTimeBlocks": "Time Blocks",
     "manageTrash": "Trash",
+    "moodCaptureEnabled": "Ask my mood after habit check-ins",
     "about": "About",
-    "aboutText": "STOA keeps everything on this device. No account, no cloud sync."
+    "aboutText": "STOA keeps everything on this device. No account, no cloud sync.",
+    "aiSectionTitle": "AI reports",
+    "noFreeTierNotice": "AI reports call the Claude API using your own key. There is no free tier — each request costs money on your Anthropic account.",
+    "claudeApiKey": "Claude API key",
+    "claudeApiKeyPlaceholder": "sk-ant-...",
+    "aiUsageCount_one": "{{count}} request in the last 30 days",
+    "aiUsageCount_other": "{{count}} requests in the last 30 days",
+    "connectivity_checking": "Checking…",
+    "connectivity_online": "Connected",
+    "connectivity_offline": "Unreachable",
+    "modelForScheduledReport": "Model for scheduled reports",
+    "modelForFreeformQuery": "Model for questions",
+    "modelHaiku": "Haiku (faster, cheaper)",
+    "modelSonnet": "Sonnet (more capable)",
+    "scheduledReportEnabled": "Generate a weekly report automatically",
+    "scheduledReportDayOfWeek": "On or after",
+    "scheduledReportCaveat": "This runs the next time you open the app on or after that day, not at an exact time on the day itself."
   },
   "timeBlocks": {
     "title": "Time Blocks",

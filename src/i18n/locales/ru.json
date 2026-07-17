@@ -52,7 +52,9 @@
     "color": "Цвет",
     "icon": "Иконка",
     "archiveConfirm": "Отправить пространство в архив? Оно останется доступным, просто не будет в переключателе.",
-    "empty": "Пока нет пространств."
+    "empty": "Пока нет пространств.",
+    "northStar": "Главная цель (необязательно)",
+    "northStarPlaceholder": "Короткое напоминание, зачем нужно это пространство"
   },
   "domains": {
     "title": "Сферы жизни",
@@ -71,7 +73,8 @@
     "overdueBanner_few": "{{count}} просроченные задачи",
     "overdueBanner_many": "{{count}} просроченных задач",
     "overdueBanner_other": "{{count}} просроченных задач",
-    "reviewOverdue": "Разобрать"
+    "reviewOverdue": "Разобрать",
+    "scheduledReportTitle": "Отчёт за эту неделю"
   },
   "habits": {
     "title": "Привычки",
@@ -139,7 +142,15 @@
     "weakDayLabel": "Обычно слабее всего: {{day}}",
     "strongTimeLabel": "Лучше всего получается в блок «{{name}}»",
     "moodCorrelationBuild": "Настроение {{value}} в дни, когда вы это делаете, по сравнению с днями, когда нет",
-    "moodCorrelationAvoid": "Настроение {{value}} в дни без срыва по сравнению с днями срыва"
+    "moodCorrelationAvoid": "Настроение {{value}} в дни без срыва по сравнению с днями срыва",
+    "moodOptionLabel": "Настроение {{value}}",
+    "askAi": "Спросить об этой привычке",
+    "askAiPlaceholder": "например: Почему я постоянно пропускаю вторники?",
+    "askAiSubmit": "Спросить",
+    "askAiNoKey": "Добавьте ключ API Claude в Настройках, чтобы задавать вопросы о привычках.",
+    "askAiIncludeNorthStar": "Включить мою Главную цель",
+    "askAiThinking": "Думаю…",
+    "askAiError": "Не удалось связаться с ИИ. Попробуйте ещё раз через минуту."
   },
   "todos": {
     "title": "Задачи",
@@ -221,8 +232,27 @@
     "manageDomains": "Управление сферами жизни",
     "manageTimeBlocks": "Время дня",
     "manageTrash": "Корзина",
+    "moodCaptureEnabled": "Спрашивать настроение после отметки привычки",
     "about": "О приложении",
-    "aboutText": "STOA хранит всё на этом устройстве. Без аккаунта, без облачной синхронизации."
+    "aboutText": "STOA хранит всё на этом устройстве. Без аккаунта, без облачной синхронизации.",
+    "aiSectionTitle": "ИИ-отчёты",
+    "noFreeTierNotice": "ИИ-отчёты используют API Claude с вашим собственным ключом. Бесплатного тарифа нет — каждый запрос списывает деньги с вашего счёта Anthropic.",
+    "claudeApiKey": "Ключ API Claude",
+    "claudeApiKeyPlaceholder": "sk-ant-...",
+    "aiUsageCount_one": "{{count}} запрос за последние 30 дней",
+    "aiUsageCount_few": "{{count}} запроса за последние 30 дней",
+    "aiUsageCount_many": "{{count}} запросов за последние 30 дней",
+    "aiUsageCount_other": "{{count}} запроса за последние 30 дней",
+    "connectivity_checking": "Проверка…",
+    "connectivity_online": "Подключено",
+    "connectivity_offline": "Недоступно",
+    "modelForScheduledReport": "Модель для плановых отчётов",
+    "modelForFreeformQuery": "Модель для вопросов",
+    "modelHaiku": "Haiku (быстрее, дешевле)",
+    "modelSonnet": "Sonnet (более мощная)",
+    "scheduledReportEnabled": "Формировать еженедельный отчёт автоматически",
+    "scheduledReportDayOfWeek": "В этот день или после",
+    "scheduledReportCaveat": "Отчёт формируется при следующем открытии приложения в этот день или позже, а не точно в это время в сам день."
   },
   "timeBlocks": {
     "title": "Время дня",
