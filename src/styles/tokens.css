@@ -1,8 +1,7 @@
 /* Tasks-tab redesign token layer (Stage 1, v5 — "Tesla tokens + SpaceX
-   restraint + iOS dot motif"). Supersedes the v4 Mission Control set
-   entirely: soft off-white/deep-charcoal canvas instead of pure black,
-   white cards floating via a single soft shadow instead of hairlines or
-   blur, color reserved strictly for priority/overdue function.
+   restraint + iOS dot motif"). Soft off-white/deep-charcoal canvas, white
+   cards floating via a single soft shadow instead of blur, color reserved
+   strictly for priority/overdue/category function.
 
    Theme-reactive raw values mirror the exact pattern src/index.css already
    uses for --stoa-*: a plain :root default, a :root[data-theme="dark"]
@@ -20,31 +19,13 @@
   --tt-chip: #e5e5e5;
   --tt-heading: var(--tt-ink-muted);
 
-  /* Overdue section — full red-family identity. Task-title text is
-     deliberately NOT overridden (stays --tt-ink, near-black) per the
-     brief's "keep task-title text high-contrast" instruction; only the
-     card surface/chip/muted-label/heading colors shift into the red
-     family. #B42318 (not Tesla's raw #E01E2C) is used for heading/label
-     text specifically because it needs to read at body-text sizes against
-     a light page canvas — the full-saturation brand red stays reserved
-     for the due-chip accent, same role it already had in v5. */
-  --tt-surface-overdue: #fdf2f2;
-  --tt-chip-overdue: #f6dede;
-  --tt-ink-muted-overdue: #b42318;
+  /* Status is now a border ring, not a card-fill — see .section-overdue/
+     .section-someday below. Muted gray for Someday, distinct from the
+     plain --tt-hairline so it still reads as a deliberate ring, not just
+     a card outline. Overdue's border reuses --color-accent-alert
+     directly (no separate raw token needed, it's theme-invariant). */
+  --tt-status-someday-border: #b0b0ae;
   --tt-heading-overdue: #b42318;
-
-  /* Someday section — full muted/desaturated identity, including the
-     dot motif itself (checkbox fill, priority-dot accents), not just
-     label opacity. Still ≥4.5:1 for title text — see the measured
-     ratios in the round's report; deliberately closer to that floor
-     than Today's ~20:1 so it *reads* as lower visual weight. */
-  --tt-surface-someday: #ececea;
-  --tt-ink-someday: #5c5c5c;
-  --tt-ink-muted-someday: #9a9a9a;
-  --tt-chip-someday: #e2e2e0;
-  --tt-hairline-someday: #d6d6d4;
-  --tt-accent-alert-someday: #b98686;
-  --tt-accent-info-someday: #7c8ca6;
   --tt-heading-someday: #9a9a9a;
 }
 
@@ -58,18 +39,8 @@
   --tt-chip: #262b33;
   --tt-heading: var(--tt-ink-muted);
 
-  --tt-surface-overdue: #2a1b1b;
-  --tt-chip-overdue: #3a2626;
-  --tt-ink-muted-overdue: #ff6b6b;
+  --tt-status-someday-border: #5a5d63;
   --tt-heading-overdue: #ff6b6b;
-
-  --tt-surface-someday: #1c1e22;
-  --tt-ink-someday: #a8acb2;
-  --tt-ink-muted-someday: #6e727a;
-  --tt-chip-someday: #24262b;
-  --tt-hairline-someday: rgba(255, 255, 255, 0.08);
-  --tt-accent-alert-someday: #9c6b6b;
-  --tt-accent-info-someday: #6c7a94;
   --tt-heading-someday: #6e727a;
 }
 
@@ -83,18 +54,8 @@
     --tt-chip: #262b33;
     --tt-heading: var(--tt-ink-muted);
 
-    --tt-surface-overdue: #2a1b1b;
-    --tt-chip-overdue: #3a2626;
-    --tt-ink-muted-overdue: #ff6b6b;
+    --tt-status-someday-border: #5a5d63;
     --tt-heading-overdue: #ff6b6b;
-
-    --tt-surface-someday: #1c1e22;
-    --tt-ink-someday: #a8acb2;
-    --tt-ink-muted-someday: #6e727a;
-    --tt-chip-someday: #24262b;
-    --tt-hairline-someday: rgba(255, 255, 255, 0.08);
-    --tt-accent-alert-someday: #9c6b6b;
-    --tt-accent-info-someday: #6c7a94;
     --tt-heading-someday: #6e727a;
   }
 }
@@ -112,13 +73,29 @@
   --color-hairline: var(--tt-hairline);
   --color-chip: var(--tt-chip);
   /* Section-header text color — separate from --color-ink-muted so a
-     themed section (.section-overdue/.section-someday below) can recolor
-     its heading without also recoloring every muted label in its cards,
-     even though both happen to start from the same baseline value. */
+     themed section can recolor its heading without also recoloring every
+     muted label in its cards, even though both start from the same
+     baseline value. */
   --color-heading: var(--tt-heading);
 
+  /* Dot outline ring — split off from --color-hairline specifically so a
+     card's per-instance contrast override (see TaskCard.tsx) can retint
+     the checkbox/subtask hollow-ring color without ever touching
+     --color-hairline, which the priority dot's neutral tone also reads.
+     Priority dot must stay 100% independent of category-color contrast
+     logic per this round's explicit instruction. Defaults to the same
+     value as --color-hairline, so nothing changes for a card with no
+     category color. */
+  --color-dot-ring: var(--tt-hairline);
+
+  /* Status border — a 2px ring, not a fill. Transparent by default
+     (Today); .section-overdue/.section-someday below override it. */
+  --color-status-border: transparent;
+
   /* Functional-only accents (Tesla's own tokens), identical in both
-     themes — SpaceX's "color only for function" carried over verbatim. */
+     themes — SpaceX's "color only for function" carried over verbatim.
+     Untouched by section/category theming; the priority dot always reads
+     these two values, nothing else. */
   --color-accent-info: #3e6ae1;
   --color-accent-alert: #e01e2c;
 
@@ -163,28 +140,21 @@
   animation: dot-fill var(--ease-dot-fill) 200ms both;
 }
 
-/* Per-section color identity (Today/Overdue/Someday). Each rule only
-   redeclares the custom properties TaskCard already renders from
-   (--color-surface, --color-ink, --color-ink-muted, --color-chip,
-   --color-hairline, --color-accent-*) — the dot-motif mechanics
-   (checkbox fill logic, subtask-dot row, priority-dot tone selection)
-   are untouched in TaskCard.tsx; only the palette they read cascades
-   differently inside these wrappers. Today needs no override — it's the
-   baseline the :root values above already are. */
+/* Per-section status identity (Today/Overdue/Someday) — scaled down from
+   full card-fill (prior round) to a narrower border-only signal, to make
+   room for the category/project background color TaskCard now applies
+   per-instance. Only --color-status-border and --color-heading are
+   redeclared; --color-surface/--color-ink/--color-chip/--color-accent-*
+   are deliberately NOT touched here anymore so the priority dot and the
+   category-color background stay exactly as TaskCard computes them.
+   Today needs no override — --color-status-border's :root default
+   (transparent) already covers it. */
 .section-overdue {
-  --color-surface: var(--tt-surface-overdue);
-  --color-chip: var(--tt-chip-overdue);
-  --color-ink-muted: var(--tt-ink-muted-overdue);
+  --color-status-border: var(--color-accent-alert);
   --color-heading: var(--tt-heading-overdue);
 }
 
 .section-someday {
-  --color-surface: var(--tt-surface-someday);
-  --color-ink: var(--tt-ink-someday);
-  --color-ink-muted: var(--tt-ink-muted-someday);
-  --color-chip: var(--tt-chip-someday);
-  --color-hairline: var(--tt-hairline-someday);
-  --color-accent-alert: var(--tt-accent-alert-someday);
-  --color-accent-info: var(--tt-accent-info-someday);
+  --color-status-border: var(--tt-status-someday-border);
   --color-heading: var(--tt-heading-someday);
 }

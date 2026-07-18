@@ -4,8 +4,8 @@
 // no live Todo/Dexie data, no swipe, no click handlers. Stage 2 wires it
 // up to real state.
 
-import type { ReactNode } from 'react'
-import { priorityDotTone } from '../../../styles/tokens'
+import type { CSSProperties, ReactNode } from 'react'
+import { accessibleRingColor, accessibleTextColor, priorityDotTone } from '../../../styles/tokens'
 
 export type TaskCardStatus = 'overdue' | 'upcoming' | 'someday' | 'done'
 
@@ -24,6 +24,10 @@ export interface TaskCardProps {
   subtasks?: TaskCardSubtask[]
   subtasksExpanded?: boolean
   checked?: boolean
+  /** Resolved LifeDomain.color or Project.color (project wins if a task has
+   * both) — caller's responsibility, TaskCard stays presentational and
+   * doesn't fetch either record itself. Undefined = neutral theme fallback. */
+  categoryColor?: string
 }
 
 const TONE_COLOR: Record<'alert' | 'info', string> = {
@@ -46,7 +50,7 @@ function Dot({ filled, size, animate }: { filled: boolean; size: number; animate
         height: size,
         borderRadius: '50%',
         background: filled ? 'var(--color-ink)' : 'transparent',
-        border: filled ? 'none' : `1.5px solid var(--color-hairline)`,
+        border: filled ? 'none' : `1.5px solid var(--color-dot-ring)`,
         boxSizing: 'border-box',
         transition: 'background 200ms var(--ease-dot-fill)',
       }}
@@ -96,12 +100,32 @@ export function TaskCard({
   subtasks,
   subtasksExpanded,
   checked,
+  categoryColor,
 }: TaskCardProps) {
   const hasSubtasks = (subtasks?.length ?? 0) > 0
   const isOverdue = status === 'overdue'
 
+  // Category color drives the card background directly (arbitrary user
+  // hex, not a theme token). --color-ink/--color-dot-ring are overridden
+  // locally so title text, the checkbox/subtask dot fill, and the hollow
+  // ring all stay legible against it — computed per instance, never
+  // assumed light. --color-status-border and --color-accent-* (the
+  // priority dot) are NOT touched here: status stays a separate signal
+  // from the section wrapper, and the priority dot stays fully independent
+  // of category color per this round's explicit instruction.
+  const categoryStyle: CSSProperties = categoryColor
+    ? ({
+        backgroundColor: categoryColor,
+        '--color-ink': accessibleTextColor(categoryColor),
+        '--color-dot-ring': accessibleRingColor(categoryColor),
+      } as CSSProperties)
+    : {}
+
   return (
-    <div className="bg-surface rounded-card p-4 flex flex-col gap-2.5 card-shadow">
+    <div
+      className="bg-surface rounded-card p-4 flex flex-col gap-2.5 card-shadow"
+      style={{ border: '2px solid var(--color-status-border)', ...categoryStyle }}
+    >
       <div className="flex items-start gap-3">
         <button
           type="button"
