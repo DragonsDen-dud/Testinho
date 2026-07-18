@@ -111,6 +111,7 @@ export function TodoForm({
             <Input type="time" value={scheduledTime} onChange={(e) => setScheduledTime(e.target.value)} />
           </Field>
         </div>
+        <p className="text-xs text-[var(--stoa-text-muted)] -mt-2">{t('todos.scheduledTimeHint')}</p>
 
         <Field label={t('todos.priority')}>
           <Select value={priorityLevelId} onChange={(e) => setPriorityLevelId(e.target.value)}>

@@ -191,6 +191,7 @@
     "archiveConfirm": "Archive this task?",
     "deleteConfirm": "Move this task to Trash? You can restore it later, or it'll be removed for good after 30 days.",
     "scheduledTime": "Time",
+    "scheduledTimeHint": "Setting a time here turns on a reminder for this task, on its due date.",
     "recurring": "Repeats",
     "recurrenceType": "Frequency",
     "recurrenceInterval": "Every",

@@ -81,6 +81,19 @@ describe('tickReminders — initial firing (Articles 40/41)', () => {
     expect(state?.state).toBe('sent')
   })
 
+  it('a todo with a dueDate but no scheduledTime never fires a reminder — scheduledTime is the only trigger', async () => {
+    await createTodo({ spaceId: SPACE_ID, title: 'Pay rent', dueDate: '2026-07-16', criticalReminder: false })
+    const notify = vi.fn()
+
+    // Well past any reasonable time-of-day, and again the next day, to rule
+    // out "just hasn't reached its time yet" rather than "never fires at all".
+    await tickReminders(SPACE_ID, new Date(2026, 6, 16, 23, 59), notify)
+    await tickReminders(SPACE_ID, new Date(2026, 6, 17, 12, 0), notify)
+
+    expect(notify).not.toHaveBeenCalled()
+    expect(await db.reminderStates.count()).toBe(0)
+  })
+
   describe('quiet hours (Article 41)', () => {
     it('queues instead of firing when the reminder time falls inside quiet hours', async () => {
       await db.appSettings.update('singleton', { quietHours: { enabled: true, start: '22:00', end: '07:00' } })
