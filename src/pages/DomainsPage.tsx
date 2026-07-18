@@ -9,6 +9,7 @@ import { EmptyState } from '../components/ui/EmptyState'
 import { Sheet } from '../components/ui/Sheet'
 import { Field, Input } from '../components/ui/Input'
 import { SwatchPicker } from '../components/ui/SwatchPicker'
+import { EmojiInput } from '../components/ui/EmojiInput'
 import { PRESET_COLORS, PRESET_ICONS } from '../lib/presets'
 import type { LifeDomain } from '../db/types'
 
@@ -99,8 +100,8 @@ export function DomainsPage() {
             <Field label={t('domains.name')}>
               <Input value={name} onChange={(e) => setName(e.target.value)} autoFocus required />
             </Field>
-            <Field label={t('spaces.icon')}>
-              <SwatchPicker kind="icon" options={PRESET_ICONS} value={icon} onChange={setIcon} />
+            <Field label={t('domains.icon')}>
+              <EmojiInput value={icon} onChange={setIcon} />
             </Field>
             <Field label={t('spaces.color')}>
               <SwatchPicker kind="color" options={PRESET_COLORS} value={color} onChange={setColor} />

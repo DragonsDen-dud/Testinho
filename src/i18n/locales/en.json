@@ -65,6 +65,7 @@
     "newDomain": "New domain",
     "editDomain": "Edit domain",
     "name": "Name",
+    "icon": "Icon",
     "empty": "No domains yet."
   },
   "dashboard": {

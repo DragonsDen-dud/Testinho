@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { Button } from '../components/ui/Button'
 import { Field, Input } from '../components/ui/Input'
 import { SwatchPicker } from '../components/ui/SwatchPicker'
+import { EmojiInput } from '../components/ui/EmojiInput'
 import { PRESET_COLORS, PRESET_ICONS } from '../lib/presets'
 import { createSpace } from '../data/spaces'
 import { createDomain } from '../data/domains'
@@ -133,8 +134,8 @@ export function OnboardingPage() {
               onChange={(e) => setDomainName(e.target.value)}
             />
           </Field>
-          <Field label={t('spaces.icon')}>
-            <SwatchPicker kind="icon" options={PRESET_ICONS} value={domainIcon} onChange={setDomainIcon} />
+          <Field label={t('domains.icon')}>
+            <EmojiInput value={domainIcon} onChange={setDomainIcon} />
           </Field>
           <Field label={t('spaces.color')}>
             <SwatchPicker kind="color" options={PRESET_COLORS} value={domainColor} onChange={setDomainColor} />
