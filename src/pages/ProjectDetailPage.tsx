@@ -4,8 +4,9 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { useAppSettings } from '../state/useAppSettings'
 import { useProjects, projectProgress } from '../state/useProjects'
 import { useTodos } from '../state/useTodos'
-import { createTodo, updateTodo, archiveTodo, deleteTodo } from '../data/todos'
-import { updateProject, archiveProject, deleteProject } from '../data/projects'
+import { createTodo, updateTodo, archiveTodo, deleteTodo, restoreTodo } from '../data/todos'
+import { updateProject, archiveProject, deleteProject, restoreProject } from '../data/projects'
+import { showUndoToast } from '../state/toast'
 import { ProjectForm } from '../components/projects/ProjectForm'
 import { TodoForm } from '../components/todos/TodoForm'
 import { TodoItem } from '../components/todos/TodoItem'
@@ -93,8 +94,10 @@ export function ProjectDetailPage() {
             navigate('/projects')
           }}
           onDelete={async () => {
-            await deleteProject(project.id)
+            const id = project.id
+            await deleteProject(id)
             navigate('/projects')
+            showUndoToast(t('common.deletedToast'), () => restoreProject(id))
           }}
         />
       )}
@@ -124,8 +127,10 @@ export function ProjectDetailPage() {
           onDelete={
             editingTodo !== 'new'
               ? async () => {
-                  await deleteTodo(editingTodo.id)
+                  const id = editingTodo.id
+                  await deleteTodo(id)
                   setEditingTodo(null)
+                  showUndoToast(t('common.deletedToast'), () => restoreTodo(id))
                 }
               : undefined
           }

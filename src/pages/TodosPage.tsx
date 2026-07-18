@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { useAppSettings } from '../state/useAppSettings'
 import { useTodos, useOverdueTodos } from '../state/useTodos'
-import { createTodo, updateTodo, archiveTodo, deleteTodo, moveToSomeday, promoteSomeday } from '../data/todos'
+import { createTodo, updateTodo, archiveTodo, deleteTodo, restoreTodo, moveToSomeday, promoteSomeday } from '../data/todos'
+import { showUndoToast } from '../state/toast'
 import { TodoForm } from '../components/todos/TodoForm'
 import { TodoItem } from '../components/todos/TodoItem'
 import { SomedayPromoteForm } from '../components/todos/SomedayPromoteForm'
@@ -27,6 +28,19 @@ export function TodosPage() {
   const [tab, setTab] = useState<Tab>('open')
   const [promoting, setPromoting] = useState<Todo | null>(null)
   const [quickAddTitle, setQuickAddTitle] = useState('')
+  const [searchParams, setSearchParams] = useSearchParams()
+
+  // Article 49 — the FAB's "Task" option opens the real full TodoForm (not
+  // the title-only quick-add row above), navigating here with ?new=1.
+  useEffect(() => {
+    if (searchParams.get('new') === '1') {
+      setCreating(true)
+      setSearchParams((prev) => {
+        prev.delete('new')
+        return prev
+      })
+    }
+  }, [searchParams, setSearchParams])
 
   async function submitQuickAdd() {
     const title = quickAddTitle.trim()
@@ -158,8 +172,10 @@ export function TodosPage() {
           onDelete={
             editingTodo
               ? async () => {
-                  await deleteTodo(editingTodo.id)
+                  const id = editingTodo.id
+                  await deleteTodo(id)
                   closeForm()
+                  showUndoToast(t('common.deletedToast'), () => restoreTodo(id))
                 }
               : undefined
           }

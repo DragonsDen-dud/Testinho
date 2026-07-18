@@ -28,3 +28,15 @@ export function useCurrentScheduledReport(
     return rows[0]
   }, [spaceId, scope])
 }
+
+/** Article 48 — every DiagnosticEntry for a Space, for global search.
+ * DiagnosticEntry has no deletedAt/Trash concept (unlike Habit/Todo/
+ * Project), so there's nothing to exclude here. */
+export function useDiagnosticEntries(spaceId: string | null | undefined) {
+  return (
+    useLiveQuery(async () => {
+      if (!spaceId) return []
+      return db.diagnosticEntries.where('spaceId').equals(spaceId).toArray()
+    }, [spaceId]) ?? []
+  )
+}

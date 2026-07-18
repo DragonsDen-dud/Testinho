@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useSearchParams } from 'react-router-dom'
 import { useAppSettings } from '../state/useAppSettings'
 import { useActivePrompts, usePrompts, useJournalEntries } from '../state/useJournal'
 import { createJournalEntry, updateJournalEntry, deleteJournalEntry } from '../data/journal'
@@ -21,6 +22,35 @@ export function JournalPage() {
   const entries = useJournalEntries(spaceId)
   const [composing, setComposing] = useState<{ prompt?: JournalPrompt; entry?: JournalEntry } | null>(null)
   const [managingPrompts, setManagingPrompts] = useState(false)
+  const [searchParams, setSearchParams] = useSearchParams()
+
+  // Article 49 — the FAB's "Journal entry" option opens the same free-entry
+  // composer as the "+ Free entry" button, via ?new=1.
+  // Article 48 — a search result for a specific entry deep-links here via
+  // ?entry=<id>, since this page (not a per-entry route) is JournalEntry's
+  // real screen.
+  useEffect(() => {
+    if (searchParams.get('new') === '1') {
+      setComposing({})
+      setSearchParams((prev) => {
+        prev.delete('new')
+        return prev
+      })
+      return
+    }
+    const entryId = searchParams.get('entry')
+    if (entryId) {
+      const entry = entries.find((e) => e.id === entryId)
+      if (entry) {
+        setComposing({ prompt: promptFor(entry), entry })
+        setSearchParams((prev) => {
+          prev.delete('entry')
+          return prev
+        })
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams, setSearchParams, entries])
 
   function promptFor(entry: JournalEntry): JournalPrompt | undefined {
     return entry.promptId ? allPrompts.find((p) => p.id === entry.promptId) : undefined

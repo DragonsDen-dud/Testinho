@@ -16,7 +16,9 @@
     "confirmDelete": "Delete this? This can't be undone.",
     "yes": "Yes",
     "no": "No",
-    "clear": "Clear"
+    "clear": "Clear",
+    "deletedToast": "Deleted.",
+    "undo": "Undo"
   },
   "nav": {
     "dashboard": "Today",
@@ -24,6 +26,7 @@
     "todos": "Tasks",
     "journal": "Journal",
     "planning": "Planning",
+    "search": "Search",
     "settings": "Settings"
   },
   "onboarding": {
@@ -329,5 +332,24 @@
   "voice": {
     "startListening": "Start voice input",
     "stopListening": "Stop voice input"
+  },
+  "quickAdd": {
+    "fabLabel": "Quick add",
+    "habit": "Habit",
+    "todo": "Task",
+    "journal": "Journal entry"
+  },
+  "search": {
+    "title": "Search",
+    "placeholder": "Search habits, tasks, journal, reports…",
+    "noResults": "No matches.",
+    "habitsSection": "Habits",
+    "todosSection": "Tasks",
+    "journalSection": "Journal",
+    "diagnosticsSection": "Reports"
+  },
+  "diagnostics": {
+    "notFound": "This report isn't here anymore.",
+    "noInsightYet": "No AI report generated for this period yet."
   }
 }

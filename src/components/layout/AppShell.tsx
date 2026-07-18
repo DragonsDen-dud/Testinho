@@ -1,5 +1,7 @@
 import { Outlet } from 'react-router-dom'
 import { BottomNav } from './BottomNav'
+import { QuickAddFab } from './QuickAddFab'
+import { UndoToast } from '../ui/UndoToast'
 
 export function AppShell() {
   return (
@@ -7,6 +9,8 @@ export function AppShell() {
       <div className="flex-1 overflow-y-auto pb-4">
         <Outlet />
       </div>
+      <UndoToast />
+      <QuickAddFab />
       <BottomNav />
     </div>
   )

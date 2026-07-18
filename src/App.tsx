@@ -22,6 +22,8 @@ import { ProjectDetailPage } from './pages/ProjectDetailPage'
 import { JournalPage } from './pages/JournalPage'
 import { OverdueTriagePage } from './pages/OverdueTriagePage'
 import { TimeBlocksPage } from './pages/TimeBlocksPage'
+import { DiagnosticDetailPage } from './pages/DiagnosticDetailPage'
+import { SearchPage } from './pages/SearchPage'
 
 function App() {
   const { i18n } = useTranslation()
@@ -90,6 +92,8 @@ function App() {
           <Route path="/settings/domains" element={<DomainsPage />} />
           <Route path="/settings/trash" element={<TrashPage />} />
           <Route path="/settings/time-blocks" element={<TimeBlocksPage />} />
+          <Route path="/diagnostics/:id" element={<DiagnosticDetailPage />} />
+          <Route path="/search" element={<SearchPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>

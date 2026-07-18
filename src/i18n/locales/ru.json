@@ -16,7 +16,9 @@
     "confirmDelete": "Удалить это? Действие необратимо.",
     "yes": "Да",
     "no": "Нет",
-    "clear": "Очистить"
+    "clear": "Очистить",
+    "deletedToast": "Удалено.",
+    "undo": "Отменить"
   },
   "nav": {
     "dashboard": "Сегодня",
@@ -24,6 +26,7 @@
     "todos": "Задачи",
     "journal": "Дневник",
     "planning": "Планирование",
+    "search": "Поиск",
     "settings": "Настройки"
   },
   "onboarding": {
@@ -343,5 +346,24 @@
   "voice": {
     "startListening": "Начать голосовой ввод",
     "stopListening": "Остановить голосовой ввод"
+  },
+  "quickAdd": {
+    "fabLabel": "Быстрое добавление",
+    "habit": "Привычка",
+    "todo": "Задача",
+    "journal": "Запись в дневник"
+  },
+  "search": {
+    "title": "Поиск",
+    "placeholder": "Поиск по привычкам, задачам, дневнику, отчётам…",
+    "noResults": "Ничего не найдено.",
+    "habitsSection": "Привычки",
+    "todosSection": "Задачи",
+    "journalSection": "Дневник",
+    "diagnosticsSection": "Отчёты"
+  },
+  "diagnostics": {
+    "notFound": "Этого отчёта больше нет.",
+    "noInsightYet": "Для этого периода ИИ-отчёт ещё не сформирован."
   }
 }

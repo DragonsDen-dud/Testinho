@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useAppSettings } from '../state/useAppSettings'
 import { useHabits, useLogsForDate } from '../state/useHabits'
-import { createHabit, updateHabit, archiveHabit, deleteHabit, pauseHabit, resumeHabit } from '../data/habits'
+import { createHabit, updateHabit, archiveHabit, deleteHabit, restoreHabit, pauseHabit, resumeHabit } from '../data/habits'
+import { showUndoToast } from '../state/toast'
 import { HabitForm } from '../components/habits/HabitForm'
 import { HabitCard } from '../components/habits/HabitCard'
 import { Button } from '../components/ui/Button'
@@ -21,6 +22,20 @@ export function HabitsPage() {
     todayKey(),
   )
   const [creating, setCreating] = useState(false)
+  const [searchParams, setSearchParams] = useSearchParams()
+
+  // Article 49 — the quick-add FAB navigates here with ?new=1 rather than
+  // opening the form itself, so this is the same "New habit" flow whether
+  // reached from this page's own button or from any other screen.
+  useEffect(() => {
+    if (searchParams.get('new') === '1') {
+      setCreating(true)
+      setSearchParams((prev) => {
+        prev.delete('new')
+        return prev
+      })
+    }
+  }, [searchParams, setSearchParams])
 
   const editingHabit = params.id ? habits.find((h) => h.id === params.id) : undefined
   const formOpen = creating || (!!params.id && !!editingHabit)
@@ -70,8 +85,12 @@ export function HabitsPage() {
           onDelete={
             editingHabit
               ? async () => {
-                  await deleteHabit(editingHabit.id)
+                  const id = editingHabit.id
+                  await deleteHabit(id)
                   closeForm()
+                  // Article 50 — same restoreHabit Trash already uses, so
+                  // Undo produces an identical result to a manual restore.
+                  showUndoToast(t('common.deletedToast'), () => restoreHabit(id))
                 }
               : undefined
           }
