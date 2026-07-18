@@ -10,8 +10,31 @@ export function parseAllowedOrigins(envValue: string | undefined): string[] {
   if (!envValue) return []
   return envValue
     .split(',')
-    .map((o) => o.trim())
+    .map((o) => o.trim().replace(/^['"]|['"]$/g, '')) // a value pasted into Vercel's env var UI with surrounding quotes is a common mistake — strip them rather than silently never matching
     .filter(Boolean)
+}
+
+/**
+ * Origin equality per RFC 6454 is scheme+host+port only — never
+ * case-sensitive on host, and never carries a trailing slash or path.
+ * `new URL(x).origin` canonicalizes exactly that (lowercases the host,
+ * drops any accidental trailing slash/path), so both the incoming header
+ * and each configured allowlist entry go through the same normalization
+ * before comparing. A bare strict-string comparison (the original
+ * implementation) fails on any of those cosmetic differences even when
+ * the two origins are, in fact, the same origin.
+ */
+function normalizeOrigin(value: string): string {
+  try {
+    return new URL(value).origin
+  } catch {
+    return value.trim().toLowerCase().replace(/\/+$/, '')
+  }
+}
+
+function originMatchesAllowlist(origin: string, allowedOrigins: string[]): boolean {
+  const normalized = normalizeOrigin(origin)
+  return allowedOrigins.some((allowed) => normalizeOrigin(allowed) === normalized)
 }
 
 /**
@@ -20,15 +43,16 @@ export function parseAllowedOrigins(envValue: string | undefined): string[] {
  * "cross-origin". Non-browser callers (curl, server-to-server) typically
  * send no Origin header at all — those pass this check (there's nothing to
  * compare) and rely on the rate limiter instead. Any request that DOES
- * carry an Origin header must match the configured allowlist exactly.
+ * carry an Origin header must match the configured allowlist (after
+ * normalization — see normalizeOrigin).
  */
 export function isOriginAllowed(origin: string | null, allowedOrigins: string[]): boolean {
   if (!origin) return true
-  return allowedOrigins.includes(origin)
+  return originMatchesAllowlist(origin, allowedOrigins)
 }
 
 export function corsHeaders(origin: string | null, allowedOrigins: string[]): Record<string, string> {
-  if (origin && allowedOrigins.includes(origin)) {
+  if (origin && originMatchesAllowlist(origin, allowedOrigins)) {
     return {
       'access-control-allow-origin': origin,
       'access-control-allow-methods': 'GET, POST, OPTIONS',

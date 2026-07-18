@@ -33,7 +33,11 @@ export default function handler(req: Request): Response {
   }
 
   if (!isOriginAllowed(origin, ALLOWED_ORIGINS)) {
-    return jsonResponse(403, { ok: false, error: 'origin_not_allowed' }, cors)
+    return jsonResponse(
+      403,
+      { ok: false, error: 'origin_not_allowed', detail: `received "${origin}", allowed: [${ALLOWED_ORIGINS.join(', ')}]` },
+      cors,
+    )
   }
 
   const rateLimit = checkRateLimit(rateLimitStore, clientKeyFromRequest(req), Date.now(), RATE_LIMIT_WINDOW_MS, RATE_LIMIT_MAX_REQUESTS)

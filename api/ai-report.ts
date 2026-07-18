@@ -56,7 +56,14 @@ export default async function handler(req: Request): Promise<Response> {
   if (req.method !== 'POST') return jsonResponse(405, { ok: false, error: 'method_not_allowed' }, cors)
 
   if (!isOriginAllowed(origin, ALLOWED_ORIGINS)) {
-    return jsonResponse(403, { ok: false, error: 'origin_not_allowed' }, cors)
+    // Nothing secret here — these are meant to be public frontend origins —
+    // so echoing both sides back is safe, and it's the difference between a
+    // real mismatch being instantly diagnosable versus another guessing round.
+    return jsonResponse(
+      403,
+      { ok: false, error: 'origin_not_allowed', detail: `received "${origin}", allowed: [${ALLOWED_ORIGINS.join(', ')}]` },
+      cors,
+    )
   }
 
   const rateLimit = checkRateLimit(rateLimitStore, clientKeyFromRequest(req), Date.now(), RATE_LIMIT_WINDOW_MS, RATE_LIMIT_MAX_REQUESTS)

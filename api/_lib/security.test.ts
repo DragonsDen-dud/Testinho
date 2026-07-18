@@ -12,6 +12,11 @@ describe('parseAllowedOrigins', () => {
       'https://b.example',
     ])
   })
+
+  it('strips surrounding quotes from a value — a common Vercel env-var-UI paste mistake', () => {
+    expect(parseAllowedOrigins('"https://stoa-app-cyan.vercel.app"')).toEqual(['https://stoa-app-cyan.vercel.app'])
+    expect(parseAllowedOrigins("'https://stoa-app-cyan.vercel.app'")).toEqual(['https://stoa-app-cyan.vercel.app'])
+  })
 })
 
 describe('isOriginAllowed', () => {
@@ -31,6 +36,27 @@ describe('isOriginAllowed', () => {
 
   it('rejects any Origin when the allowlist is empty (unconfigured)', () => {
     expect(isOriginAllowed('https://stoa.example', [])).toBe(false)
+  })
+
+  // Regression coverage for a real live-deploy bug: ALLOWED_ORIGINS was
+  // configured to (as far as anyone could visually confirm) the exact live
+  // origin, a redeploy had happened, and the request still 403'd. A bare
+  // strict-string comparison is exactly the kind of check that "looks
+  // right" while failing on an invisible difference — these lock in that
+  // scheme+host+port equality is what's checked now, not byte-for-byte
+  // string equality.
+  it('allows a matching origin even with a trailing slash on the configured entry', () => {
+    expect(isOriginAllowed('https://stoa.example', ['https://stoa.example/'])).toBe(true)
+  })
+
+  it('allows a matching origin regardless of host casing', () => {
+    expect(isOriginAllowed('https://STOA.example', ['https://stoa.example'])).toBe(true)
+    expect(isOriginAllowed('https://stoa.example', ['https://STOA.example'])).toBe(true)
+  })
+
+  it('still rejects a genuinely different origin after normalization', () => {
+    expect(isOriginAllowed('https://stoa.example', ['https://stoa.example.evil.com'])).toBe(false)
+    expect(isOriginAllowed('http://stoa.example', ['https://stoa.example'])).toBe(false) // different scheme
   })
 })
 

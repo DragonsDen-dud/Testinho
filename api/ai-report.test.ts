@@ -47,7 +47,9 @@ describe('api/ai-report handler (Step 2 hardening)', () => {
     const res = await handler(postRequest({ origin: 'https://evil.example' }))
     expect(res.status).toBe(403)
     const body = await res.json()
-    expect(body).toEqual({ ok: false, error: 'origin_not_allowed' })
+    expect(body.ok).toBe(false)
+    expect(body.error).toBe('origin_not_allowed')
+    expect(body.detail).toContain('https://evil.example')
     expect(fetchSpy).not.toHaveBeenCalled()
   })
 

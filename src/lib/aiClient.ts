@@ -43,9 +43,12 @@ export async function callAiProxy(input: AiCallInput): Promise<AiCallResult> {
       // both UI paths currently show only a generic "couldn't reach it"
       // message — this is the one place that always sees the real reason,
       // so it's the one place that logs it, rather than duplicating this in
-      // every call site.
-      console.error('[aiClient] ai-report request failed:', res.status, error)
-      return { ok: false, error }
+      // every call site. `detail` (e.g. origin_not_allowed's received-vs-
+      // allowed breakdown) is optional and only some error codes set it —
+      // folded into the surfaced string when present so it's visible
+      // wherever `error` is already shown, not just in the console.
+      console.error('[aiClient] ai-report request failed:', res.status, error, data?.detail)
+      return { ok: false, error: data?.detail ? `${error}: ${data.detail}` : error }
     }
     return { ok: true, text: data.text }
   } catch (err) {

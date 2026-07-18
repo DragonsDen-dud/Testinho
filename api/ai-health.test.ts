@@ -33,7 +33,9 @@ describe('api/ai-health handler (Step 2 hardening)', () => {
     )
     expect(res.status).toBe(403)
     const body = await res.json()
-    expect(body).toEqual({ ok: false, error: 'origin_not_allowed' })
+    expect(body.ok).toBe(false)
+    expect(body.error).toBe('origin_not_allowed')
+    expect(body.detail).toContain('https://evil.example')
   })
 
   it('answers a CORS preflight (OPTIONS) with 204 and no body', async () => {
