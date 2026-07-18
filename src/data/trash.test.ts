@@ -22,6 +22,7 @@ describe('purgeExpiredTrash (Article 20 auto-purge)', () => {
       activeSpaceId: SPACE_ID,
       homeScreenModuleOrder: ['habits', 'todos'],
       onboardingComplete: true,
+      crossSpaceOverviewEnabled: false,
       trashRetentionDays: 7,
     })
 

@@ -34,6 +34,7 @@ async function seedOneRowPerTable() {
     activeSpaceId: 'space-1',
     homeScreenModuleOrder: ['todos', 'habits'],
     onboardingComplete: true,
+    crossSpaceOverviewEnabled: false,
     trashRetentionDays: 30,
     claudeApiKey: 'sk-ant-test-key',
   }

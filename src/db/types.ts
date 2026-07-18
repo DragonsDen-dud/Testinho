@@ -18,6 +18,12 @@ export interface AppSettings {
   activeSpaceId: string | null
   homeScreenModuleOrder: string[]
   onboardingComplete: boolean
+  // Article 34 — Phase 2, off by default. The cross-Space aggregated-%
+  // overview screen itself is deferred; this field exists now so the
+  // eventual feature has a toggle to read rather than needing a later
+  // migration. Optional, not required: like every other field added after
+  // launch, existing rows predate it — undefined means "off", same as false.
+  crossSpaceOverviewEnabled?: boolean
   trashRetentionDays: number
   overdueBannerLastShownDate?: string
   timeBlockRangeHintDismissed?: boolean

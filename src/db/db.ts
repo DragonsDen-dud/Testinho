@@ -108,6 +108,7 @@ export async function ensureAppSettings(): Promise<AppSettings> {
     activeSpaceId: null,
     homeScreenModuleOrder: ['habits', 'todos'],
     onboardingComplete: false,
+    crossSpaceOverviewEnabled: false,
     trashRetentionDays: 30,
     moodCaptureEnabled: true,
     aiModelPreference: { scheduledReport: 'haiku', freeformQuery: 'haiku' },
