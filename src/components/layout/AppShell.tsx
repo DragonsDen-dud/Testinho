@@ -2,6 +2,7 @@ import { Outlet } from 'react-router-dom'
 import { BottomNav } from './BottomNav'
 import { QuickAddFab } from './QuickAddFab'
 import { UndoToast } from '../ui/UndoToast'
+import { PwaUpdateBanner } from '../pwa/PwaUpdateBanner'
 import { WhatsNewSheet } from '../whatsnew/WhatsNewSheet'
 import { useAppSettings } from '../../state/useAppSettings'
 import { shouldShowWhatsNew } from '../../lib/changelog'
@@ -21,6 +22,7 @@ export function AppShell() {
       </div>
       {showWhatsNew && <WhatsNewSheet />}
       <UndoToast />
+      <PwaUpdateBanner />
       <QuickAddFab />
       <BottomNav />
     </div>

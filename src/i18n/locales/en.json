@@ -432,5 +432,9 @@
   "diagnostics": {
     "notFound": "This report isn't here anymore.",
     "noInsightYet": "No AI report generated for this period yet."
+  },
+  "pwa": {
+    "updateAvailable": "A new version is ready.",
+    "refresh": "Refresh"
   }
 }

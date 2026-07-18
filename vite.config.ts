@@ -9,7 +9,13 @@ export default defineConfig({
     react(),
     tailwindcss(),
     VitePWA({
-      registerType: 'autoUpdate',
+      // 'prompt' (not 'autoUpdate') so the app controls registration itself
+      // via virtual:pwa-register — see src/state/pwaUpdate.ts. autoUpdate's
+      // injected register script has no hook for a UI prompt; it silently
+      // waits for a natural navigation/reload to actually surface a new
+      // build, which was the "looks unfixed until you fully close and
+      // reopen" gotcha documented in README.md before this round.
+      registerType: 'prompt',
       includeAssets: ['favicon.svg'],
       manifest: {
         name: 'STOA',
