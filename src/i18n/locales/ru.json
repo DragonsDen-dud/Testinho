@@ -248,6 +248,7 @@
     "manageDomains": "Управление сферами жизни",
     "manageTimeBlocks": "Время дня",
     "manageTrash": "Корзина",
+    "checkDatabase": "Проверить базу данных",
     "moodCaptureEnabled": "Спрашивать настроение после отметки привычки",
     "homeScreenOrder": "Порядок на главном экране (перетащите для изменения)",
     "about": "О приложении",
@@ -379,6 +380,35 @@
   "photo": {
     "attach": "Прикрепить фото",
     "compressing": "Сжатие…"
+  },
+  "integrity": {
+    "title": "Проверка целостности данных",
+    "hint": "Сканирует локальные данные на этом устройстве на предмет ссылок на записи, которых больше не существует, и позволяет исправить каждую из них.",
+    "rescan": "Сканировать снова",
+    "scanning": "Сканирование…",
+    "noIssues": "Проблем не найдено.",
+    "orphanDescription": "Запись «{{table}}» содержит ссылку {{field}}, которая больше не существует ({{count}}).",
+    "clearReference": "Очистить ссылку",
+    "deleteRecord": "Удалить запись",
+    "deleteRecordConfirm": "Удалить эту запись полностью? Действие необратимо.",
+    "tableAppSettings": "Настройки",
+    "tableSpaces": "Пространство",
+    "tableLifeDomains": "Сфера жизни",
+    "tableTimeBlocks": "Время дня",
+    "tablePriorityLevels": "Приоритет",
+    "tableHabits": "Привычка",
+    "tableHabitLogs": "Отметка привычки",
+    "tableTodos": "Задача",
+    "tablePlanEntries": "План на день",
+    "tableProjects": "Проект",
+    "tableJournalPrompts": "Промпт дневника",
+    "tableJournalEntries": "Запись в дневнике",
+    "tableDiagnosticEntries": "ИИ-отчёт",
+    "tableReminderStates": "Напоминание"
+  },
+  "whatsNew": {
+    "title": "Что нового в {{version}}",
+    "gotIt": "Понятно"
   },
   "quickAdd": {
     "fabLabel": "Быстрое добавление",

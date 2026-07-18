@@ -24,6 +24,7 @@ import { OverdueTriagePage } from './pages/OverdueTriagePage'
 import { TimeBlocksPage } from './pages/TimeBlocksPage'
 import { DiagnosticDetailPage } from './pages/DiagnosticDetailPage'
 import { SearchPage } from './pages/SearchPage'
+import { IntegrityCheckPage } from './pages/IntegrityCheckPage'
 
 function App() {
   const { i18n } = useTranslation()
@@ -91,6 +92,7 @@ function App() {
           <Route path="/settings/spaces" element={<SpacesPage />} />
           <Route path="/settings/domains" element={<DomainsPage />} />
           <Route path="/settings/trash" element={<TrashPage />} />
+          <Route path="/settings/integrity-check" element={<IntegrityCheckPage />} />
           <Route path="/settings/time-blocks" element={<TimeBlocksPage />} />
           <Route path="/diagnostics/:id" element={<DiagnosticDetailPage />} />
           <Route path="/search" element={<SearchPage />} />

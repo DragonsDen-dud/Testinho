@@ -98,6 +98,12 @@ export function SettingsPage() {
       >
         {t('settings.manageTrash')} →
       </button>
+      <button
+        className="text-left text-sm py-2.5 border-t border-[var(--stoa-border)]"
+        onClick={() => navigate('/settings/integrity-check')}
+      >
+        {t('settings.checkDatabase')} →
+      </button>
 
       <RemindersSettingsSection />
 

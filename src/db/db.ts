@@ -15,6 +15,7 @@ import type {
   DiagnosticEntry,
   ReminderState,
 } from './types'
+import { CURRENT_VERSION } from '../lib/changelog'
 
 export class StoaDatabase extends Dexie {
   appSettings!: Table<AppSettings, string>
@@ -117,6 +118,10 @@ export async function ensureAppSettings(): Promise<AppSettings> {
     quietHours: { enabled: false, start: '22:00', end: '07:00' },
     morningDigest: { enabled: false, time: '08:00' },
     backupReminderIntervalDays: 30,
+    // A brand-new install has seen nothing yet — seeding this to the
+    // current version means a first-time user never gets a changelog nag
+    // for changes that predate their very first session.
+    lastSeenChangelogVersion: CURRENT_VERSION,
   }
   await db.appSettings.put(defaults)
   return defaults

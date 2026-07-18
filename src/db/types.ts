@@ -47,6 +47,11 @@ export interface AppSettings {
   lastBackupExportedAt?: string // YYYY-MM-DD
   backupReminderIntervalDays?: number // default 30
   backupReminderSnoozedUntil?: string // YYYY-MM-DD, set by "remind me later"
+  // Article 56 — undefined means "never seen any version's What's New
+  // sheet". ensureAppSettings seeds this to the current version for a
+  // brand-new install, so a first-time user never gets a changelog nag
+  // about changes that predate their very first session.
+  lastSeenChangelogVersion?: string
 }
 
 export interface ScheduledAiReportSettings {

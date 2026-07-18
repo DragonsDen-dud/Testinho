@@ -240,6 +240,7 @@
     "manageDomains": "Manage life domains",
     "manageTimeBlocks": "Time Blocks",
     "manageTrash": "Trash",
+    "checkDatabase": "Check Database",
     "moodCaptureEnabled": "Ask my mood after habit check-ins",
     "homeScreenOrder": "Home screen order (drag to reorder)",
     "about": "About",
@@ -361,6 +362,35 @@
   "photo": {
     "attach": "Attach photo",
     "compressing": "Compressing…"
+  },
+  "integrity": {
+    "title": "Data Integrity Check",
+    "hint": "Scans this device's local data for references pointing at records that no longer exist, and lets you fix each one.",
+    "rescan": "Scan again",
+    "scanning": "Scanning…",
+    "noIssues": "No issues found.",
+    "orphanDescription": "{{table}} record has a {{field}} reference that no longer exists ({{count}}).",
+    "clearReference": "Clear reference",
+    "deleteRecord": "Delete record",
+    "deleteRecordConfirm": "Delete this record entirely? This can't be undone.",
+    "tableAppSettings": "Settings",
+    "tableSpaces": "Space",
+    "tableLifeDomains": "Domain",
+    "tableTimeBlocks": "Time Block",
+    "tablePriorityLevels": "Priority",
+    "tableHabits": "Habit",
+    "tableHabitLogs": "Habit check-in",
+    "tableTodos": "Task",
+    "tablePlanEntries": "Day plan",
+    "tableProjects": "Project",
+    "tableJournalPrompts": "Journal prompt",
+    "tableJournalEntries": "Journal entry",
+    "tableDiagnosticEntries": "AI report",
+    "tableReminderStates": "Reminder"
+  },
+  "whatsNew": {
+    "title": "What's new in {{version}}",
+    "gotIt": "Got it"
   },
   "quickAdd": {
     "fabLabel": "Quick add",
