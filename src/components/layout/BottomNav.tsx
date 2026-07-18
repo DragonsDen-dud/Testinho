@@ -24,7 +24,10 @@ export function BottomNav() {
   const hasUnviewedReport = useHasUnviewedScheduledReport(settings?.activeSpaceId)
 
   return (
-    <nav className="sticky bottom-0 border-t border-[var(--stoa-border)] bg-[var(--stoa-bg)]/95 backdrop-blur pb-[env(safe-area-inset-bottom)]">
+    // Flat, not glass — no backdrop-blur, a plain hairline top border and
+    // a fully solid background, consistent with the no-glass decision
+    // already made for the Tasks tab redesign.
+    <nav className="sticky bottom-0 border-t border-[var(--stoa-border)] bg-[var(--stoa-bg)] pb-[env(safe-area-inset-bottom)]">
       <div className="max-w-md mx-auto flex justify-around">
         {items.map((item) => (
           <NavLink
@@ -32,21 +35,29 @@ export function BottomNav() {
             to={item.to}
             end={item.to === '/'}
             className={({ isActive }) =>
-              `flex flex-col items-center gap-0.5 py-2 px-1 text-[10px] flex-1 ${
-                isActive ? 'text-[var(--stoa-accent)]' : 'text-[var(--stoa-text-muted)]'
+              `flex flex-col items-center justify-center gap-0.5 min-h-11 flex-1 text-[10px] transition-opacity duration-150 ${
+                isActive ? 'text-[var(--stoa-accent)] opacity-100' : 'text-[var(--stoa-text-muted)] opacity-50'
               }`
             }
           >
-            <span className="relative text-base leading-none">
-              {item.icon}
-              {item.key === 'analytics' && hasUnviewedReport && (
+            {({ isActive }) => (
+              <>
                 <span
-                  aria-label={t('analytics.unviewedReportBadge')}
-                  className="absolute -top-0.5 -right-1.5 w-2 h-2 rounded-full bg-[var(--stoa-danger)]"
-                />
-              )}
-            </span>
-            {t(`nav.${item.key}`)}
+                  className={`relative flex items-center justify-center w-8 h-8 rounded-full text-base leading-none transition-transform duration-150 active:scale-90 ${
+                    isActive ? 'bg-[var(--stoa-accent-soft)]' : ''
+                  }`}
+                >
+                  {item.icon}
+                  {item.key === 'analytics' && hasUnviewedReport && (
+                    <span
+                      aria-label={t('analytics.unviewedReportBadge')}
+                      className="absolute top-0.5 right-1 w-2 h-2 rounded-full bg-[var(--stoa-danger)]"
+                    />
+                  )}
+                </span>
+                {t(`nav.${item.key}`)}
+              </>
+            )}
           </NavLink>
         ))}
       </div>

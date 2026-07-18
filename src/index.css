@@ -63,3 +63,24 @@ body {
 * {
   box-sizing: border-box;
 }
+
+/* Bottom-tab-switch content transition — a gentle fade+settle on the new
+   tab's content, not a hard swap. Ease-out, no bounce/spring: this is
+   everyday chrome the user sees dozens of times a day, not a moment worth
+   celebrating. Keyed by top-level route segment in AppShell, so it fires
+   on an actual tab switch (Habits -> Tasks) but not on in-tab navigation
+   (opening a Todo's edit sheet), which would otherwise re-fade on every
+   detail-screen push. */
+@keyframes tab-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.tab-fade-in {
+  animation: tab-fade-in 180ms ease-out both;
+}
