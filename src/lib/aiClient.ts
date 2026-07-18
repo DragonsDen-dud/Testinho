@@ -13,6 +13,7 @@ export interface AiCallInput {
   question?: string
   habitName?: string
   northStar?: string
+  priorFeedback?: string
   apiKey: string
   model: string
 }
@@ -31,6 +32,7 @@ export async function callAiProxy(input: AiCallInput): Promise<AiCallResult> {
           question: input.question,
           habitName: input.habitName,
           northStar: input.northStar,
+          priorFeedback: input.priorFeedback,
         },
         apiKey: input.apiKey,
         model: input.model,

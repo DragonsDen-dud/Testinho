@@ -5,6 +5,10 @@ export interface AiPromptContext {
   northStar?: string
   question?: string
   habitName?: string
+  // Article 12/16 — the prior period's DiagnosticEntry.userFeedback for the
+  // same Space+scope, scheduled_template only. Undefined/omitted whenever
+  // there's no prior entry or it had no feedback — never a placeholder.
+  priorFeedback?: string
 }
 
 // Article 16 — two separate system prompts, not one prompt with a mode flag.
@@ -41,6 +45,18 @@ export function buildUserMessage(reportType: ReportType, ctx: AiPromptContext): 
     if (ctx.habitName) parts.push(`This question is specifically about the habit "${ctx.habitName}".`)
   }
   parts.push(`Data (autoStats, computed locally ahead of time, treat as ground truth):\n${JSON.stringify(ctx.autoStats, null, 2)}`)
+  // Placed right after autoStats, ahead of North Star: this is the user's
+  // own reflection on the *same* reporting cycle the "Comparison to
+  // previous period" section is about, a much tighter tie to this call's
+  // purpose than North Star's broader, rarer, opt-in identity/goals context
+  // — reportType-gated even though nothing currently calls this with
+  // priorFeedback set for freeform_query, so the guard isn't just relying
+  // on caller discipline.
+  if (reportType === 'scheduled_template' && ctx.priorFeedback) {
+    parts.push(
+      `The user's own written reflection from the previous period (their own words — acknowledge it if it's relevant to this period's data, but don't force a reference if it doesn't naturally fit):\n${ctx.priorFeedback}`,
+    )
+  }
   if (ctx.northStar) {
     parts.push(
       `The user's North Star (their own stated long-term intent, included only because they explicitly opted in for this request):\n${ctx.northStar}`,

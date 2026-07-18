@@ -264,6 +264,121 @@ describe('runMonthlyScheduledReportIfDue (Article 12 month scope)', () => {
   })
 })
 
+describe('prior-period feedback context (Article 12/16)', () => {
+  it('omits priorFeedback when this is the first-ever week-scope report for the Space', async () => {
+    await db.appSettings.update('singleton', { claudeApiKey: 'sk-test' })
+    checkAiHealth.mockResolvedValue(true)
+    callAiProxy.mockResolvedValue({ ok: true, text: 'Weekly summary.' })
+
+    await runWeeklyScheduledReportIfDue(SPACE_ID, '2026-07-16')
+
+    expect(callAiProxy).toHaveBeenCalledWith(expect.objectContaining({ priorFeedback: undefined }))
+  })
+
+  it("includes the most recent prior week-scope entry's feedback, regardless of generatedBy", async () => {
+    await db.appSettings.update('singleton', { claudeApiKey: 'sk-test' })
+    checkAiHealth.mockResolvedValue(true)
+    callAiProxy.mockResolvedValue({ ok: true, text: 'Weekly summary.' })
+
+    // A prior week (2026-07-06..2026-07-12), generatedBy 'manual' (e.g. a
+    // freeform_query entry) — still eligible; the requirement is "the
+    // user's last written reflection of this scope," not "the last
+    // scheduled report specifically."
+    await db.diagnosticEntries.put({
+      id: 'prior-week',
+      spaceId: SPACE_ID,
+      periodStart: '2026-07-06',
+      periodEnd: '2026-07-12',
+      scope: 'week',
+      autoStats: {},
+      userFeedback: 'Tuesdays were rough this week.',
+      aiInsight: 'Some earlier insight.',
+      reportType: 'freeform_query',
+      includedNorthStarContext: false,
+      generatedBy: 'manual',
+    })
+
+    await runWeeklyScheduledReportIfDue(SPACE_ID, '2026-07-16')
+
+    expect(callAiProxy).toHaveBeenCalledWith(expect.objectContaining({ priorFeedback: 'Tuesdays were rough this week.' }))
+  })
+
+  it('omits priorFeedback when the most recent prior entry has empty feedback, even if an older one has some', async () => {
+    await db.appSettings.update('singleton', { claudeApiKey: 'sk-test' })
+    checkAiHealth.mockResolvedValue(true)
+    callAiProxy.mockResolvedValue({ ok: true, text: 'Weekly summary.' })
+
+    await db.diagnosticEntries.put({
+      id: 'older-week',
+      spaceId: SPACE_ID,
+      periodStart: '2026-06-29',
+      periodEnd: '2026-07-05',
+      scope: 'week',
+      autoStats: {},
+      userFeedback: 'An older reflection.',
+      aiInsight: 'x',
+      reportType: 'scheduled_template',
+      includedNorthStarContext: false,
+      generatedBy: 'scheduled',
+    })
+    await db.diagnosticEntries.put({
+      id: 'most-recent-prior-week',
+      spaceId: SPACE_ID,
+      periodStart: '2026-07-06',
+      periodEnd: '2026-07-12',
+      scope: 'week',
+      autoStats: {},
+      userFeedback: '', // no feedback written for the most recent prior period
+      aiInsight: 'y',
+      reportType: 'scheduled_template',
+      includedNorthStarContext: false,
+      generatedBy: 'scheduled',
+    })
+
+    await runWeeklyScheduledReportIfDue(SPACE_ID, '2026-07-16')
+
+    expect(callAiProxy).toHaveBeenCalledWith(expect.objectContaining({ priorFeedback: undefined }))
+  })
+
+  it('a week-scope entry never leaks into a month-scope report\'s priorFeedback', async () => {
+    await db.appSettings.update('singleton', { claudeApiKey: 'sk-test' })
+    checkAiHealth.mockResolvedValue(true)
+    callAiProxy.mockResolvedValue({ ok: true, text: 'Monthly summary.' })
+
+    await db.diagnosticEntries.put({
+      id: 'prior-week-only',
+      spaceId: SPACE_ID,
+      periodStart: '2026-06-01',
+      periodEnd: '2026-06-07',
+      scope: 'week',
+      autoStats: {},
+      userFeedback: 'A week-scope reflection.',
+      aiInsight: 'x',
+      reportType: 'scheduled_template',
+      includedNorthStarContext: false,
+      generatedBy: 'scheduled',
+    })
+
+    await runMonthlyScheduledReportIfDue(SPACE_ID, '2026-07-16')
+
+    expect(callAiProxy).toHaveBeenCalledWith(expect.objectContaining({ priorFeedback: undefined }))
+  })
+
+  it("a prior month-scope entry's feedback is picked up for the next month-scope report", async () => {
+    await db.appSettings.update('singleton', { claudeApiKey: 'sk-test' })
+    checkAiHealth.mockResolvedValue(true)
+    callAiProxy.mockResolvedValue({ ok: true, text: 'Monthly summary.' })
+
+    const first = await runMonthlyScheduledReportIfDue(SPACE_ID, '2026-06-01')
+    await db.diagnosticEntries.update(first!.id, { userFeedback: 'June was mixed.' })
+    callAiProxy.mockClear()
+
+    await runMonthlyScheduledReportIfDue(SPACE_ID, '2026-07-31') // 31 days after June's periodEnd
+
+    expect(callAiProxy).toHaveBeenCalledWith(expect.objectContaining({ priorFeedback: 'June was mixed.' }))
+  })
+})
+
 describe('runScheduledReportsIfDue — both scopes on the same app-open (Article 12)', () => {
   it('fires both week and month on the same check when both are due, as two separate non-clobbering rows', async () => {
     await db.appSettings.update('singleton', { claudeApiKey: 'sk-test' })

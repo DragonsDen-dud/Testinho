@@ -36,6 +36,7 @@ interface RequestBody {
     question?: string
     habitName?: string
     northStar?: string
+    priorFeedback?: string
   }
   apiKey: string
   model: string

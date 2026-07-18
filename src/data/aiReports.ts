@@ -82,6 +82,32 @@ async function lastScheduledPeriodEndFor(spaceId: string, scope: 'week' | 'month
     .at(-1)
 }
 
+/**
+ * Article 12/16 — the most recent genuinely-prior DiagnosticEntry for this
+ * Space+scope (periodEnd strictly before the current period's start, so
+ * the entry `upsertAutoStats` just upserted for *this* period is never
+ * picked up as its own "prior" entry). `generatedBy` is deliberately not
+ * filtered — a manual (freeform_query) entry's feedback is just as eligible
+ * as a scheduled one's, since the requirement is "the user's last written
+ * reflection of this scope," not "the last scheduled report specifically."
+ * Only the single most recent prior entry is considered; an older entry
+ * further back that happens to have feedback is not searched for as a
+ * fallback if the immediately-prior one has none.
+ */
+async function getPriorPeriodFeedback(
+  spaceId: string,
+  scope: 'week' | 'month',
+  currentPeriodStart: string,
+): Promise<string | undefined> {
+  const priorEntries = await db.diagnosticEntries
+    .where('spaceId')
+    .equals(spaceId)
+    .filter((e) => e.scope === scope && e.periodEnd < currentPeriodStart)
+    .toArray()
+  const mostRecent = priorEntries.sort((a, b) => b.periodEnd.localeCompare(a.periodEnd))[0]
+  return mostRecent?.userFeedback || undefined
+}
+
 /** Shared tail once a scope's due-check has already passed: refresh autoStats, call the AI, save. */
 async function generateScheduledReport(
   spaceId: string,
@@ -90,10 +116,12 @@ async function generateScheduledReport(
   settings: AppSettings,
 ): Promise<DiagnosticEntry | null> {
   const entry = await upsertAutoStats(spaceId, today)
+  const priorFeedback = await getPriorPeriodFeedback(spaceId, entry.scope, entry.periodStart)
   const model = resolveModelId(settings.aiModelPreference?.scheduledReport ?? 'haiku')
   const result = await callAiProxy({
     reportType: 'scheduled_template',
     autoStats: entry.autoStats,
+    priorFeedback,
     apiKey: settings.claudeApiKey!,
     model,
   })

@@ -1,14 +1,10 @@
-import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db/db'
-import { updateDiagnosticFeedback } from '../data/diagnostics'
 import { formatHumanDate } from '../lib/date'
-import { TextArea } from '../components/ui/Input'
-import { MicButton } from '../components/ui/MicButton'
 import { EmptyState } from '../components/ui/EmptyState'
-import { appendTranscript } from '../lib/speechRecognition'
+import { FeedbackField } from '../components/diagnostics/FeedbackField'
 
 /**
  * Article 48 — search needs a real destination for a DiagnosticEntry
@@ -22,9 +18,6 @@ export function DiagnosticDetailPage() {
   const navigate = useNavigate()
   const { id } = useParams()
   const entry = useLiveQuery(() => (id ? db.diagnosticEntries.get(id) : undefined), [id])
-  const [feedback, setFeedback] = useState<string | null>(null)
-
-  const feedbackValue = feedback ?? entry?.userFeedback ?? ''
 
   return (
     <div className="p-4 max-w-md mx-auto w-full flex flex-col gap-4">
@@ -53,26 +46,7 @@ export function DiagnosticDetailPage() {
             <EmptyState text={t('diagnostics.noInsightYet')} />
           )}
 
-          <div className="flex flex-col gap-1.5">
-            <div className="flex gap-2 items-start">
-              <TextArea
-                rows={2}
-                placeholder={t('dashboard.reportFeedbackPlaceholder')}
-                value={feedbackValue}
-                onChange={(e) => setFeedback(e.target.value)}
-                onBlur={() => updateDiagnosticFeedback(entry.id, feedbackValue.trim())}
-                className="flex-1 text-sm"
-              />
-              <MicButton
-                lang={i18n.language}
-                onTranscript={(transcript) => {
-                  const merged = appendTranscript(feedbackValue, transcript)
-                  setFeedback(merged)
-                  void updateDiagnosticFeedback(entry.id, merged.trim())
-                }}
-              />
-            </div>
-          </div>
+          <FeedbackField key={entry.id} entryId={entry.id} initialValue={entry.userFeedback} />
         </>
       )}
     </div>

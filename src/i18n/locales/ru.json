@@ -2,6 +2,7 @@
   "common": {
     "appName": "STOA",
     "save": "Сохранить",
+    "saved": "Сохранено",
     "cancel": "Отмена",
     "delete": "Удалить",
     "edit": "Изменить",

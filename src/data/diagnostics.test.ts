@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { db } from '../db/db'
-import { upsertWeeklyAutoStats, upsertMonthlyAutoStats, markDiagnosticViewed } from './diagnostics'
+import { upsertWeeklyAutoStats, upsertMonthlyAutoStats, markDiagnosticViewed, updateDiagnosticFeedback } from './diagnostics'
 import { createHabit, logHabit } from './habits'
 import type { DiagnosticEntry } from '../db/types'
 
@@ -147,5 +147,30 @@ describe('markDiagnosticViewed (Article 12 — Analytics unviewed-report badge)'
 
   it('is a no-op for a nonexistent id, not a throw', async () => {
     await expect(markDiagnosticViewed('missing-id')).resolves.toBeUndefined()
+  })
+})
+
+describe('updateDiagnosticFeedback (explicit Save action)', () => {
+  it('persists userFeedback on the specific entry', async () => {
+    await db.diagnosticEntries.put(scheduledEntry())
+
+    await updateDiagnosticFeedback('entry-1', 'This week felt steady.')
+
+    const updated = await db.diagnosticEntries.get('entry-1')
+    expect(updated?.userFeedback).toBe('This week felt steady.')
+  })
+
+  it('does not affect any other entry\'s userFeedback', async () => {
+    await db.diagnosticEntries.put(scheduledEntry({ id: 'entry-1', userFeedback: 'original A' }))
+    await db.diagnosticEntries.put(
+      scheduledEntry({ id: 'entry-2', scope: 'month', periodStart: '2026-07-01', periodEnd: '2026-07-31', userFeedback: 'original B' }),
+    )
+
+    await updateDiagnosticFeedback('entry-1', 'updated A')
+
+    const entryOne = await db.diagnosticEntries.get('entry-1')
+    const entryTwo = await db.diagnosticEntries.get('entry-2')
+    expect(entryOne?.userFeedback).toBe('updated A')
+    expect(entryTwo?.userFeedback).toBe('original B')
   })
 })

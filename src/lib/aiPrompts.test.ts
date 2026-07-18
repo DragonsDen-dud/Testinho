@@ -52,3 +52,29 @@ describe('buildUserMessage — North Star is strictly opt-in per call (Article 1
     expect(freeform).toContain('habit1')
   })
 })
+
+describe('buildUserMessage — prior-period feedback (Article 12/16)', () => {
+  const autoStats = { habit1: { weekdayPattern: null } }
+
+  it('omits the prior-feedback block entirely when not passed', () => {
+    const message = buildUserMessage('scheduled_template', { autoStats })
+    expect(message).not.toContain('previous period')
+  })
+
+  it('includes prior feedback text when passed for scheduled_template', () => {
+    const message = buildUserMessage('scheduled_template', {
+      autoStats,
+      priorFeedback: 'I felt like Tuesdays were rough.',
+    })
+    expect(message).toContain('I felt like Tuesdays were rough.')
+  })
+
+  it('is reportType-gated: never included for freeform_query even if passed', () => {
+    const message = buildUserMessage('freeform_query', {
+      autoStats,
+      question: 'How am I doing?',
+      priorFeedback: 'I felt like Tuesdays were rough.',
+    })
+    expect(message).not.toContain('I felt like Tuesdays were rough.')
+  })
+})
