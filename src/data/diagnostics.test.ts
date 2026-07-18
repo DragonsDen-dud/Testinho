@@ -1,7 +1,8 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { db } from '../db/db'
-import { upsertWeeklyAutoStats, upsertMonthlyAutoStats } from './diagnostics'
+import { upsertWeeklyAutoStats, upsertMonthlyAutoStats, markDiagnosticViewed } from './diagnostics'
 import { createHabit, logHabit } from './habits'
+import type { DiagnosticEntry } from '../db/types'
 
 const SPACE_ID = 'space-1'
 
@@ -105,5 +106,46 @@ describe('upsertMonthlyAutoStats (Article 12 month scope)', () => {
     const rows = await db.diagnosticEntries.where('spaceId').equals(SPACE_ID).toArray()
     expect(rows).toHaveLength(2)
     expect(rows.map((r) => r.scope).sort()).toEqual(['month', 'week'])
+  })
+})
+
+function scheduledEntry(overrides: Partial<DiagnosticEntry> = {}): DiagnosticEntry {
+  return {
+    id: 'entry-1',
+    spaceId: SPACE_ID,
+    periodStart: '2026-07-13',
+    periodEnd: '2026-07-19',
+    scope: 'week',
+    autoStats: {},
+    userFeedback: '',
+    aiInsight: 'You did great this week.',
+    reportType: 'scheduled_template',
+    includedNorthStarContext: false,
+    generatedBy: 'scheduled',
+    ...overrides,
+  }
+}
+
+describe('markDiagnosticViewed (Article 12 — Analytics unviewed-report badge)', () => {
+  it('sets viewedAt on a not-yet-viewed entry', async () => {
+    await db.diagnosticEntries.put(scheduledEntry())
+
+    await markDiagnosticViewed('entry-1')
+
+    const updated = await db.diagnosticEntries.get('entry-1')
+    expect(updated?.viewedAt).toBeTruthy()
+  })
+
+  it('does not overwrite an already-set viewedAt on a second call', async () => {
+    await db.diagnosticEntries.put(scheduledEntry({ viewedAt: '2026-07-14T08:00:00.000Z' }))
+
+    await markDiagnosticViewed('entry-1')
+
+    const updated = await db.diagnosticEntries.get('entry-1')
+    expect(updated?.viewedAt).toBe('2026-07-14T08:00:00.000Z')
+  })
+
+  it('is a no-op for a nonexistent id, not a throw', async () => {
+    await expect(markDiagnosticViewed('missing-id')).resolves.toBeUndefined()
   })
 })

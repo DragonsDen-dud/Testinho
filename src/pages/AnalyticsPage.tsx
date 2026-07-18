@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Bar, BarChart, CartesianGrid, Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { useAppSettings } from '../state/useAppSettings'
@@ -5,7 +6,10 @@ import { useActiveSpace } from '../state/useSpaces'
 import { useHabits, useHabitLogsForHabits } from '../state/useHabits'
 import { useTodos } from '../state/useTodos'
 import { useDomains } from '../state/useDomains'
+import { useCurrentScheduledReport } from '../state/useDiagnostics'
+import { markDiagnosticViewed } from '../data/diagnostics'
 import { ChartCard } from '../components/analytics/ChartCard'
+import { ScheduledReportCard } from '../components/analytics/ScheduledReportCard'
 import { EmptyState } from '../components/ui/EmptyState'
 import {
   computeCompletionRates,
@@ -29,6 +33,21 @@ export function AnalyticsPage() {
   const todos = useTodos(settings?.activeSpaceId)
   const domains = useDomains(settings?.activeSpaceId)
   const logsByHabitId = useHabitLogsForHabits(habits.map((h) => h.id))
+  const weeklyReport = useCurrentScheduledReport(settings?.activeSpaceId, 'week')
+  const monthlyReport = useCurrentScheduledReport(settings?.activeSpaceId, 'month')
+
+  // Article 12 — a report is "viewed" simply by being visible here; there's
+  // no separate click-to-read step, matching how the old Dashboard banner
+  // needed no interaction beyond being on screen. Guarded by
+  // markDiagnosticViewed's own no-op-if-already-viewed check, so this
+  // running again on every render (e.g. after a feedback edit re-renders
+  // the page) never re-bumps an already-set viewedAt.
+  useEffect(() => {
+    if (weeklyReport) void markDiagnosticViewed(weeklyReport.id)
+  }, [weeklyReport])
+  useEffect(() => {
+    if (monthlyReport) void markDiagnosticViewed(monthlyReport.id)
+  }, [monthlyReport])
 
   const hasAnyHabits = habits.length > 0
   const hasAnyTodos = todos.length > 0
@@ -77,6 +96,9 @@ export function AnalyticsPage() {
           </div>
         )}
       </div>
+
+      {weeklyReport && <ScheduledReportCard title={t('dashboard.scheduledReportTitleWeek')} report={weeklyReport} />}
+      {monthlyReport && <ScheduledReportCard title={t('dashboard.scheduledReportTitleMonth')} report={monthlyReport} />}
 
       {!hasAnyHabits && !hasAnyTodos ? (
         <EmptyState text={t('analytics.empty')} />

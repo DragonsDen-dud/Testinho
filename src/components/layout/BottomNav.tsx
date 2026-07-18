@@ -1,5 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import { NavLink } from 'react-router-dom'
+import { useAppSettings } from '../../state/useAppSettings'
+import { useHasUnviewedScheduledReport } from '../../state/useDiagnostics'
 
 const items = [
   { to: '/', key: 'dashboard', icon: '◎' },
@@ -14,6 +16,13 @@ const items = [
 
 export function BottomNav() {
   const { t } = useTranslation()
+  const settings = useAppSettings()
+  // Article 12 — replaces the old Dashboard banner: an unread scheduled
+  // report now surfaces as a small dot on the Analytics tab instead of a
+  // popup on every app open, cleared by actually visiting Analytics (see
+  // AnalyticsPage's mark-viewed effect).
+  const hasUnviewedReport = useHasUnviewedScheduledReport(settings?.activeSpaceId)
+
   return (
     <nav className="sticky bottom-0 border-t border-[var(--stoa-border)] bg-[var(--stoa-bg)]/95 backdrop-blur pb-[env(safe-area-inset-bottom)]">
       <div className="max-w-md mx-auto flex justify-around">
@@ -28,7 +37,15 @@ export function BottomNav() {
               }`
             }
           >
-            <span className="text-base leading-none">{item.icon}</span>
+            <span className="relative text-base leading-none">
+              {item.icon}
+              {item.key === 'analytics' && hasUnviewedReport && (
+                <span
+                  aria-label={t('analytics.unviewedReportBadge')}
+                  className="absolute -top-0.5 -right-1.5 w-2 h-2 rounded-full bg-[var(--stoa-danger)]"
+                />
+              )}
+            </span>
             {t(`nav.${item.key}`)}
           </NavLink>
         ))}

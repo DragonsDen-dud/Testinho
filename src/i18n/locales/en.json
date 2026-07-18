@@ -411,7 +411,8 @@
     "taskRatioTitle": "Task breakdown",
     "moodCorrelationTitle": "Mood correlation",
     "moodCorrelationEmpty": "Not enough data yet — needs at least 5 done and 5 not-done days with mood logged, per habit.",
-    "exportPng": "Export as PNG"
+    "exportPng": "Export as PNG",
+    "unviewedReportBadge": "New report available"
   },
   "search": {
     "title": "Search",

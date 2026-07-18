@@ -256,6 +256,10 @@ export interface DiagnosticEntry {
   reportType?: 'scheduled_template' | 'freeform_query'
   includedNorthStarContext: boolean
   generatedBy: 'manual' | 'scheduled'
+  // Set the first time the user actually sees this report's content on the
+  // Analytics screen (see markDiagnosticViewed) — drives the unviewed-report
+  // badge on the Analytics nav tab. Undefined means never viewed.
+  viewedAt?: string
 }
 
 export type ReminderEntityType = 'habit' | 'todo'

@@ -7,35 +7,21 @@ import { MicButton } from '../ui/MicButton'
 import { appendTranscript } from '../../lib/speechRecognition'
 
 /**
- * Article 12 report banner, shared between week/month scopes on Dashboard.
- * Also the Article 10 target surface for DiagnosticEntry.userFeedback — no
- * UI wrote to that field before this pass, so the feedback textarea below
- * the report text is new scaffolding, not a pre-existing field being wired up.
+ * Article 12's Scheduled AI Report display, relocated here from a Dashboard
+ * banner — the report now lives permanently on Analytics for its whole
+ * period rather than appearing as a one-time popup on every app open.
+ * "Viewing" it (see AnalyticsPage's mark-viewed effect) is what clears the
+ * unviewed badge on the Analytics nav tab, so there's no dismiss button
+ * here — the section just stays visible for the rest of the period,
+ * exactly like DiagnosticDetailPage does for an older report.
  */
-export function ScheduledReportBanner({
-  title,
-  report,
-  onDismiss,
-}: {
-  title: string
-  report: DiagnosticEntry
-  onDismiss: () => void
-}) {
+export function ScheduledReportCard({ title, report }: { title: string; report: DiagnosticEntry }) {
   const { t, i18n } = useTranslation()
   const [feedback, setFeedback] = useState(report.userFeedback ?? '')
 
   return (
     <div className="rounded-xl bg-[var(--stoa-accent-soft)] px-3.5 py-2.5 text-sm flex flex-col gap-1.5">
-      <div className="flex items-start justify-between gap-2">
-        <span className="font-medium">{title}</span>
-        <button
-          aria-label={t('common.close')}
-          className="text-[var(--stoa-text-muted)] px-1 shrink-0"
-          onClick={onDismiss}
-        >
-          ×
-        </button>
-      </div>
+      <span className="font-medium">{title}</span>
       <p className="whitespace-pre-wrap text-[var(--stoa-text)]">{report.aiInsight}</p>
       <div className="flex gap-2 items-start mt-1">
         <TextArea

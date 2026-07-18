@@ -5,10 +5,8 @@ import { useAppSettings, updateAppSettings } from '../state/useAppSettings'
 import { useSpaces } from '../state/useSpaces'
 import { useHabits, useLogsForDate } from '../state/useHabits'
 import { useOpenTodosToday } from '../state/useTodos'
-import { useCurrentScheduledReport } from '../state/useDiagnostics'
 import { useConnectivity } from '../state/useConnectivity'
 import { HabitCard } from '../components/habits/HabitCard'
-import { ScheduledReportBanner } from '../components/dashboard/ScheduledReportBanner'
 import { ConnectivityPanel } from '../components/dashboard/ConnectivityPanel'
 import { BackupReminderBanner } from '../components/dashboard/BackupReminderBanner'
 import { TodoItem } from '../components/todos/TodoItem'
@@ -39,10 +37,6 @@ export function DashboardPage() {
   const { statuses: connectivityStatuses, recheck: recheckConnectivity } = useConnectivity()
   const { pullDistance, refreshing, threshold } = usePullToRefresh(recheckConnectivity)
   const backupReminderDue = settings ? isBackupReminderDue(settings, date) : false
-  const weeklyReport = useCurrentScheduledReport(settings?.activeSpaceId, 'week')
-  const monthlyReport = useCurrentScheduledReport(settings?.activeSpaceId, 'month')
-  const [weeklyReportDismissed, setWeeklyReportDismissed] = useState(false)
-  const [monthlyReportDismissed, setMonthlyReportDismissed] = useState(false)
 
   // Article 30 — once per calendar day. Deliberately does NOT latch on a
   // negative result: useOpenTodosToday's live query can resolve once for
@@ -138,22 +132,6 @@ export function DashboardPage() {
       )}
 
       {backupReminderDue && <BackupReminderBanner intervalDays={settings?.backupReminderIntervalDays ?? 30} />}
-
-      {weeklyReport && !weeklyReportDismissed && (
-        <ScheduledReportBanner
-          title={t('dashboard.scheduledReportTitleWeek')}
-          report={weeklyReport}
-          onDismiss={() => setWeeklyReportDismissed(true)}
-        />
-      )}
-
-      {monthlyReport && !monthlyReportDismissed && (
-        <ScheduledReportBanner
-          title={t('dashboard.scheduledReportTitleMonth')}
-          report={monthlyReport}
-          onDismiss={() => setMonthlyReportDismissed(true)}
-        />
-      )}
 
       {order.map((key) => sections[key]).filter(Boolean)}
     </div>

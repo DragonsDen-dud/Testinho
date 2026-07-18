@@ -431,7 +431,8 @@
     "taskRatioTitle": "Соотношение задач",
     "moodCorrelationTitle": "Корреляция с настроением",
     "moodCorrelationEmpty": "Пока недостаточно данных — нужно минимум по 5 дней выполнения и невыполнения с указанным настроением на привычку.",
-    "exportPng": "Экспорт как PNG"
+    "exportPng": "Экспорт как PNG",
+    "unviewedReportBadge": "Доступен новый отчёт"
   },
   "search": {
     "title": "Поиск",

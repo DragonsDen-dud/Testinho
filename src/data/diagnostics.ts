@@ -87,3 +87,15 @@ export async function upsertMonthlyAutoStats(spaceId: string, asOfDate: string =
 export async function updateDiagnosticFeedback(id: string, userFeedback: string): Promise<void> {
   await db.diagnosticEntries.update(id, { userFeedback })
 }
+
+/**
+ * Marks a report as seen — drives the unviewed-report badge on the
+ * Analytics nav tab. Only sets viewedAt the first time; a report already
+ * marked viewed keeps its original viewed timestamp rather than being
+ * bumped forward on every subsequent visit to Analytics.
+ */
+export async function markDiagnosticViewed(id: string): Promise<void> {
+  const existing = await db.diagnosticEntries.get(id)
+  if (!existing || existing.viewedAt) return
+  await db.diagnosticEntries.update(id, { viewedAt: new Date().toISOString() })
+}
