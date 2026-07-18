@@ -10,11 +10,13 @@ import { useConnectivity } from '../state/useConnectivity'
 import { HabitCard } from '../components/habits/HabitCard'
 import { ScheduledReportBanner } from '../components/dashboard/ScheduledReportBanner'
 import { ConnectivityPanel } from '../components/dashboard/ConnectivityPanel'
+import { BackupReminderBanner } from '../components/dashboard/BackupReminderBanner'
 import { TodoItem } from '../components/todos/TodoItem'
 import { EmptyState } from '../components/ui/EmptyState'
 import { isScheduledOnDate } from '../lib/habitStrength'
 import { shouldShowOverdueBanner } from '../lib/overdueBanner'
 import { usePullToRefresh } from '../lib/usePullToRefresh'
+import { isBackupReminderDue } from '../lib/backupReminder'
 import { todayKey } from '../lib/date'
 
 export function DashboardPage() {
@@ -36,6 +38,7 @@ export function DashboardPage() {
   const { today: todosToday, overdue, loaded: todosLoaded } = useOpenTodosToday(settings?.activeSpaceId)
   const { statuses: connectivityStatuses, recheck: recheckConnectivity } = useConnectivity()
   const { pullDistance, refreshing, threshold } = usePullToRefresh(recheckConnectivity)
+  const backupReminderDue = settings ? isBackupReminderDue(settings, date) : false
   const weeklyReport = useCurrentScheduledReport(settings?.activeSpaceId, 'week')
   const monthlyReport = useCurrentScheduledReport(settings?.activeSpaceId, 'month')
   const [weeklyReportDismissed, setWeeklyReportDismissed] = useState(false)
@@ -133,6 +136,8 @@ export function DashboardPage() {
           </button>
         </div>
       )}
+
+      {backupReminderDue && <BackupReminderBanner intervalDays={settings?.backupReminderIntervalDays ?? 30} />}
 
       {weeklyReport && !weeklyReportDismissed && (
         <ScheduledReportBanner

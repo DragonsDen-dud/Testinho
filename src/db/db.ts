@@ -116,6 +116,7 @@ export async function ensureAppSettings(): Promise<AppSettings> {
     },
     quietHours: { enabled: false, start: '22:00', end: '07:00' },
     morningDigest: { enabled: false, time: '08:00' },
+    backupReminderIntervalDays: 30,
   }
   await db.appSettings.put(defaults)
   return defaults

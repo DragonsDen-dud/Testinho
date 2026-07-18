@@ -6,6 +6,7 @@ import { Select } from '../components/ui/Input'
 import { AiSettingsSection } from '../components/settings/AiSettingsSection'
 import { RemindersSettingsSection } from '../components/settings/RemindersSettingsSection'
 import { HomeScreenOrderSection } from '../components/settings/HomeScreenOrderSection'
+import { BackupSection } from '../components/settings/BackupSection'
 import type { Language, ThemePreset } from '../db/types'
 
 export function SettingsPage() {
@@ -101,6 +102,8 @@ export function SettingsPage() {
       <RemindersSettingsSection />
 
       <AiSettingsSection />
+
+      <BackupSection />
 
       <div className="border-t border-[var(--stoa-border)] pt-4 text-xs text-[var(--stoa-text-muted)]">
         <div className="font-medium mb-1">{t('settings.about')}</div>

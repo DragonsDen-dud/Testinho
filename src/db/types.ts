@@ -42,6 +42,11 @@ export interface AppSettings {
   // reminderTimes/scheduledTime reminders. Neither toggle silences the other.
   morningDigest?: { enabled: boolean; time: string } // HH:mm
   morningDigestLastDeliveredDate?: string
+  // Article 18 — a successful export clears any snooze and updates this;
+  // undefined means "never backed up", which is due immediately.
+  lastBackupExportedAt?: string // YYYY-MM-DD
+  backupReminderIntervalDays?: number // default 30
+  backupReminderSnoozedUntil?: string // YYYY-MM-DD, set by "remind me later"
 }
 
 export interface ScheduledAiReportSettings {

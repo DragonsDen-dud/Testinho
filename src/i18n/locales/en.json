@@ -83,7 +83,9 @@
     "connectivityClaudeApi": "Claude API",
     "pullToRefresh": "Pull to refresh",
     "releaseToRefresh": "Release to refresh",
-    "refreshing": "Refreshing…"
+    "refreshing": "Refreshing…",
+    "backupReminder": "It's been a while since your last backup.",
+    "backupRemindLater": "Remind me later"
   },
   "habits": {
     "title": "Habits",
@@ -258,7 +260,17 @@
     "scheduledReportWeekEnabled": "Generate a weekly report automatically",
     "scheduledReportMonthEnabled": "Generate a monthly report automatically",
     "scheduledReportDayOfWeek": "On or after",
-    "scheduledReportCaveat": "Weekly reports run the next time you open the app on or after your chosen day; monthly reports run the next time you open the app once about 30 days have passed. Neither fires at an exact moment."
+    "scheduledReportCaveat": "Weekly reports run the next time you open the app on or after your chosen day; monthly reports run the next time you open the app once about 30 days have passed. Neither fires at an exact moment.",
+    "backupSectionTitle": "Backup",
+    "backupApiKeyNotice": "The backup file includes your Claude API key in plain text (same as it's already stored on this device) — keep it as private as you would that key.",
+    "backupExport": "Export backup",
+    "backupImport": "Import backup",
+    "backupImportHint": "Replaces everything currently on this device with the contents of the file. This can't be undone.",
+    "backupImportConfirm": "This will replace ALL current data on this device with the contents of the backup file. This can't be undone. Continue?",
+    "backupLastExported": "Last backed up {{date}}",
+    "backupNeverExported": "Never backed up",
+    "backupImportError_invalid_format": "That file doesn't look like a STOA backup.",
+    "backupImportError_unknown_table": "That file references data this version of STOA doesn't recognize."
   },
   "timeBlocks": {
     "title": "Time Blocks",
