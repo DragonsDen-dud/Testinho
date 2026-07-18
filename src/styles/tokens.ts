@@ -1,24 +1,26 @@
-// JS-side companions to src/styles/tokens.css. Durations live here (not in
-// CSS) because Framer/JS-driven transitions and measured perf traces need a
-// number, not a class name — the curve names match the --spring-*/--ease-*
-// custom properties 1:1 so a component picks a purpose, not a raw value.
+// JS-side companions to src/styles/tokens.css (Mission Control direction).
 
 export const MOTION = {
-  micro: { durationMs: 220, curve: 'var(--spring-snappy)' }, // checkbox, chip tap
-  card: { durationMs: 320, curve: 'var(--spring-standard)' }, // swipe settle, subtask expand
-  sheet: { durationMs: 400, curve: 'var(--ease-gentle)' }, // edit sheet, FAB menu
+  micro: { durationMs: 150, curve: 'var(--mc-ease-snap)' }, // checkbox, dot state change
+  card: { durationMs: 200, curve: 'var(--mc-ease-snap)' }, // subtask expand, segment fill
 } as const
 
-// PriorityLevel (src/db/types.ts) has no `color` field — the redesign brief
-// assumes one exists ("pull from the user's own PriorityLevel.color if
-// customized"), but it doesn't, and adding one would violate this round's
-// zero-data-model-changes constraint. This is a deterministic fallback ramp
-// keyed by sortOrder instead, reusing the same swatch set as
-// src/lib/presets.ts PRESET_COLORS for visual consistency with the rest of
-// the app rather than inventing a new palette.
-const PRIORITY_FALLBACK_RAMP = ['#dc2626', '#d97706', '#2563eb', '#64748b']
+// PriorityLevel (src/db/types.ts) has no `color` field — same discrepancy
+// as the prior direction. Mission Control reserves color strictly for
+// function (brief: "never decoration"), so only the top two priority
+// tiers by sortOrder get an alert color; everything else reads as neutral
+// white — an LED panel doesn't have a distinct color for every priority
+// tier, just alert / caution / normal.
+export type StatusLedColor = 'critical' | 'caution' | 'nominal'
 
-export function priorityFallbackColor(sortOrder: number): string {
-  const i = ((sortOrder % PRIORITY_FALLBACK_RAMP.length) + PRIORITY_FALLBACK_RAMP.length) % PRIORITY_FALLBACK_RAMP.length
-  return PRIORITY_FALLBACK_RAMP[i]
+export function priorityStatusColor(sortOrder: number): StatusLedColor {
+  if (sortOrder <= 0) return 'critical'
+  if (sortOrder === 1) return 'caution'
+  return 'nominal'
+}
+
+export const STATUS_LED_COLOR_VAR: Record<StatusLedColor, string> = {
+  critical: 'var(--color-status-critical)',
+  caution: 'var(--color-status-caution)',
+  nominal: 'var(--color-status-nominal)',
 }
