@@ -131,6 +131,18 @@ export async function setHabitLogMood(habitId: string, date: string, mood: numbe
   await db.habitLogs.update(existing.id, { mood })
 }
 
+/**
+ * Attaches (or clears) a free-text note to an already-saved check-in — same
+ * post-hoc, non-blocking shape as setHabitLogMood (Article 10's mic button
+ * needs an adjacent text field on the habit card to transcribe into, and
+ * none existed before this).
+ */
+export async function setHabitLogNote(habitId: string, date: string, note: string | undefined): Promise<void> {
+  const existing = await db.habitLogs.where('[habitId+date]').equals([habitId, date]).first()
+  if (!existing) return
+  await db.habitLogs.update(existing.id, { note: note || undefined })
+}
+
 export async function clearHabitLog(habitId: string, date: string): Promise<void> {
   const existing = await db.habitLogs.where('[habitId+date]').equals([habitId, date]).first()
   if (existing) await db.habitLogs.delete(existing.id)

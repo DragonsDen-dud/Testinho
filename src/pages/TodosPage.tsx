@@ -8,13 +8,16 @@ import { TodoForm } from '../components/todos/TodoForm'
 import { TodoItem } from '../components/todos/TodoItem'
 import { SomedayPromoteForm } from '../components/todos/SomedayPromoteForm'
 import { Button } from '../components/ui/Button'
+import { Input } from '../components/ui/Input'
+import { MicButton } from '../components/ui/MicButton'
 import { EmptyState } from '../components/ui/EmptyState'
+import { appendTranscript } from '../lib/speechRecognition'
 import type { Todo } from '../db/types'
 
 type Tab = 'open' | 'done' | 'someday'
 
 export function TodosPage() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const navigate = useNavigate()
   const params = useParams()
   const settings = useAppSettings()
@@ -23,6 +26,14 @@ export function TodosPage() {
   const [creating, setCreating] = useState(false)
   const [tab, setTab] = useState<Tab>('open')
   const [promoting, setPromoting] = useState<Todo | null>(null)
+  const [quickAddTitle, setQuickAddTitle] = useState('')
+
+  async function submitQuickAdd() {
+    const title = quickAddTitle.trim()
+    if (!title || !settings?.activeSpaceId) return
+    await createTodo({ spaceId: settings.activeSpaceId, title, criticalReminder: false })
+    setQuickAddTitle('')
+  }
 
   const editingTodo = params.id ? todos.find((td) => td.id === params.id) : undefined
   const formOpen = creating || (!!params.id && !!editingTodo)
@@ -44,6 +55,25 @@ export function TodosPage() {
         <h1 className="text-lg font-semibold">{t('todos.title')}</h1>
         <Button onClick={() => setCreating(true)}>+ {t('todos.newTodo')}</Button>
       </div>
+
+      <form
+        className="flex gap-2 items-center"
+        onSubmit={(e) => {
+          e.preventDefault()
+          void submitQuickAdd()
+        }}
+      >
+        <Input
+          value={quickAddTitle}
+          onChange={(e) => setQuickAddTitle(e.target.value)}
+          placeholder={t('todos.quickAddPlaceholder')}
+          className="flex-1"
+        />
+        <MicButton
+          lang={i18n.language}
+          onTranscript={(transcript) => setQuickAddTitle((prev) => appendTranscript(prev, transcript))}
+        />
+      </form>
 
       <button
         className="text-sm text-[var(--stoa-accent)] self-start"

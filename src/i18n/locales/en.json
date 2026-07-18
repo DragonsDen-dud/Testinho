@@ -73,7 +73,8 @@
     "overdueBanner_other": "{{count}} overdue tasks",
     "reviewOverdue": "Review",
     "scheduledReportTitleWeek": "This week's report",
-    "scheduledReportTitleMonth": "This month's report"
+    "scheduledReportTitleMonth": "This month's report",
+    "reportFeedbackPlaceholder": "Any reaction to this report? (optional)"
   },
   "habits": {
     "title": "Habits",
@@ -107,6 +108,7 @@
     "stakePenaltyText": "What you'll do about it",
     "note": "Note",
     "notePlaceholder": "Anything you want to remember about this habit",
+    "checkInNotePlaceholder": "Add a note about today (optional)",
     "strength": "Strength",
     "streak": "Streak",
     "daysCleanLabel_one": "{{count}} day without a slip",
@@ -151,6 +153,7 @@
     "editTodo": "Edit task",
     "titleLabel": "Title",
     "titlePlaceholder": "e.g. Renew passport",
+    "quickAddPlaceholder": "Quick add a task…",
     "description": "Description",
     "dueDate": "Due date",
     "priority": "Priority",
@@ -322,5 +325,9 @@
     "unmappableSchedule": "This schedule (\"N times a week\" or custom) doesn't have a fixed pattern of days, so it can't be turned into a calendar repeat — pick specific weekdays or daily if you'd like a calendar reminder.",
     "noReminderTimes": "Add at least one reminder time to export this to your calendar.",
     "noDueDate": "Add a due date to export this to your calendar."
+  },
+  "voice": {
+    "startListening": "Start voice input",
+    "stopListening": "Stop voice input"
   }
 }

@@ -7,6 +7,7 @@ import { useHabits, useLogsForDate } from '../state/useHabits'
 import { useOpenTodosToday } from '../state/useTodos'
 import { useCurrentScheduledReport } from '../state/useDiagnostics'
 import { HabitCard } from '../components/habits/HabitCard'
+import { ScheduledReportBanner } from '../components/dashboard/ScheduledReportBanner'
 import { TodoItem } from '../components/todos/TodoItem'
 import { EmptyState } from '../components/ui/EmptyState'
 import { isScheduledOnDate } from '../lib/habitStrength'
@@ -114,35 +115,19 @@ export function DashboardPage() {
       )}
 
       {weeklyReport && !weeklyReportDismissed && (
-        <div className="rounded-xl bg-[var(--stoa-accent-soft)] px-3.5 py-2.5 text-sm flex flex-col gap-1.5">
-          <div className="flex items-start justify-between gap-2">
-            <span className="font-medium">{t('dashboard.scheduledReportTitleWeek')}</span>
-            <button
-              aria-label={t('common.close')}
-              className="text-[var(--stoa-text-muted)] px-1 shrink-0"
-              onClick={() => setWeeklyReportDismissed(true)}
-            >
-              ×
-            </button>
-          </div>
-          <p className="whitespace-pre-wrap text-[var(--stoa-text)]">{weeklyReport.aiInsight}</p>
-        </div>
+        <ScheduledReportBanner
+          title={t('dashboard.scheduledReportTitleWeek')}
+          report={weeklyReport}
+          onDismiss={() => setWeeklyReportDismissed(true)}
+        />
       )}
 
       {monthlyReport && !monthlyReportDismissed && (
-        <div className="rounded-xl bg-[var(--stoa-accent-soft)] px-3.5 py-2.5 text-sm flex flex-col gap-1.5">
-          <div className="flex items-start justify-between gap-2">
-            <span className="font-medium">{t('dashboard.scheduledReportTitleMonth')}</span>
-            <button
-              aria-label={t('common.close')}
-              className="text-[var(--stoa-text-muted)] px-1 shrink-0"
-              onClick={() => setMonthlyReportDismissed(true)}
-            >
-              ×
-            </button>
-          </div>
-          <p className="whitespace-pre-wrap text-[var(--stoa-text)]">{monthlyReport.aiInsight}</p>
-        </div>
+        <ScheduledReportBanner
+          title={t('dashboard.scheduledReportTitleMonth')}
+          report={monthlyReport}
+          onDismiss={() => setMonthlyReportDismissed(true)}
+        />
       )}
 
       {order.map((key) => sections[key]).filter(Boolean)}

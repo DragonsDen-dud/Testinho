@@ -3,6 +3,8 @@ import { useTranslation } from 'react-i18next'
 import { Sheet } from '../ui/Sheet'
 import { Field, TextArea } from '../ui/Input'
 import { Button } from '../ui/Button'
+import { MicButton } from '../ui/MicButton'
+import { appendTranscript } from '../../lib/speechRecognition'
 import type { JournalEntry, JournalPrompt } from '../../db/types'
 
 const MOODS = [1, 2, 3, 4, 5]
@@ -21,7 +23,7 @@ export function JournalEntryForm({
   onClose: () => void
   onDelete?: () => void
 }) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const [text, setText] = useState(initial?.text ?? '')
   const [mood, setMood] = useState<number | undefined>(initial?.mood)
 
@@ -36,14 +38,18 @@ export function JournalEntryForm({
         }}
       >
         <Field label={t('journal.entryLabel')}>
-          <TextArea
-            autoFocus
-            rows={5}
-            placeholder={t('journal.entryPlaceholder')}
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            required
-          />
+          <div className="flex gap-2 items-start">
+            <TextArea
+              autoFocus
+              rows={5}
+              placeholder={t('journal.entryPlaceholder')}
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              required
+              className="flex-1"
+            />
+            <MicButton lang={i18n.language} onTranscript={(transcript) => setText((prev) => appendTranscript(prev, transcript))} />
+          </div>
         </Field>
 
         <Field label={t('journal.mood')}>

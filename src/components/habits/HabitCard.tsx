@@ -8,13 +8,15 @@ import { computeHabitStrength, computeBuildStreak, computeAvoidStreak, isPausedO
 import { unmetDependencyNames } from '../../lib/habitDependencies'
 import { computeWeekdayPattern, computeTimeOfDayPattern } from '../../lib/habitPatterns'
 import { computeMoodCorrelation, formatSignedMood } from '../../lib/moodCorrelation'
-import { logHabit, logMeasurableEntry, resumeHabit, setHabitLogMood } from '../../data/habits'
+import { logHabit, logMeasurableEntry, resumeHabit, setHabitLogMood, setHabitLogNote } from '../../data/habits'
 import { todayKey, weekdayName } from '../../lib/date'
 import { useAppSettings } from '../../state/useAppSettings'
 import { ActiveReminderRow } from '../reminders/ActiveReminderRow'
 import { Button } from '../ui/Button'
-import { Input } from '../ui/Input'
+import { Input, TextArea } from '../ui/Input'
+import { MicButton } from '../ui/MicButton'
 import { ProgressBar } from '../ui/ProgressBar'
+import { appendTranscript } from '../../lib/speechRecognition'
 
 // Article 35 support — 5-point scale mapped to -2..+2, matching the sign
 // mood correlation expects (positive = better mood). Purely additive: tapping
@@ -207,8 +209,50 @@ export function HabitCard({
               ))}
             </div>
           )}
+
+          {todayLog && <HabitLogNoteField key={todayLog.id} habitId={habit.id} date={date} initialNote={todayLog.note} />}
         </>
       )}
+    </div>
+  )
+}
+
+/**
+ * Article 10 target surface (HabitLog.note) — no such UI existed before this
+ * pass, so this is new scaffolding, same progressive-disclosure shape as the
+ * mood row above it: appears once a check-in exists, never blocks it.
+ * Keyed by `todayLog.id` on the call site so a new log (new day, or a
+ * cleared/re-logged entry) remounts this with a fresh buffer instead of
+ * showing stale text from a previous log.
+ */
+function HabitLogNoteField({ habitId, date, initialNote }: { habitId: string; date: string; initialNote?: string }) {
+  const { t, i18n } = useTranslation()
+  const [note, setNote] = useState(initialNote ?? '')
+
+  return (
+    <div className="flex gap-2 items-start -mt-1">
+      <TextArea
+        rows={1}
+        placeholder={t('habits.checkInNotePlaceholder')}
+        value={note}
+        onChange={(e) => setNote(e.target.value)}
+        onBlur={() => setHabitLogNote(habitId, date, note.trim() || undefined)}
+        className="flex-1 text-xs py-1.5"
+      />
+      <MicButton
+        lang={i18n.language}
+        onTranscript={(transcript) =>
+          setNote((prev) => {
+            const merged = appendTranscript(prev, transcript)
+            // A transcript is a discrete, complete event (unlike an
+            // in-progress keystroke) — persist it immediately rather than
+            // waiting for blur, matching the mood row's immediate-save
+            // behavior right above.
+            void setHabitLogNote(habitId, date, merged.trim() || undefined)
+            return merged
+          })
+        }
+      />
     </div>
   )
 }

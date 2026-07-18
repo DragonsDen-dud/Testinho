@@ -78,3 +78,12 @@ export async function upsertMonthlyAutoStats(spaceId: string, asOfDate: string =
   const { start, end } = monthBoundsOf(asOfDate)
   return upsertAutoStats(spaceId, 'month', start, end, asOfDate)
 }
+
+/**
+ * Article 10 target surface (DiagnosticEntry.userFeedback) — no UI wrote to
+ * this field before this pass; a Scheduled AI Report banner is the natural
+ * place to let the user jot a reaction to it.
+ */
+export async function updateDiagnosticFeedback(id: string, userFeedback: string): Promise<void> {
+  await db.diagnosticEntries.update(id, { userFeedback })
+}
