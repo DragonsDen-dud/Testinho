@@ -7,10 +7,7 @@
 // interaction. Not linked from any nav — reachable only by direct URL.
 
 import { TaskCard } from '../../components/todos/redesign/TaskCard'
-
-function SectionHeading({ label }: { label: string }) {
-  return <div className="text-section-header uppercase text-heading">{label}</div>
-}
+import { SectionHeading } from '../../components/todos/redesign/SectionHeading'
 
 // Representative LifeDomain/Project colors a real user might pick —
 // deliberately spanning light, mid-saturation, and an intentionally dark
@@ -55,9 +52,9 @@ export function TasksRedesignPreviewPage() {
           projectLabel="Health"
           categoryColor={HEALTH_MINT}
           subtasks={[
-            { title: 'Book flights', done: true },
-            { title: 'Reserve hotel', done: true },
-            { title: 'Map out day trips', done: false },
+            { id: 's1', title: 'Book flights', done: true },
+            { id: 's2', title: 'Reserve hotel', done: true },
+            { id: 's3', title: 'Map out day trips', done: false },
           ]}
           subtasksExpanded
         />

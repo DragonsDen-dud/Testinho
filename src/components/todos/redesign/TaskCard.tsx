@@ -1,8 +1,9 @@
-// Stage 1 of the Tasks-tab redesign, v5 — Tesla tokens + SpaceX restraint
-// + iOS passcode-dot motif (supersedes the v4 Mission Control version of
-// this file entirely). Pure presentational: fully-formed display props,
-// no live Todo/Dexie data, no swipe, no click handlers. Stage 2 wires it
-// up to real state.
+// Tasks-tab redesign, v5 — Tesla tokens + SpaceX restraint + iOS
+// passcode-dot motif + per-instance category color/status border (all
+// approved). Stage 2: every handler below is optional so the Stage 1
+// static preview (which passes none) keeps rendering exactly as approved
+// — real wiring happens in ConnectedTaskCard, this file stays the single
+// source of visual truth for both.
 
 import type { CSSProperties, ReactNode } from 'react'
 import { accessibleRingColor, accessibleTextColor, priorityDotTone } from '../../../styles/tokens'
@@ -10,6 +11,7 @@ import { accessibleRingColor, accessibleTextColor, priorityDotTone } from '../..
 export type TaskCardStatus = 'overdue' | 'upcoming' | 'someday' | 'done'
 
 export interface TaskCardSubtask {
+  id: string
   title: string
   done: boolean
 }
@@ -28,6 +30,14 @@ export interface TaskCardProps {
    * both) — caller's responsibility, TaskCard stays presentational and
    * doesn't fetch either record itself. Undefined = neutral theme fallback. */
   categoryColor?: string
+  /** Tapping the title/body area — opens the edit sheet. */
+  onOpen?: () => void
+  /** Tapping the main checkbox dot. */
+  onToggleChecked?: () => void
+  /** Tapping the chevron — expand/collapse the subtask list. */
+  onToggleExpanded?: () => void
+  /** Tapping one subtask's dot in the expanded list. */
+  onToggleSubtask?: (subtaskId: string) => void
 }
 
 const TONE_COLOR: Record<'alert' | 'info', string> = {
@@ -61,8 +71,8 @@ function Dot({ filled, size, animate }: { filled: boolean; size: number; animate
 function SubtaskDots({ subtasks }: { subtasks: TaskCardSubtask[] }) {
   return (
     <span className="inline-flex items-center gap-1" aria-label={`${subtasks.filter((s) => s.done).length} of ${subtasks.length} subtasks done`}>
-      {subtasks.map((s, i) => (
-        <Dot key={i} filled={s.done} size={7} />
+      {subtasks.map((s) => (
+        <Dot key={s.id} filled={s.done} size={7} />
       ))}
     </span>
   )
@@ -101,6 +111,10 @@ export function TaskCard({
   subtasksExpanded,
   checked,
   categoryColor,
+  onOpen,
+  onToggleChecked,
+  onToggleExpanded,
+  onToggleSubtask,
 }: TaskCardProps) {
   const hasSubtasks = (subtasks?.length ?? 0) > 0
   const isOverdue = status === 'overdue'
@@ -132,11 +146,15 @@ export function TaskCard({
           aria-pressed={checked}
           aria-label={checked ? 'Mark not done' : 'Mark done'}
           className="mt-0.5 shrink-0"
+          onClick={(e) => {
+            e.stopPropagation()
+            onToggleChecked?.()
+          }}
         >
           <Dot filled={!!checked} size={24} animate />
         </button>
 
-        <div className="flex-1 min-w-0">
+        <button type="button" className="flex-1 min-w-0 text-left" onClick={onOpen}>
           <div
             className="text-task-title text-ink truncate"
             style={checked ? { textDecoration: 'line-through', opacity: 0.4 } : undefined}
@@ -150,28 +168,44 @@ export function TaskCard({
             {hasSubtasks && <SubtaskDots subtasks={subtasks!} />}
             {projectLabel && <Chip>{projectLabel}</Chip>}
           </div>
-        </div>
+        </button>
 
         {hasSubtasks && (
-          <span aria-hidden className="mt-1 text-ink-muted text-xs shrink-0">
+          <button
+            type="button"
+            aria-label={subtasksExpanded ? 'Collapse subtasks' : 'Expand subtasks'}
+            className="-m-2 p-2 text-ink-muted text-xs shrink-0 flex items-center justify-center"
+            onClick={(e) => {
+              e.stopPropagation()
+              onToggleExpanded?.()
+            }}
+          >
             {subtasksExpanded ? '⌄' : '›'}
-          </span>
+          </button>
         )}
         <PriorityDot sortOrder={prioritySortOrder} />
       </div>
 
       {hasSubtasks && subtasksExpanded && (
         <div className="pl-9 flex flex-col gap-2 pt-1">
-          {subtasks!.map((s, i) => (
-            <div key={i} className="flex items-center gap-2.5">
-              <Dot filled={s.done} size={16} />
+          {subtasks!.map((s) => (
+            <button
+              key={s.id}
+              type="button"
+              className="flex items-center gap-2.5 text-left"
+              onClick={(e) => {
+                e.stopPropagation()
+                onToggleSubtask?.(s.id)
+              }}
+            >
+              <Dot filled={s.done} size={16} animate />
               <span
                 className="text-task-meta text-ink"
                 style={s.done ? { textDecoration: 'line-through', opacity: 0.4 } : { opacity: 0.85 }}
               >
                 {s.title}
               </span>
-            </div>
+            </button>
           ))}
         </div>
       )}

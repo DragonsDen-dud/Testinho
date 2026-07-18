@@ -6,7 +6,8 @@ import { useTodos, useOverdueTodos } from '../state/useTodos'
 import { createTodo, updateTodo, archiveTodo, deleteTodo, restoreTodo, moveToSomeday, promoteSomeday } from '../data/todos'
 import { showUndoToast } from '../state/toast'
 import { TodoForm } from '../components/todos/TodoForm'
-import { TodoItem } from '../components/todos/TodoItem'
+import { ConnectedTaskCard } from '../components/todos/redesign/ConnectedTaskCard'
+import { SectionHeading } from '../components/todos/redesign/SectionHeading'
 import { SomedayPromoteForm } from '../components/todos/SomedayPromoteForm'
 import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
@@ -15,7 +16,7 @@ import { EmptyState } from '../components/ui/EmptyState'
 import { appendTranscript } from '../lib/speechRecognition'
 import type { Todo } from '../db/types'
 
-type Tab = 'open' | 'done' | 'someday'
+type Tab = 'open' | 'done'
 
 export function TodosPage() {
   const { t, i18n } = useTranslation()
@@ -23,9 +24,11 @@ export function TodosPage() {
   const params = useParams()
   const settings = useAppSettings()
   const todos = useTodos(settings?.activeSpaceId)
-  const overdue = useOverdueTodos(settings?.activeSpaceId)
+  const overdueTodos = useOverdueTodos(settings?.activeSpaceId)
   const [creating, setCreating] = useState(false)
+  const [creatingSomeday, setCreatingSomeday] = useState(false)
   const [tab, setTab] = useState<Tab>('open')
+  const [somedayExpanded, setSomedayExpanded] = useState(false)
   const [promoting, setPromoting] = useState<Todo | null>(null)
   const [quickAddTitle, setQuickAddTitle] = useState('')
   const [searchParams, setSearchParams] = useSearchParams()
@@ -54,20 +57,29 @@ export function TodosPage() {
 
   function closeForm() {
     setCreating(false)
+    setCreatingSomeday(false)
     if (params.id) navigate('/todos')
   }
 
-  const visible = todos.filter((td) => {
-    if (tab === 'open') return td.status === 'open'
-    if (tab === 'done') return td.status === 'done'
-    return td.status === 'someday'
-  })
+  function openNewTodoForm(intoSomeday: boolean) {
+    setCreatingSomeday(intoSomeday)
+    setCreating(true)
+  }
+
+  function openTodo(id: string) {
+    navigate(`/todos/${id}/edit`)
+  }
+
+  const overdueIds = new Set(overdueTodos.map((t) => t.id))
+  const activeTodos = todos.filter((td) => td.status === 'open' && !overdueIds.has(td.id))
+  const somedayTodos = todos.filter((td) => td.status === 'someday')
+  const doneTodos = todos.filter((td) => td.status === 'done')
 
   return (
     <div className="p-4 max-w-md mx-auto w-full flex flex-col gap-3">
       <div className="flex items-center justify-between">
         <h1 className="text-lg font-semibold">{t('todos.title')}</h1>
-        <Button onClick={() => setCreating(true)}>+ {t('todos.newTodo')}</Button>
+        <Button onClick={() => openNewTodoForm(false)}>+ {t('todos.newTodo')}</Button>
       </div>
 
       <form
@@ -96,16 +108,6 @@ export function TodosPage() {
         {t('projects.title')} →
       </button>
 
-      {overdue.length > 0 && tab === 'open' && (
-        <button
-          className="rounded-xl bg-[var(--stoa-danger)]/10 border border-[var(--stoa-danger)]/30 px-3.5 py-2.5 text-sm text-[var(--stoa-danger)] flex items-center justify-between"
-          onClick={() => navigate('/todos/overdue')}
-        >
-          <span>{t('dashboard.overdueBanner', { count: overdue.length })}</span>
-          <span className="underline">{t('dashboard.reviewOverdue')}</span>
-        </button>
-      )}
-
       <div className="flex gap-2">
         <button
           className={`text-sm px-3 py-1.5 rounded-full ${tab === 'open' ? 'bg-[var(--stoa-border)]' : 'text-[var(--stoa-text-muted)]'}`}
@@ -119,34 +121,83 @@ export function TodosPage() {
         >
           {t('todos.statusDone')}
         </button>
-        <button
-          className={`text-sm px-3 py-1.5 rounded-full ${tab === 'someday' ? 'bg-[var(--stoa-border)]' : 'text-[var(--stoa-text-muted)]'}`}
-          onClick={() => setTab('someday')}
-        >
-          {t('todos.statusSomeday')}
-        </button>
       </div>
 
-      {visible.length === 0 && (
-        <EmptyState
-          text={tab === 'open' ? t('todos.emptyOpen') : tab === 'someday' ? t('todos.emptySomeday') : t('todos.empty')}
-        />
+      {tab === 'open' && (
+        <div className="flex flex-col gap-5">
+          {overdueTodos.length > 0 && (
+            <div className="section-overdue flex flex-col gap-3">
+              <div className="flex items-center justify-between">
+                <SectionHeading label={t('todos.sectionOverdue')} />
+                <button className="text-xs text-[var(--stoa-accent)]" onClick={() => navigate('/todos/overdue')}>
+                  {t('dashboard.reviewOverdue')}
+                </button>
+              </div>
+              <div className="flex flex-col gap-2">
+                {overdueTodos.map((td) => (
+                  <ConnectedTaskCard key={td.id} todo={td} onOpen={() => openTodo(td.id)} />
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="flex flex-col gap-3">
+            <SectionHeading label={t('todos.sectionActive')} />
+            {activeTodos.length === 0 ? (
+              <EmptyState text={t('todos.emptyOpen')} />
+            ) : (
+              <div className="flex flex-col gap-2">
+                {activeTodos.map((td) => (
+                  <ConnectedTaskCard key={td.id} todo={td} onOpen={() => openTodo(td.id)} />
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="section-someday flex flex-col gap-3">
+            <button
+              type="button"
+              className="flex items-center justify-between rounded-card p-4 bg-surface card-shadow text-left"
+              style={{ border: '2px solid var(--color-status-border)' }}
+              onClick={() => setSomedayExpanded((v) => !v)}
+            >
+              <span className="text-task-meta text-ink-muted">
+                {somedayTodos.length > 0 ? t('todos.somedayCollapsedRow', { count: somedayTodos.length }) : t('todos.statusSomeday')}
+              </span>
+              <span aria-hidden className="text-ink-muted text-xs">
+                {somedayExpanded ? '⌄' : '›'}
+              </span>
+            </button>
+            {somedayExpanded && (
+              <div className="flex flex-col gap-3">
+                {somedayTodos.map((td) => (
+                  <div key={td.id} className="flex flex-col gap-2">
+                    <ConnectedTaskCard todo={td} onOpen={() => openTodo(td.id)} />
+                    <Button variant="secondary" onClick={() => setPromoting(td)}>
+                      {t('todos.startDoingThis')}
+                    </Button>
+                  </div>
+                ))}
+                {somedayTodos.length === 0 && <EmptyState text={t('todos.emptySomeday')} />}
+                <Button variant="secondary" onClick={() => openNewTodoForm(true)}>
+                  + {t('todos.newTodo')}
+                </Button>
+              </div>
+            )}
+          </div>
+        </div>
       )}
 
-      <div className="flex flex-col gap-2">
-        {visible.map((td) =>
-          tab === 'someday' ? (
-            <div key={td.id} className="flex flex-col gap-2">
-              <TodoItem todo={td} onOpen={() => navigate(`/todos/${td.id}/edit`)} />
-              <Button variant="secondary" onClick={() => setPromoting(td)}>
-                {t('todos.startDoingThis')}
-              </Button>
-            </div>
-          ) : (
-            <TodoItem key={td.id} todo={td} onOpen={() => navigate(`/todos/${td.id}/edit`)} />
-          ),
-        )}
-      </div>
+      {tab === 'done' &&
+        (doneTodos.length === 0 ? (
+          <EmptyState text={t('todos.empty')} />
+        ) : (
+          <div className="flex flex-col gap-2">
+            {doneTodos.map((td) => (
+              <ConnectedTaskCard key={td.id} todo={td} onOpen={() => openTodo(td.id)} />
+            ))}
+          </div>
+        ))}
 
       {formOpen && settings?.activeSpaceId && (
         <TodoForm
@@ -157,7 +208,7 @@ export function TodosPage() {
             if (editingTodo) {
               await updateTodo(editingTodo.id, data)
             } else {
-              await createTodo(data, tab === 'someday' ? 'someday' : 'open')
+              await createTodo(data, creatingSomeday ? 'someday' : 'open')
             }
             closeForm()
           }}

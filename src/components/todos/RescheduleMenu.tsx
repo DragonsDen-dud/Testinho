@@ -5,9 +5,23 @@ import { Input } from '../ui/Input'
 import { addDays, todayKey } from '../../lib/date'
 
 /** Article 30 — Tomorrow / In a week / Pick a date. Not a free date-picker-only flow. */
-export function RescheduleMenu({ onReschedule }: { onReschedule: (newDueDate: string) => void }) {
+export function RescheduleMenu({
+  onReschedule,
+  startOpen,
+  onCancel,
+}: {
+  onReschedule: (newDueDate: string) => void
+  /** Skips the "Reschedule" trigger button, opening straight into the
+   * Tomorrow/In a week/Pick a date choices — for callers (e.g. the Stage 2
+   * swipe action) that already have their own trigger. */
+  startOpen?: boolean
+  /** Fires when the user backs out via Cancel — lets a caller that mounted
+   * this only for the swipe flow unmount it instead of falling back to
+   * re-showing the "Reschedule" trigger button in place. */
+  onCancel?: () => void
+}) {
   const { t } = useTranslation()
-  const [open, setOpen] = useState(false)
+  const [open, setOpen] = useState(!!startOpen)
   const [pickingDate, setPickingDate] = useState(false)
   const [dateDraft, setDateDraft] = useState('')
 
@@ -75,7 +89,10 @@ export function RescheduleMenu({ onReschedule }: { onReschedule: (newDueDate: st
       <button
         type="button"
         className="text-xs text-[var(--stoa-text-muted)]"
-        onClick={() => setOpen(false)}
+        onClick={() => {
+          setOpen(false)
+          onCancel?.()
+        }}
       >
         {t('common.cancel')}
       </button>

@@ -99,6 +99,14 @@
   --color-accent-info: #3e6ae1;
   --color-accent-alert: #e01e2c;
 
+  /* Swipe-action affordances (Stage 2) — a different category from the
+     priority/status colors above: these are functional button fills for
+     the three swipe actions, not a status signal read by TaskCard's own
+     state. Green/blue/red is the standard iOS-swipe-action convention
+     (complete/reschedule/delete), not decoration. */
+  --color-action-complete: #30d158;
+  --color-action-delete: var(--color-accent-alert);
+
   --text-task-title: 17px;
   --text-task-title--line-height: 1.3;
   --text-task-title--font-weight: 600;
