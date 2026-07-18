@@ -26,6 +26,7 @@
     "todos": "Tasks",
     "journal": "Journal",
     "planning": "Planning",
+    "analytics": "Analytics",
     "search": "Search",
     "settings": "Settings"
   },
@@ -397,6 +398,19 @@
     "habit": "Habit",
     "todo": "Task",
     "journal": "Journal entry"
+  },
+  "analytics": {
+    "title": "Analytics",
+    "empty": "Add some habits or tasks to see analytics here.",
+    "completionTitle": "Completion rate",
+    "windowDays_one": "{{count}} day",
+    "windowDays_other": "{{count}} days",
+    "domainStrengthTitle": "Habit Strength by domain",
+    "noDomain": "No domain",
+    "taskRatioTitle": "Task breakdown",
+    "moodCorrelationTitle": "Mood correlation",
+    "moodCorrelationEmpty": "Not enough data yet — needs at least 5 done and 5 not-done days with mood logged, per habit.",
+    "exportPng": "Export as PNG"
   },
   "search": {
     "title": "Search",

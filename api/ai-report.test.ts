@@ -33,7 +33,7 @@ describe('api/ai-report handler (Step 2 hardening)', () => {
   beforeEach(() => {
     process.env.ALLOWED_ORIGINS = ORIGIN
     fetchSpy = vi
-      .spyOn(global, 'fetch')
+      .spyOn(globalThis, 'fetch')
       .mockImplementation(async () => new Response(JSON.stringify({ content: [{ text: 'ok' }] }), { status: 200 }))
   })
 

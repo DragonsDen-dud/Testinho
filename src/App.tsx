@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { lazy, Suspense, useEffect, useRef } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAppSettings } from './state/useAppSettings'
@@ -26,8 +26,13 @@ import { DiagnosticDetailPage } from './pages/DiagnosticDetailPage'
 import { SearchPage } from './pages/SearchPage'
 import { IntegrityCheckPage } from './pages/IntegrityCheckPage'
 
+// Lazy — recharts is the single largest dependency in this app and
+// analytics is the only screen that needs it. Splitting it out keeps the
+// initial load light for every other screen in this local-first PWA.
+const AnalyticsPage = lazy(() => import('./pages/AnalyticsPage').then((m) => ({ default: m.AnalyticsPage })))
+
 function App() {
-  const { i18n } = useTranslation()
+  const { t, i18n } = useTranslation()
   const settings = useAppSettings()
 
   useEffect(() => {
@@ -88,6 +93,14 @@ function App() {
           <Route path="/projects/:id" element={<ProjectDetailPage />} />
           <Route path="/journal" element={<JournalPage />} />
           <Route path="/planning" element={<PlanningPage />} />
+          <Route
+            path="/analytics"
+            element={
+              <Suspense fallback={<div className="p-4 text-sm text-[var(--stoa-text-muted)]">{t('common.loading')}</div>}>
+                <AnalyticsPage />
+              </Suspense>
+            }
+          />
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="/settings/spaces" element={<SpacesPage />} />
           <Route path="/settings/domains" element={<DomainsPage />} />

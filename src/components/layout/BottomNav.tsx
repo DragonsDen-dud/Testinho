@@ -7,6 +7,7 @@ const items = [
   { to: '/todos', key: 'todos', icon: '☑' },
   { to: '/journal', key: 'journal', icon: '✍' },
   { to: '/planning', key: 'planning', icon: '✎' },
+  { to: '/analytics', key: 'analytics', icon: '📊' },
   { to: '/search', key: 'search', icon: '🔍' },
   { to: '/settings', key: 'settings', icon: '⚙' },
 ]

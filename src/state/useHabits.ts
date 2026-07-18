@@ -32,3 +32,21 @@ export function useLogsForDate(habitIds: string[], date: string): Map<string, Ha
     }, [habitIds.join(','), date]) ?? []
   return new Map(logs.map((l) => [l.habitId, l]))
 }
+
+/**
+ * Full log history for a set of habits (E.6 Analytics), keyed by habitId.
+ * Queries per-habit via the indexed `habitId` field (Article 17 — aggregate
+ * at query level, not a full-table scan), same shape as useHabitLogs above.
+ */
+export function useHabitLogsForHabits(habitIds: string[]): Map<string, HabitLog[]> {
+  const key = habitIds.slice().sort().join(',')
+  return (
+    useLiveQuery(async () => {
+      if (habitIds.length === 0) return new Map<string, HabitLog[]>()
+      const entries = await Promise.all(
+        habitIds.map(async (id) => [id, await db.habitLogs.where('habitId').equals(id).toArray()] as const),
+      )
+      return new Map(entries)
+    }, [key]) ?? new Map<string, HabitLog[]>()
+  )
+}
