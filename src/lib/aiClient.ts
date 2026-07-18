@@ -37,9 +37,19 @@ export async function callAiProxy(input: AiCallInput): Promise<AiCallResult> {
       }),
     })
     const data = await res.json()
-    if (!res.ok || !data.ok) return { ok: false, error: data?.error ?? `HTTP ${res.status}` }
+    if (!res.ok || !data.ok) {
+      const error = data?.error ?? `HTTP ${res.status}`
+      // Every caller (freeform + scheduled reports) funnels through here, and
+      // both UI paths currently show only a generic "couldn't reach it"
+      // message — this is the one place that always sees the real reason,
+      // so it's the one place that logs it, rather than duplicating this in
+      // every call site.
+      console.error('[aiClient] ai-report request failed:', res.status, error)
+      return { ok: false, error }
+    }
     return { ok: true, text: data.text }
-  } catch {
+  } catch (err) {
+    console.error('[aiClient] ai-report request threw before a response was received:', err)
     return { ok: false, error: 'network_error' }
   }
 }

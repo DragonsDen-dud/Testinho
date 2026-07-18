@@ -15,6 +15,7 @@ export function AskAiHabitPanel({ habit }: { habit: Habit }) {
   const [includeNorthStar, setIncludeNorthStar] = useState(false)
   const [status, setStatus] = useState<'idle' | 'loading' | 'done' | 'error'>('idle')
   const [answer, setAnswer] = useState('')
+  const [errorCode, setErrorCode] = useState('')
 
   if (!settings?.claudeApiKey) {
     return (
@@ -41,6 +42,12 @@ export function AskAiHabitPanel({ habit }: { habit: Habit }) {
       // checkbox doesn't silently carry over and apply to the next question.
       setIncludeNorthStar(false)
     } else {
+      // The friendly message alone previously discarded which of several
+      // very different failure modes actually happened (blocked by the
+      // proxy's origin check, a bad Anthropic key, rate-limited, a network
+      // failure...) — shown alongside it now so a real failure is
+      // diagnosable from the screen itself, not just from server logs.
+      setErrorCode(result.error)
       setStatus('error')
     }
   }
@@ -64,7 +71,12 @@ export function AskAiHabitPanel({ habit }: { habit: Habit }) {
           {t('habits.askAiIncludeNorthStar')}
         </label>
         {status === 'loading' && <p className="text-xs text-[var(--stoa-text-muted)]">{t('habits.askAiThinking')}</p>}
-        {status === 'error' && <p className="text-xs text-[var(--stoa-danger)]">{t('habits.askAiError')}</p>}
+        {status === 'error' && (
+          <p className="text-xs text-[var(--stoa-danger)]">
+            {t('habits.askAiError')}
+            {errorCode && <span className="text-[var(--stoa-text-muted)]"> ({errorCode})</span>}
+          </p>
+        )}
         {status === 'done' && <p className="text-sm whitespace-pre-wrap">{answer}</p>}
       </div>
     </Field>
