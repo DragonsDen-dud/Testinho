@@ -1,0 +1,131 @@
+/* Tasks-tab redesign token layer (Stage 1). Registered via Tailwind v4's
+   CSS-first @theme so these become real utilities (rounded-card, bg-overdue,
+   text-task-title, etc.) rather than ad-hoc inline values per component.
+
+   Spacing is deliberately NOT re-tokenized here: the requested 4/8/12/16/
+   20/24/32 scale is exactly Tailwind's existing default spacing scale
+   (--spacing: 4px multiplier) — p-1..p-8 already are that scale. Card
+   padding is p-4 (16px), card gap is gap-3 (12px), section spacing is
+   gap-6 (24px). Introducing a second, parallel spacing token set here
+   would just be the same numbers under different names. */
+
+@theme {
+  /* Radii — tiered by element size, per the brief. */
+  --radius-card: 24px;
+  --radius-chip: 10px;
+  --radius-pill: 9999px;
+  --radius-sheet: 28px;
+
+  /* Semantic status colors (iOS system palette). Opacity is applied at
+     the call site via Tailwind's /NN modifier (bg-overdue/12), which
+     Tailwind v4 supports natively for any @theme color. */
+  --color-overdue: #ff453a;
+  --color-upcoming: #0a84ff;
+  --color-someday: #8e8e93;
+  --color-complete: #30d158;
+
+  /* Typography — compound theme keys bundle size + line-height + weight +
+     tracking into one utility class (text-task-title, text-task-meta,
+     text-section-header). */
+  --text-task-title: 17px;
+  --text-task-title--line-height: 1.3;
+  --text-task-title--font-weight: 600;
+  --text-task-title--letter-spacing: -0.4px;
+
+  --text-task-meta: 13px;
+  --text-task-meta--line-height: 1.3;
+  --text-task-meta--font-weight: 500;
+
+  --text-section-header: 13px;
+  --text-section-header--line-height: 1.2;
+  --text-section-header--font-weight: 600;
+  --text-section-header--letter-spacing: 0.5px;
+}
+
+/* Elevation — three named tiers, each blur + two-shadow stack, not a flat
+   drop-shadow. Backgrounds are theme-aware the same way src/index.css's
+   --stoa-* tokens already are (data-theme attribute, with a
+   prefers-color-scheme fallback for "system"). saturate(180%) alongside
+   the blur is what keeps it looking glassy instead of muddy on a
+   colorful background. */
+.elevation-resting {
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.04),
+    0 6px 16px rgba(0, 0, 0, 0.06);
+}
+
+.elevation-pressed {
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  /* 4% black overlay layered over the resting base via a flat gradient —
+     `background` shorthand can't take two plain colors, but a gradient
+     layer stacked above a color layer is valid multi-layer background. */
+  background: linear-gradient(rgba(0, 0, 0, 0.04), rgba(0, 0, 0, 0.04)), rgba(255, 255, 255, 0.72);
+  box-shadow:
+    0 1px 1px rgba(0, 0, 0, 0.05),
+    0 2px 6px rgba(0, 0, 0, 0.05);
+  transform: scale(0.98);
+}
+
+.elevation-dragging {
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow:
+    0 4px 8px rgba(0, 0, 0, 0.08),
+    0 16px 32px rgba(0, 0, 0, 0.12);
+}
+
+:root[data-theme='dark'] .elevation-resting,
+:root[data-theme='dark'] .elevation-dragging {
+  background: rgba(28, 28, 30, 0.72);
+}
+:root[data-theme='dark'] .elevation-pressed {
+  background: rgba(28, 28, 30, 0.76);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']):not([data-theme='contrast']) .elevation-resting,
+  :root:not([data-theme='light']):not([data-theme='contrast']) .elevation-dragging {
+    background: rgba(28, 28, 30, 0.72);
+  }
+  :root:not([data-theme='light']):not([data-theme='contrast']) .elevation-pressed {
+    background: rgba(28, 28, 30, 0.76);
+  }
+}
+
+/* Motion — three named curves for three named purposes (see tokens.ts for
+   the JS-side duration constants paired with these). */
+:root {
+  --spring-standard: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --spring-snappy: cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-gentle: cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+/* Horizontally-scrollable chip row (brief 2.1: "chip row scrolls, never
+   wraps") — scrollbar hidden across engines, scrolling itself unaffected. */
+.chip-row {
+  scrollbar-width: none;
+}
+.chip-row::-webkit-scrollbar {
+  display: none;
+}
+
+/* Checkbox checkmark spring-in, the "single highest-impact micro-interaction"
+   per the brief. Animates scale+opacity only (compositor-only properties). */
+@keyframes checkmark-spring {
+  from {
+    transform: scale(0.4);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+.checkmark-spring {
+  animation: checkmark-spring var(--spring-standard) 260ms both;
+}

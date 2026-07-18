@@ -25,6 +25,7 @@ import { TimeBlocksPage } from './pages/TimeBlocksPage'
 import { DiagnosticDetailPage } from './pages/DiagnosticDetailPage'
 import { SearchPage } from './pages/SearchPage'
 import { IntegrityCheckPage } from './pages/IntegrityCheckPage'
+import { TasksRedesignPreviewPage } from './pages/dev/TasksRedesignPreviewPage'
 
 // Lazy — recharts is the single largest dependency in this app and
 // analytics is the only screen that needs it. Splitting it out keeps the
@@ -75,6 +76,12 @@ function App() {
 
   if (settings === undefined) return null
 
+  // Stage-1-only preview route: bypass onboarding gating so it's reachable
+  // for screenshot review on a fresh profile with no Space set up yet.
+  if (window.location.pathname === '/dev/tasks-redesign-preview') {
+    return <TasksRedesignPreviewPage />
+  }
+
   if (!settings.onboardingComplete) {
     return <OnboardingPage />
   }
@@ -82,6 +89,8 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
+        {/* Stage-1-only, unlinked — Tasks tab redesign screenshot review. */}
+        <Route path="/dev/tasks-redesign-preview" element={<TasksRedesignPreviewPage />} />
         <Route element={<AppShell />}>
           <Route path="/" element={<DashboardPage />} />
           <Route path="/habits" element={<HabitsPage />} />
