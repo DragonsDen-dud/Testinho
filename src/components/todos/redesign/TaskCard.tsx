@@ -1,9 +1,11 @@
-// Stage 1 of the Tasks-tab redesign, v4 "Mission Control" direction (see
-// conversation brief — supersedes the earlier Liquid Glass version of this
-// file entirely). Pure presentational: fully-formed display props, no
-// live Todo/Dexie data, no swipe, no click handlers. Stage 2 wires it up.
+// Stage 1 of the Tasks-tab redesign, v5 — Tesla tokens + SpaceX restraint
+// + iOS passcode-dot motif (supersedes the v4 Mission Control version of
+// this file entirely). Pure presentational: fully-formed display props,
+// no live Todo/Dexie data, no swipe, no click handlers. Stage 2 wires it
+// up to real state.
 
-import { priorityStatusColor, STATUS_LED_COLOR_VAR } from '../../../styles/tokens'
+import type { ReactNode } from 'react'
+import { priorityDotTone } from '../../../styles/tokens'
 
 export type TaskCardStatus = 'overdue' | 'upcoming' | 'someday' | 'done'
 
@@ -17,7 +19,6 @@ export interface TaskCardProps {
   status: TaskCardStatus
   dueLabel?: string
   hasRecurrence?: boolean
-  priorityLabel?: string
   prioritySortOrder?: number
   projectLabel?: string
   subtasks?: TaskCardSubtask[]
@@ -25,82 +26,62 @@ export interface TaskCardProps {
   checked?: boolean
 }
 
-function StatusDot({ sortOrder }: { sortOrder: number }) {
-  const led = priorityStatusColor(sortOrder)
-  const color = STATUS_LED_COLOR_VAR[led]
+const TONE_COLOR: Record<'alert' | 'info', string> = {
+  alert: 'var(--color-accent-alert)',
+  info: 'var(--color-accent-info)',
+}
+
+// The single filled/unfilled dot, reused at three sizes: the main
+// checkbox (24px), the subtask-row dots (8px), and the expanded subtask
+// checkboxes (16px). Filled = solid ink, exactly like a passcode dot —
+// no checkmark glyph, the fill itself is the completion signal.
+function Dot({ filled, size, animate }: { filled: boolean; size: number; animate?: boolean }) {
   return (
     <span
       aria-hidden
-      className="w-2 h-2 rounded-full shrink-0"
-      style={{ background: color, boxShadow: `0 0 4px ${color}` }}
+      className={filled && animate ? 'dot-fill' : undefined}
+      style={{
+        display: 'inline-block',
+        width: size,
+        height: size,
+        borderRadius: '50%',
+        background: filled ? 'var(--color-ink)' : 'transparent',
+        border: filled ? 'none' : `1.5px solid var(--color-hairline)`,
+        boxSizing: 'border-box',
+        transition: 'background 200ms var(--ease-dot-fill)',
+      }}
     />
   )
 }
 
-function Field({ label, value, mono, alert }: { label: string; value: string; mono?: boolean; alert?: boolean }) {
+function SubtaskDots({ subtasks }: { subtasks: TaskCardSubtask[] }) {
   return (
-    <div className="flex items-baseline gap-1.5 min-w-0">
-      <span className="text-mc-label uppercase text-white/40 shrink-0" style={alert ? { color: 'var(--color-status-critical)' } : undefined}>
-        {label}
-      </span>
-      <span
-        className="text-mc-value text-white/85 truncate"
-        style={{
-          fontFamily: mono ? 'var(--font-mc-mono)' : undefined,
-          color: alert ? 'var(--color-status-critical)' : undefined,
-        }}
-      >
-        {value}
-      </span>
-    </div>
-  )
-}
-
-function SegmentedBar({ fraction, segments = 8 }: { fraction: number; segments?: number }) {
-  const filled = Math.round(fraction * segments)
-  return (
-    <div className="flex items-center gap-[2px]" aria-hidden>
-      {Array.from({ length: segments }).map((_, i) => (
-        <span
-          key={i}
-          className="h-1 flex-1 rounded-[1px]"
-          style={{
-            background: i < filled ? 'rgba(255,255,255,0.7)' : 'var(--color-hairline)',
-            transition: `background 200ms var(--mc-ease-snap)`,
-          }}
-        />
+    <span className="inline-flex items-center gap-1" aria-label={`${subtasks.filter((s) => s.done).length} of ${subtasks.length} subtasks done`}>
+      {subtasks.map((s, i) => (
+        <Dot key={i} filled={s.done} size={7} />
       ))}
-    </div>
+    </span>
   )
 }
 
-function Checkbox({ checked, size }: { checked?: boolean; size: number }) {
+function PriorityDot({ sortOrder }: { sortOrder: number }) {
+  const tone = priorityDotTone(sortOrder)
+  if (tone === 'neutral') {
+    return <span aria-hidden className="w-2 h-2 rounded-full shrink-0" style={{ background: 'var(--color-hairline)' }} />
+  }
+  return <span aria-hidden className="w-2 h-2 rounded-full shrink-0" style={{ background: TONE_COLOR[tone] }} />
+}
+
+function Chip({ children, alert }: { children: ReactNode; alert?: boolean }) {
   return (
     <span
-      aria-hidden
-      className="flex items-center justify-center shrink-0"
+      className="text-task-meta rounded-pill px-2.5 py-1 shrink-0"
       style={{
-        width: size,
-        height: size,
-        borderRadius: 3,
-        border: `1.5px solid ${checked ? 'var(--color-status-go)' : 'var(--color-hairline)'}`,
-        background: checked ? 'var(--color-status-go)' : 'transparent',
+        background: alert ? 'rgba(224, 30, 44, 0.1)' : 'var(--color-chip)',
+        color: alert ? 'var(--color-accent-alert)' : 'var(--color-ink-muted)',
       }}
     >
-      {checked && (
-        <svg
-          viewBox="0 0 24 24"
-          className="mc-check-in"
-          style={{ width: size * 0.6, height: size * 0.6 }}
-          fill="none"
-          stroke="#000"
-          strokeWidth={4}
-          strokeLinecap="square"
-          strokeLinejoin="miter"
-        >
-          <path d="M5 13l4 4L19 7" />
-        </svg>
-      )}
+      {children}
     </span>
   )
 }
@@ -110,78 +91,64 @@ export function TaskCard({
   status,
   dueLabel,
   hasRecurrence,
-  priorityLabel,
   prioritySortOrder = 0,
   projectLabel,
   subtasks,
   subtasksExpanded,
   checked,
 }: TaskCardProps) {
-  const doneCount = subtasks?.filter((s) => s.done).length ?? 0
-  const totalCount = subtasks?.length ?? 0
-  const hasSubtasks = totalCount > 0
-  const hasSecondaryRow = !!projectLabel || hasSubtasks
+  const hasSubtasks = (subtasks?.length ?? 0) > 0
   const isOverdue = status === 'overdue'
 
   return (
-    <div
-      className="bg-panel rounded-panel px-4 py-3 flex flex-col gap-2"
-      style={{
-        border: '1px solid var(--color-hairline)',
-        borderTopColor: isOverdue ? 'var(--color-status-critical)' : undefined,
-        borderTopWidth: isOverdue ? '2px' : undefined,
-      }}
-    >
-      <div className="flex items-center gap-2.5">
-        <Checkbox checked={checked} size={18} />
-        <span
-          className="flex-1 text-mc-title text-white truncate"
-          style={checked ? { textDecoration: 'line-through', opacity: 0.4 } : undefined}
+    <div className="bg-surface rounded-card p-4 flex flex-col gap-2.5 card-shadow">
+      <div className="flex items-start gap-3">
+        <button
+          type="button"
+          aria-pressed={checked}
+          aria-label={checked ? 'Mark not done' : 'Mark done'}
+          className="mt-0.5 shrink-0"
         >
-          {hasRecurrence && <span className="mr-1 text-white/40">↻</span>}
-          {title}
-        </span>
+          <Dot filled={!!checked} size={24} animate />
+        </button>
+
+        <div className="flex-1 min-w-0">
+          <div
+            className="text-task-title text-ink truncate"
+            style={checked ? { textDecoration: 'line-through', opacity: 0.4 } : undefined}
+          >
+            {hasRecurrence && <span className="mr-1 text-ink-muted">↻</span>}
+            {title}
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2 mt-1.5">
+            {dueLabel && <Chip alert={isOverdue}>{isOverdue ? `Overdue · ${dueLabel}` : dueLabel}</Chip>}
+            {hasSubtasks && <SubtaskDots subtasks={subtasks!} />}
+            {projectLabel && <Chip>{projectLabel}</Chip>}
+          </div>
+        </div>
+
         {hasSubtasks && (
-          <span aria-hidden className="text-white/35 text-xs shrink-0">
+          <span aria-hidden className="mt-1 text-ink-muted text-xs shrink-0">
             {subtasksExpanded ? '⌄' : '›'}
           </span>
         )}
-        <StatusDot sortOrder={prioritySortOrder} />
+        <PriorityDot sortOrder={prioritySortOrder} />
       </div>
 
-      {(dueLabel || priorityLabel) && (
-        <div className="flex items-center gap-4 pl-[26px]">
-          {dueLabel && <Field label={isOverdue ? 'OVERDUE' : 'DUE'} value={dueLabel} mono alert={isOverdue} />}
-          {priorityLabel && <Field label="PRIORITY" value={priorityLabel.toUpperCase()} />}
-        </div>
-      )}
-
-      {hasSecondaryRow && (
-        <>
-          <div style={{ borderTop: '1px solid var(--color-hairline)' }} className="ml-[26px]" />
-          <div className="flex items-center gap-4 pl-[26px]">
-            {projectLabel && <Field label="PROJECT" value={projectLabel.toUpperCase()} />}
-            {hasSubtasks && <Field label="SUBTASKS" value={`${String(doneCount).padStart(2, '0')}/${String(totalCount).padStart(2, '0')}`} mono />}
-          </div>
-        </>
-      )}
-
       {hasSubtasks && subtasksExpanded && (
-        <div className="pl-[26px] flex flex-col gap-2 pt-1">
-          <SegmentedBar fraction={totalCount ? doneCount / totalCount : 0} />
-          <div className="flex flex-col gap-1.5">
-            {subtasks!.map((s, i) => (
-              <div key={i} className="flex items-center gap-2">
-                <Checkbox checked={s.done} size={14} />
-                <span
-                  className="text-mc-value text-white/80"
-                  style={s.done ? { textDecoration: 'line-through', opacity: 0.4 } : undefined}
-                >
-                  {s.title}
-                </span>
-              </div>
-            ))}
-          </div>
+        <div className="pl-9 flex flex-col gap-2 pt-1">
+          {subtasks!.map((s, i) => (
+            <div key={i} className="flex items-center gap-2.5">
+              <Dot filled={s.done} size={16} />
+              <span
+                className="text-task-meta text-ink"
+                style={s.done ? { textDecoration: 'line-through', opacity: 0.4 } : { opacity: 0.85 }}
+              >
+                {s.title}
+              </span>
+            </div>
+          ))}
         </div>
       )}
     </div>

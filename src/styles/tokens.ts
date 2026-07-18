@@ -1,26 +1,19 @@
-// JS-side companions to src/styles/tokens.css (Mission Control direction).
+// JS-side companions to src/styles/tokens.css (v5 — Tesla + SpaceX + iOS
+// dot fusion).
 
 export const MOTION = {
-  micro: { durationMs: 150, curve: 'var(--mc-ease-snap)' }, // checkbox, dot state change
-  card: { durationMs: 200, curve: 'var(--mc-ease-snap)' }, // subtask expand, segment fill
+  dotFill: { durationMs: 200, curve: 'var(--ease-dot-fill)' },
 } as const
 
-// PriorityLevel (src/db/types.ts) has no `color` field — same discrepancy
-// as the prior direction. Mission Control reserves color strictly for
-// function (brief: "never decoration"), so only the top two priority
-// tiers by sortOrder get an alert color; everything else reads as neutral
-// white — an LED panel doesn't have a distinct color for every priority
-// tier, just alert / caution / normal.
-export type StatusLedColor = 'critical' | 'caution' | 'nominal'
+// PriorityLevel (src/db/types.ts) still has no `color` field — same
+// discrepancy flagged in the prior two rounds. "Color only for function"
+// collapses to three tiers: only the top priority gets the alert color,
+// the next gets the info color, everything else is neutral — a status
+// light doesn't need a shade per priority level, just alert/info/none.
+export type PriorityDotTone = 'alert' | 'info' | 'neutral'
 
-export function priorityStatusColor(sortOrder: number): StatusLedColor {
-  if (sortOrder <= 0) return 'critical'
-  if (sortOrder === 1) return 'caution'
-  return 'nominal'
-}
-
-export const STATUS_LED_COLOR_VAR: Record<StatusLedColor, string> = {
-  critical: 'var(--color-status-critical)',
-  caution: 'var(--color-status-caution)',
-  nominal: 'var(--color-status-nominal)',
+export function priorityDotTone(sortOrder: number): PriorityDotTone {
+  if (sortOrder <= 0) return 'alert'
+  if (sortOrder === 1) return 'info'
+  return 'neutral'
 }
