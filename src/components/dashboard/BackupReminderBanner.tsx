@@ -17,10 +17,15 @@ export function BackupReminderBanner({ intervalDays }: { intervalDays: number })
   const { t } = useTranslation()
   const [exporting, setExporting] = useState(false)
 
+  // Article 23 — this banner's own one-tap export deliberately stays
+  // "without photos": a quick, small, always-fast backup, matching the
+  // banner's own low-friction nature. The full with/without-photos choice
+  // (and its size warning) lives in Settings, for whoever actually wants
+  // photos included in what they export.
   async function exportNow() {
     setExporting(true)
     try {
-      const { json, filename } = await buildBackupJson()
+      const { json, filename } = await buildBackupJson(false)
       await triggerBackupExport(filename, json)
       await updateAppSettings({ lastBackupExportedAt: todayKey(), backupReminderSnoozedUntil: undefined })
     } finally {

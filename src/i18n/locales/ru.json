@@ -280,7 +280,16 @@
     "backupLastExported": "Последняя копия: {{date}}",
     "backupNeverExported": "Резервная копия ещё не создавалась",
     "backupImportError_invalid_format": "Этот файл не похож на резервную копию STOA.",
-    "backupImportError_unknown_table": "Этот файл ссылается на данные, которые эта версия STOA не распознаёт."
+    "backupImportError_unknown_table": "Этот файл ссылается на данные, которые эта версия STOA не распознаёт.",
+    "backupIncludePhotos": "Включить фотографии",
+    "backupPhotoSizeNote_one": "{{count}} фото, около {{size}}",
+    "backupPhotoSizeNote_few": "{{count}} фото, около {{size}}",
+    "backupPhotoSizeNote_many": "{{count}} фото, около {{size}}",
+    "backupPhotoSizeNote_other": "{{count}} фото, около {{size}}",
+    "backupPhotoSizeWarning_one": "{{count}} фото, около {{size}} — экспорт и отправка могут занять некоторое время",
+    "backupPhotoSizeWarning_few": "{{count}} фото, около {{size}} — экспорт и отправка могут занять некоторое время",
+    "backupPhotoSizeWarning_many": "{{count}} фото, около {{size}} — экспорт и отправка могут занять некоторое время",
+    "backupPhotoSizeWarning_other": "{{count}} фото, около {{size}} — экспорт и отправка могут занять некоторое время"
   },
   "timeBlocks": {
     "title": "Время дня",
@@ -366,6 +375,10 @@
   "voice": {
     "startListening": "Начать голосовой ввод",
     "stopListening": "Остановить голосовой ввод"
+  },
+  "photo": {
+    "attach": "Прикрепить фото",
+    "compressing": "Сжатие…"
   },
   "quickAdd": {
     "fabLabel": "Быстрое добавление",

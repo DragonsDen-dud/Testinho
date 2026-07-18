@@ -8,13 +8,14 @@ import { computeHabitStrength, computeBuildStreak, computeAvoidStreak, isPausedO
 import { unmetDependencyNames } from '../../lib/habitDependencies'
 import { computeWeekdayPattern, computeTimeOfDayPattern } from '../../lib/habitPatterns'
 import { computeMoodCorrelation, formatSignedMood } from '../../lib/moodCorrelation'
-import { logHabit, logMeasurableEntry, resumeHabit, setHabitLogMood, setHabitLogNote } from '../../data/habits'
+import { logHabit, logMeasurableEntry, resumeHabit, setHabitLogMood, setHabitLogNote, setHabitLogPhoto } from '../../data/habits'
 import { todayKey, weekdayName } from '../../lib/date'
 import { useAppSettings } from '../../state/useAppSettings'
 import { ActiveReminderRow } from '../reminders/ActiveReminderRow'
 import { Button } from '../ui/Button'
 import { Input, TextArea } from '../ui/Input'
 import { MicButton } from '../ui/MicButton'
+import { PhotoAttachmentInput } from '../ui/PhotoAttachmentInput'
 import { ProgressBar } from '../ui/ProgressBar'
 import { appendTranscript } from '../../lib/speechRecognition'
 
@@ -210,7 +211,15 @@ export function HabitCard({
             </div>
           )}
 
-          {todayLog && <HabitLogNoteField key={todayLog.id} habitId={habit.id} date={date} initialNote={todayLog.note} />}
+          {todayLog && (
+            <HabitLogNoteField
+              key={todayLog.id}
+              habitId={habit.id}
+              date={date}
+              initialNote={todayLog.note}
+              initialPhoto={todayLog.photo}
+            />
+          )}
         </>
       )}
     </div>
@@ -225,33 +234,53 @@ export function HabitCard({
  * cleared/re-logged entry) remounts this with a fresh buffer instead of
  * showing stale text from a previous log.
  */
-function HabitLogNoteField({ habitId, date, initialNote }: { habitId: string; date: string; initialNote?: string }) {
+function HabitLogNoteField({
+  habitId,
+  date,
+  initialNote,
+  initialPhoto,
+}: {
+  habitId: string
+  date: string
+  initialNote?: string
+  initialPhoto?: Blob
+}) {
   const { t, i18n } = useTranslation()
   const [note, setNote] = useState(initialNote ?? '')
+  const [photo, setPhoto] = useState<Blob | undefined>(initialPhoto)
 
   return (
-    <div className="flex gap-2 items-start -mt-1">
-      <TextArea
-        rows={1}
-        placeholder={t('habits.checkInNotePlaceholder')}
-        value={note}
-        onChange={(e) => setNote(e.target.value)}
-        onBlur={() => setHabitLogNote(habitId, date, note.trim() || undefined)}
-        className="flex-1 text-xs py-1.5"
-      />
-      <MicButton
-        lang={i18n.language}
-        onTranscript={(transcript) =>
-          setNote((prev) => {
-            const merged = appendTranscript(prev, transcript)
-            // A transcript is a discrete, complete event (unlike an
-            // in-progress keystroke) — persist it immediately rather than
-            // waiting for blur, matching the mood row's immediate-save
-            // behavior right above.
-            void setHabitLogNote(habitId, date, merged.trim() || undefined)
-            return merged
-          })
-        }
+    <div className="flex flex-col gap-1.5 -mt-1">
+      <div className="flex gap-2 items-start">
+        <TextArea
+          rows={1}
+          placeholder={t('habits.checkInNotePlaceholder')}
+          value={note}
+          onChange={(e) => setNote(e.target.value)}
+          onBlur={() => setHabitLogNote(habitId, date, note.trim() || undefined)}
+          className="flex-1 text-xs py-1.5"
+        />
+        <MicButton
+          lang={i18n.language}
+          onTranscript={(transcript) =>
+            setNote((prev) => {
+              const merged = appendTranscript(prev, transcript)
+              // A transcript is a discrete, complete event (unlike an
+              // in-progress keystroke) — persist it immediately rather than
+              // waiting for blur, matching the mood row's immediate-save
+              // behavior right above.
+              void setHabitLogNote(habitId, date, merged.trim() || undefined)
+              return merged
+            })
+          }
+        />
+      </div>
+      <PhotoAttachmentInput
+        photo={photo}
+        onChange={(next) => {
+          setPhoto(next)
+          void setHabitLogPhoto(habitId, date, next)
+        }}
       />
     </div>
   )

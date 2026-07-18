@@ -143,6 +143,18 @@ export async function setHabitLogNote(habitId: string, date: string, note: strin
   await db.habitLogs.update(existing.id, { note: note || undefined })
 }
 
+/**
+ * Attaches (or clears) a photo on an already-saved check-in — same
+ * post-hoc, non-blocking shape as setHabitLogMood/setHabitLogNote. The
+ * Blob passed in is always already compressed (see lib/imageCompression.ts)
+ * by the time it reaches here; this function never sees the original file.
+ */
+export async function setHabitLogPhoto(habitId: string, date: string, photo: Blob | undefined): Promise<void> {
+  const existing = await db.habitLogs.where('[habitId+date]').equals([habitId, date]).first()
+  if (!existing) return
+  await db.habitLogs.update(existing.id, { photo })
+}
+
 export async function clearHabitLog(habitId: string, date: string): Promise<void> {
   const existing = await db.habitLogs.where('[habitId+date]').equals([habitId, date]).first()
   if (existing) await db.habitLogs.delete(existing.id)

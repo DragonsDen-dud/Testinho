@@ -270,7 +270,12 @@
     "backupLastExported": "Last backed up {{date}}",
     "backupNeverExported": "Never backed up",
     "backupImportError_invalid_format": "That file doesn't look like a STOA backup.",
-    "backupImportError_unknown_table": "That file references data this version of STOA doesn't recognize."
+    "backupImportError_unknown_table": "That file references data this version of STOA doesn't recognize.",
+    "backupIncludePhotos": "Include photos",
+    "backupPhotoSizeNote_one": "{{count}} photo, about {{size}}",
+    "backupPhotoSizeNote_other": "{{count}} photos, about {{size}}",
+    "backupPhotoSizeWarning_one": "{{count}} photo, about {{size}} — this may take a moment to export and share",
+    "backupPhotoSizeWarning_other": "{{count}} photos, about {{size}} — this may take a moment to export and share"
   },
   "timeBlocks": {
     "title": "Time Blocks",
@@ -352,6 +357,10 @@
   "voice": {
     "startListening": "Start voice input",
     "stopListening": "Stop voice input"
+  },
+  "photo": {
+    "attach": "Attach photo",
+    "compressing": "Compressing…"
   },
   "quickAdd": {
     "fabLabel": "Quick add",

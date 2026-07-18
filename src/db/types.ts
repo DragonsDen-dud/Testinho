@@ -150,6 +150,9 @@ export interface HabitLog {
   bonus?: boolean // entries.length >= 2 — neutral fact, never a score/reward (Article 24)
   note?: string
   mood?: number
+  // Article 23 — always the already-compressed Blob (see lib/imageCompression.ts);
+  // nothing upstream of persistence ever stores the original, uncompressed file.
+  photo?: Blob
 }
 
 export interface TodoSubtask {
@@ -182,6 +185,8 @@ export interface Todo {
   completedAt?: string
   createdAt: string
   deletedAt?: string
+  // Article 23 — always the already-compressed Blob (see lib/imageCompression.ts).
+  photo?: Blob
 }
 
 export interface PlanEntry {
@@ -221,6 +226,8 @@ export interface JournalEntry {
   text: string
   mood?: number
   createdAt: string
+  // Article 23 — always the already-compressed Blob (see lib/imageCompression.ts).
+  photo?: Blob
 }
 
 /** Articles 12/16/26/35 — autoStats is populated locally (no AI) so the

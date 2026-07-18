@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { Sheet } from '../ui/Sheet'
 import { Field, Input, Select, TextArea } from '../ui/Input'
 import { Button } from '../ui/Button'
+import { PhotoAttachmentInput } from '../ui/PhotoAttachmentInput'
 import { useDomains } from '../../state/useDomains'
 import { usePriorityLevels } from '../../state/useTimeBlocks'
 import { useProjects } from '../../state/useProjects'
@@ -38,6 +39,7 @@ export function TodoForm({
 
   const [title, setTitle] = useState(initial?.title ?? '')
   const [description, setDescription] = useState(initial?.description ?? '')
+  const [photo, setPhoto] = useState<Blob | undefined>(initial?.photo)
   const [dueDate, setDueDate] = useState(initial?.dueDate ?? '')
   const [scheduledTime, setScheduledTime] = useState(initial?.scheduledTime ?? '')
   const [priorityLevelId, setPriorityLevelId] = useState(initial?.priorityLevelId ?? '')
@@ -63,6 +65,7 @@ export function TodoForm({
       spaceId,
       title: title.trim(),
       description: description.trim() || undefined,
+      photo,
       dueDate: dueDate || undefined,
       scheduledTime: scheduledTime || undefined,
       priorityLevelId: priorityLevelId || undefined,
@@ -97,6 +100,8 @@ export function TodoForm({
         <Field label={t('todos.description')}>
           <TextArea rows={2} value={description} onChange={(e) => setDescription(e.target.value)} />
         </Field>
+
+        <PhotoAttachmentInput photo={photo} onChange={setPhoto} />
 
         <div className="grid grid-cols-2 gap-3">
           <Field label={t('todos.dueDate')}>

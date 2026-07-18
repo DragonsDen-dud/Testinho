@@ -4,6 +4,7 @@ import { Sheet } from '../ui/Sheet'
 import { Field, TextArea } from '../ui/Input'
 import { Button } from '../ui/Button'
 import { MicButton } from '../ui/MicButton'
+import { PhotoAttachmentInput } from '../ui/PhotoAttachmentInput'
 import { appendTranscript } from '../../lib/speechRecognition'
 import type { JournalEntry, JournalPrompt } from '../../db/types'
 
@@ -19,13 +20,14 @@ export function JournalEntryForm({
 }: {
   prompt?: JournalPrompt
   initial?: JournalEntry
-  onSave: (data: { text: string; mood?: number }) => void
+  onSave: (data: { text: string; mood?: number; photo?: Blob }) => void
   onClose: () => void
   onDelete?: () => void
 }) {
   const { t, i18n } = useTranslation()
   const [text, setText] = useState(initial?.text ?? '')
   const [mood, setMood] = useState<number | undefined>(initial?.mood)
+  const [photo, setPhoto] = useState<Blob | undefined>(initial?.photo)
 
   return (
     <Sheet title={prompt ? prompt.text : t('journal.freeEntry')} onClose={onClose}>
@@ -34,7 +36,7 @@ export function JournalEntryForm({
         onSubmit={(e) => {
           e.preventDefault()
           if (!text.trim()) return
-          onSave({ text: text.trim(), mood })
+          onSave({ text: text.trim(), mood, photo })
         }}
       >
         <Field label={t('journal.entryLabel')}>
@@ -51,6 +53,8 @@ export function JournalEntryForm({
             <MicButton lang={i18n.language} onTranscript={(transcript) => setText((prev) => appendTranscript(prev, transcript))} />
           </div>
         </Field>
+
+        <PhotoAttachmentInput photo={photo} onChange={setPhoto} />
 
         <Field label={t('journal.mood')}>
           <div className="flex gap-2">

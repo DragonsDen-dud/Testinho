@@ -118,7 +118,7 @@ beforeEach(async () => {
 describe('backup export covers every live table (Article 18 safety net)', () => {
   it('the export touches exactly the set of tables db.tables reports right now', async () => {
     const liveTableNames = new Set(db.tables.map((t) => t.name))
-    const { json } = await buildBackupJson()
+    const { json } = await buildBackupJson(false)
     const exportedTableNames = new Set(Object.keys(JSON.parse(json).tables))
     expect(exportedTableNames).toEqual(liveTableNames)
   })
@@ -131,7 +131,7 @@ describe('full export -> wipe -> import round-trip (Article 18)', () => {
     const before: Record<string, unknown[]> = {}
     for (const table of db.tables) before[table.name] = await table.toArray()
 
-    const { json } = await buildBackupJson()
+    const { json } = await buildBackupJson(false)
     await clearAllTables()
 
     // Confirm the wipe actually happened, so a false-positive "restore"
@@ -156,7 +156,7 @@ describe('full export -> wipe -> import round-trip (Article 18)', () => {
 
   it('is replace-all, not merge: data added after the backup was taken is gone once it is imported', async () => {
     await seedOneRowPerTable()
-    const { json } = await buildBackupJson() // "backup A" — taken now, before the extra habit exists
+    const { json } = await buildBackupJson(false) // "backup A" — taken now, before the extra habit exists
 
     // Something new happens after the backup — a habit the backup knows nothing about.
     await db.habits.put({
