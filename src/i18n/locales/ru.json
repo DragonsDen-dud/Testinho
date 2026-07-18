@@ -79,7 +79,13 @@
     "reviewOverdue": "Разобрать",
     "scheduledReportTitleWeek": "Отчёт за эту неделю",
     "scheduledReportTitleMonth": "Отчёт за этот месяц",
-    "reportFeedbackPlaceholder": "Есть реакция на этот отчёт? (необязательно)"
+    "reportFeedbackPlaceholder": "Есть реакция на этот отчёт? (необязательно)",
+    "connectivityApp": "Приложение",
+    "connectivityNetwork": "Сеть",
+    "connectivityClaudeApi": "Claude API",
+    "pullToRefresh": "Потяните для обновления",
+    "releaseToRefresh": "Отпустите для обновления",
+    "refreshing": "Обновление…"
   },
   "habits": {
     "title": "Привычки",
@@ -156,7 +162,8 @@
     "askAiNoKey": "Добавьте ключ API Claude в Настройках, чтобы задавать вопросы о привычках.",
     "askAiIncludeNorthStar": "Включить мою Главную цель",
     "askAiThinking": "Думаю…",
-    "askAiError": "Не удалось связаться с ИИ. Попробуйте ещё раз через минуту."
+    "askAiError": "Не удалось связаться с ИИ. Попробуйте ещё раз через минуту.",
+    "exportCsv": "Экспортировать историю в CSV"
   },
   "todos": {
     "title": "Задачи",
@@ -240,6 +247,7 @@
     "manageTimeBlocks": "Время дня",
     "manageTrash": "Корзина",
     "moodCaptureEnabled": "Спрашивать настроение после отметки привычки",
+    "homeScreenOrder": "Порядок на главном экране (перетащите для изменения)",
     "about": "О приложении",
     "aboutText": "STOA хранит всё на этом устройстве. Без аккаунта, без облачной синхронизации.",
     "aiSectionTitle": "ИИ-отчёты",

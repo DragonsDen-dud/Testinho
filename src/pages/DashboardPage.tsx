@@ -6,12 +6,15 @@ import { useSpaces } from '../state/useSpaces'
 import { useHabits, useLogsForDate } from '../state/useHabits'
 import { useOpenTodosToday } from '../state/useTodos'
 import { useCurrentScheduledReport } from '../state/useDiagnostics'
+import { useConnectivity } from '../state/useConnectivity'
 import { HabitCard } from '../components/habits/HabitCard'
 import { ScheduledReportBanner } from '../components/dashboard/ScheduledReportBanner'
+import { ConnectivityPanel } from '../components/dashboard/ConnectivityPanel'
 import { TodoItem } from '../components/todos/TodoItem'
 import { EmptyState } from '../components/ui/EmptyState'
 import { isScheduledOnDate } from '../lib/habitStrength'
 import { shouldShowOverdueBanner } from '../lib/overdueBanner'
+import { usePullToRefresh } from '../lib/usePullToRefresh'
 import { todayKey } from '../lib/date'
 
 export function DashboardPage() {
@@ -31,6 +34,8 @@ export function DashboardPage() {
     date,
   )
   const { today: todosToday, overdue, loaded: todosLoaded } = useOpenTodosToday(settings?.activeSpaceId)
+  const { statuses: connectivityStatuses, recheck: recheckConnectivity } = useConnectivity()
+  const { pullDistance, refreshing, threshold } = usePullToRefresh(recheckConnectivity)
   const weeklyReport = useCurrentScheduledReport(settings?.activeSpaceId, 'week')
   const monthlyReport = useCurrentScheduledReport(settings?.activeSpaceId, 'month')
   const [weeklyReportDismissed, setWeeklyReportDismissed] = useState(false)
@@ -88,6 +93,19 @@ export function DashboardPage() {
 
   return (
     <div className="p-4 max-w-md mx-auto w-full flex flex-col gap-5">
+      {(pullDistance > 0 || refreshing) && (
+        <div
+          className="flex items-center justify-center text-xs text-[var(--stoa-text-muted)] overflow-hidden transition-[height]"
+          style={{ height: refreshing ? 28 : Math.min(pullDistance, threshold * 1.5) }}
+        >
+          {refreshing
+            ? t('dashboard.refreshing')
+            : pullDistance >= threshold
+              ? t('dashboard.releaseToRefresh')
+              : t('dashboard.pullToRefresh')}
+        </div>
+      )}
+
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-lg font-semibold">{t('dashboard.title')}</h1>
@@ -98,6 +116,8 @@ export function DashboardPage() {
           )}
         </div>
       </div>
+
+      <ConnectivityPanel statuses={connectivityStatuses} />
 
       {showOverdueBanner && (
         <div className="rounded-xl bg-[var(--stoa-danger)]/10 border border-[var(--stoa-danger)]/30 px-3.5 py-2.5 text-sm text-[var(--stoa-danger)] flex items-center justify-between gap-2">

@@ -5,6 +5,7 @@ import { useSpaces } from '../state/useSpaces'
 import { Select } from '../components/ui/Input'
 import { AiSettingsSection } from '../components/settings/AiSettingsSection'
 import { RemindersSettingsSection } from '../components/settings/RemindersSettingsSection'
+import { HomeScreenOrderSection } from '../components/settings/HomeScreenOrderSection'
 import type { Language, ThemePreset } from '../db/types'
 
 export function SettingsPage() {
@@ -69,6 +70,8 @@ export function SettingsPage() {
         />
         {t('settings.moodCaptureEnabled')}
       </label>
+
+      <HomeScreenOrderSection />
 
       <button
         className="text-left text-sm py-2.5 border-t border-[var(--stoa-border)]"

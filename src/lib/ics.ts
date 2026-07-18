@@ -52,7 +52,7 @@ function dateOnly(dateKey: string): string {
   return dateKey.replace(/-/g, '')
 }
 
-function sanitizeFilename(name: string): string {
+export function sanitizeFilename(name: string): string {
   const cleaned = name
     .replace(/[^\p{L}\p{N} _-]/gu, '')
     .trim()

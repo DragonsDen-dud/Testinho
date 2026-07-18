@@ -77,7 +77,13 @@
     "reviewOverdue": "Review",
     "scheduledReportTitleWeek": "This week's report",
     "scheduledReportTitleMonth": "This month's report",
-    "reportFeedbackPlaceholder": "Any reaction to this report? (optional)"
+    "reportFeedbackPlaceholder": "Any reaction to this report? (optional)",
+    "connectivityApp": "App",
+    "connectivityNetwork": "Network",
+    "connectivityClaudeApi": "Claude API",
+    "pullToRefresh": "Pull to refresh",
+    "releaseToRefresh": "Release to refresh",
+    "refreshing": "Refreshing…"
   },
   "habits": {
     "title": "Habits",
@@ -148,7 +154,8 @@
     "askAiNoKey": "Add a Claude API key in Settings to ask questions about your habits.",
     "askAiIncludeNorthStar": "Include my North Star",
     "askAiThinking": "Thinking…",
-    "askAiError": "Couldn't reach the AI service. Try again in a moment."
+    "askAiError": "Couldn't reach the AI service. Try again in a moment.",
+    "exportCsv": "Export history as CSV"
   },
   "todos": {
     "title": "Tasks",
@@ -232,6 +239,7 @@
     "manageTimeBlocks": "Time Blocks",
     "manageTrash": "Trash",
     "moodCaptureEnabled": "Ask my mood after habit check-ins",
+    "homeScreenOrder": "Home screen order (drag to reorder)",
     "about": "About",
     "aboutText": "STOA keeps everything on this device. No account, no cloud sync.",
     "aiSectionTitle": "AI reports",

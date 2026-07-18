@@ -10,6 +10,7 @@ import { wouldCreateCycle } from '../../lib/habitDependencies'
 import { todayKey } from '../../lib/date'
 import { AskAiHabitPanel } from './AskAiHabitPanel'
 import { AddToCalendarButton } from '../calendar/AddToCalendarButton'
+import { ExportHabitCsvButton } from './ExportHabitCsvButton'
 import { buildHabitIcs } from '../../lib/ics'
 import type { Habit, HabitType, ScheduleType } from '../../db/types'
 import type { NewHabitInput } from '../../data/habits'
@@ -352,6 +353,8 @@ export function HabitForm({
         </Field>
 
         {initial && initial.criticalReminder && <AddToCalendarButton build={buildHabitIcs(initial)} />}
+
+        {initial && <ExportHabitCsvButton habit={initial} />}
 
         {initial && <AskAiHabitPanel habit={initial} />}
 
