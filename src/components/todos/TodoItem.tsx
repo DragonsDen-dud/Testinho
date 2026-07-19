@@ -1,7 +1,10 @@
 import { useTranslation } from 'react-i18next'
+import { CalendarCheck } from 'lucide-react'
 import type { Todo } from '../../db/types'
 import { markTodoDone, reopenTodo, rescheduleTodo } from '../../data/todos'
 import { todayKey } from '../../lib/date'
+import { todoReminderTriggerDateKey } from '../../lib/reminderTiming'
+import { todoMetadataPieces } from '../../lib/todoMetadata'
 import { usePriorityLevels } from '../../state/useTimeBlocks'
 import { useProject } from '../../state/useProjects'
 import { RescheduleMenu } from './RescheduleMenu'
@@ -14,6 +17,19 @@ export function TodoItem({ todo, onOpen }: { todo: Todo; onOpen: () => void }) {
   const project = useProject(todo.projectId)
   const isOverdue = !!todo.dueDate && todo.dueDate < todayKey() && todo.status === 'open'
   const doneSubtasks = todo.subtasks?.filter((s) => s.done).length ?? 0
+
+  // Article B.3 — [Due] · [Reminder offset] · [Snooze count] · [Calendar tag]
+  const metadata = todoMetadataPieces(todo)
+  const reminderLabel = metadata.reminderAtDueTime
+    ? t('todos.reminderTag')
+    : metadata.reminderTime
+      ? t('todos.reminderTagWithTime', { time: metadata.reminderTime })
+      : undefined
+  const snoozeLabel = metadata.snoozeCount > 0 ? t('todos.snoozedCount', { count: metadata.snoozeCount }) : undefined
+  const reminderStateDate =
+    todo.reminderEnabled && todo.dueDate && todo.scheduledTime
+      ? todoReminderTriggerDateKey(todo.dueDate, todo.scheduledTime, todo.reminderOffsetMinutes ?? 0)
+      : todo.dueDate
 
   return (
     <div className="flex flex-col gap-2 rounded-xl border border-[var(--stoa-border)] bg-[var(--stoa-surface)] px-3.5 py-3">
@@ -40,6 +56,21 @@ export function TodoItem({ todo, onOpen }: { todo: Todo; onOpen: () => void }) {
                 {todo.scheduledTime ? ` · ${todo.scheduledTime}` : ''}
               </span>
             )}
+            {reminderLabel && (
+              <span className="text-xs px-1.5 py-0.5 rounded bg-[var(--stoa-border)]/50 text-[var(--stoa-text-muted)]">
+                {reminderLabel}
+              </span>
+            )}
+            {snoozeLabel && (
+              <span className="text-xs px-1.5 py-0.5 rounded bg-[var(--stoa-border)]/50 text-[var(--stoa-text-muted)]">
+                {snoozeLabel}
+              </span>
+            )}
+            {metadata.showCalendarTag && (
+              <span aria-label={t('todos.calendarExportedTag')} className="text-[var(--stoa-text-muted)]">
+                <CalendarCheck size={12} strokeWidth={1.75} />
+              </span>
+            )}
             {priority && (
               <span className="text-xs px-1.5 py-0.5 rounded bg-[var(--stoa-border)]/50 text-[var(--stoa-text-muted)]">
                 {priority.name}
@@ -64,9 +95,9 @@ export function TodoItem({ todo, onOpen }: { todo: Todo; onOpen: () => void }) {
           </div>
         </button>
       </div>
-      {todo.dueDate && todo.status === 'open' && (
+      {reminderStateDate && todo.status === 'open' && (
         <div className="pl-8">
-          <ActiveReminderRow entityType="todo" entityId={todo.id} date={todo.dueDate} />
+          <ActiveReminderRow entityType="todo" entityId={todo.id} date={reminderStateDate} />
         </div>
       )}
       {isOverdue && (

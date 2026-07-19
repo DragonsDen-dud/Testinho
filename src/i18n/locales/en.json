@@ -195,7 +195,6 @@
     "archiveConfirm": "Archive this task?",
     "deleteConfirm": "Move this task to Trash? You can restore it later, or it'll be removed for good after 30 days.",
     "scheduledTime": "Time",
-    "scheduledTimeHint": "Setting a time here turns on a reminder for this task, on its due date.",
     "recurring": "Repeats",
     "recurrenceType": "Frequency",
     "recurrenceInterval": "Every",
@@ -217,7 +216,21 @@
     "rescheduleAllTomorrow": "Reschedule all to tomorrow",
     "handleOneByOne": "Handle one by one",
     "overdueTriageTitle": "Overdue",
-    "overdueTriageEmpty": "Nothing overdue — you're caught up."
+    "overdueTriageEmpty": "Nothing overdue — you're caught up.",
+    "addReminder": "Add reminder",
+    "reminderOffsetLabel": "Remind me",
+    "reminderOffset_atDueTime": "At due time",
+    "reminderOffset_thirtyMinBefore": "30 minutes before",
+    "reminderOffset_oneHourBefore": "1 hour before",
+    "reminderOffset_oneDayBefore": "1 day before",
+    "reminderNeedsTime": "Add a time above so the reminder has a moment to count from.",
+    "reminderForegroundNote": "This alert appears while the app is open. For a reminder that works even when it's closed, also add this to your Calendar below.",
+    "snoozedCount_one": "Snoozed ×{{count}}",
+    "snoozedCount_other": "Snoozed ×{{count}}",
+    "calendarExportedTag": "Added to Calendar",
+    "savedConfirmTitle": "Saved",
+    "reminderTag": "Reminder",
+    "reminderTagWithTime": "Reminder {{time}}"
   },
   "planning": {
     "title": "Planning",
@@ -361,7 +374,8 @@
     "oneWayHint": "This creates a one-time calendar file. Editing this later won't update anything you've already added — export again to pick up changes.",
     "unmappableSchedule": "This schedule (\"N times a week\" or custom) doesn't have a fixed pattern of days, so it can't be turned into a calendar repeat — pick specific weekdays or daily if you'd like a calendar reminder.",
     "noReminderTimes": "Add at least one reminder time to export this to your calendar.",
-    "noDueDate": "Add a due date to export this to your calendar."
+    "noDueDate": "Add a due date to export this to your calendar.",
+    "handoffHint": "Depending on your device, this opens a share sheet (look for \"Add to Calendar\" there) or downloads a file to open in your calendar app."
   },
   "voice": {
     "startListening": "Start voice input",

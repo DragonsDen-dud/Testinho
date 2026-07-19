@@ -212,12 +212,14 @@ export function TodosPage() {
           initialTitle={quickCreateTitle}
           onClose={closeForm}
           onSave={async (data) => {
+            // Article B.2 State 5 — TodoForm itself now decides when to
+            // close (immediately, or after the post-save "Add to Calendar"
+            // confirmation), so this only persists and returns the result.
             if (editingTodo) {
               await updateTodo(editingTodo.id, data)
-            } else {
-              await createTodo(data, creatingSomeday ? 'someday' : 'open')
+              return { ...editingTodo, ...data }
             }
-            closeForm()
+            return createTodo(data, creatingSomeday ? 'someday' : 'open')
           }}
           onArchive={
             editingTodo

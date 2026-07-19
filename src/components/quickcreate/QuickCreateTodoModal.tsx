@@ -15,7 +15,7 @@ import { useDomains } from '../../state/useDomains'
 import { usePriorityLevels } from '../../state/useTimeBlocks'
 import { useProjects } from '../../state/useProjects'
 import { useTodos } from '../../state/useTodos'
-import { createTodo, type NewTodoInput } from '../../data/todos'
+import { createTodo, updateTodo, type NewTodoInput } from '../../data/todos'
 import { mostRecentDomainId, midTierPriorityLevel } from '../../lib/quickCreateDefaults'
 import { parseVoiceQuickCreate } from '../../lib/voiceQuickParse'
 import { appendTranscript } from '../../lib/speechRecognition'
@@ -101,7 +101,10 @@ export function QuickCreateTodoModal({
       <Sheet title={t('quickCreate.savedTitle')} onClose={onClose}>
         <div className="flex flex-col gap-3">
           <p className="text-sm text-[var(--stoa-text-muted)]">{t('quickCreate.savedBody', { name: saved.title })}</p>
-          <AddToCalendarButton build={buildTodoIcs(saved)} />
+          <AddToCalendarButton
+            build={buildTodoIcs(saved)}
+            onExported={() => updateTodo(saved.id, { calendarExportedAt: new Date().toISOString() })}
+          />
           <Button onClick={onClose}>{t('common.close')}</Button>
         </div>
       </Sheet>

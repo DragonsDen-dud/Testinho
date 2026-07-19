@@ -5,6 +5,7 @@ import { isScheduledOnDate } from '../lib/habitStrength'
 import { resolveQuietHoursDelivery } from '../lib/quietHours'
 import { nextEscalationTiming } from '../lib/escalation'
 import { deliverNotification, type NotifyFn } from '../lib/notify'
+import { computeTodoReminderTrigger, todoReminderTriggerDateKey } from '../lib/reminderTiming'
 import { listActiveHabits } from './habits'
 import { listActiveTodos } from './todos'
 import { getReminderState } from './reminderActions'
@@ -182,24 +183,29 @@ export async function tickReminders(
     }
   }
 
+  // Article B.2 — State 3: the in-app reminder is a distinct, explicit
+  // opt-in (reminderEnabled), never inferred from scheduledTime's mere
+  // presence. The trigger instant is computed once, directly, rather than
+  // walked day-by-day like the Habit loop above — an offset (e.g. "1 day
+  // before") can push it earlier than dueDate itself, so ReminderState is
+  // keyed to the trigger's own calendar day, not the task's dueDate.
   const todos = await listActiveTodos(spaceId)
   for (const todo of todos) {
-    if (todo.status !== 'open' || !todo.scheduledTime) continue
-    for (const checkDate of checkDates) {
-      if (todo.dueDate !== checkDate) continue
-      const dueTimeFloor = checkDate === date ? nowTime : '23:59'
-      if (todo.scheduledTime > dueTimeFloor) continue
-      await sendInitialReminderIfNeeded(
-        'todo',
-        todo.id,
-        checkDate,
-        now,
-        quietHours,
-        notify,
-        todo.title,
-        i18n.t('reminders.todoBody'),
-      )
-    }
+    if (todo.status !== 'open' || !todo.reminderEnabled || !todo.dueDate || !todo.scheduledTime) continue
+    const offset = todo.reminderOffsetMinutes ?? 0
+    const trigger = computeTodoReminderTrigger(todo.dueDate, todo.scheduledTime, offset)
+    if (trigger > now) continue
+    const triggerDate = todoReminderTriggerDateKey(todo.dueDate, todo.scheduledTime, offset)
+    await sendInitialReminderIfNeeded(
+      'todo',
+      todo.id,
+      triggerDate,
+      now,
+      quietHours,
+      notify,
+      todo.title,
+      i18n.t('reminders.todoBody'),
+    )
   }
 
   // Same lookback for escalation: a reminder sent late enough that its

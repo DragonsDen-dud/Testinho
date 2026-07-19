@@ -6,6 +6,7 @@
 // source of visual truth for both.
 
 import type { CSSProperties, ReactNode } from 'react'
+import { CalendarCheck } from 'lucide-react'
 import { accessibleRingColor, accessibleTextColor, priorityDotTone } from '../../../styles/tokens'
 
 export type TaskCardStatus = 'overdue' | 'upcoming' | 'someday' | 'done'
@@ -20,6 +21,16 @@ export interface TaskCardProps {
   title: string
   status: TaskCardStatus
   dueLabel?: string
+  /** Article B.3 — "Reminder" (at due time) or "Reminder HH:mm" (offset
+   * before due time), already-translated by the caller. Undefined when no
+   * in-app reminder is enabled. */
+  reminderLabel?: string
+  /** Article B.3 — "Snoozed ×N", already-translated, undefined/omitted
+   * when the reminder has never been snoozed. */
+  snoozeLabel?: string
+  /** Article B.3 — State 5's persistent "this was exported" tag, as a
+   * pre-translated aria-label; undefined means not exported. */
+  calendarExportedLabel?: string
   hasRecurrence?: boolean
   prioritySortOrder?: number
   projectLabel?: string
@@ -104,6 +115,9 @@ export function TaskCard({
   title,
   status,
   dueLabel,
+  reminderLabel,
+  snoozeLabel,
+  calendarExportedLabel,
   hasRecurrence,
   prioritySortOrder = 0,
   projectLabel,
@@ -165,6 +179,13 @@ export function TaskCard({
 
           <div className="flex flex-wrap items-center gap-2 mt-1.5">
             {dueLabel && <Chip alert={isOverdue}>{isOverdue ? `Overdue · ${dueLabel}` : dueLabel}</Chip>}
+            {reminderLabel && <Chip>{reminderLabel}</Chip>}
+            {snoozeLabel && <Chip>{snoozeLabel}</Chip>}
+            {calendarExportedLabel && (
+              <span aria-label={calendarExportedLabel} className="shrink-0 text-ink-muted">
+                <CalendarCheck size={14} strokeWidth={1.75} />
+              </span>
+            )}
             {hasSubtasks && <SubtaskDots subtasks={subtasks!} />}
             {projectLabel && <Chip>{projectLabel}</Chip>}
           </div>

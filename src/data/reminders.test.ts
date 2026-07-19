@@ -20,8 +20,20 @@ function habitInput(name: string, reminderTimes: string[] = ['09:00']): NewHabit
   }
 }
 
+// Article B.2 — reminderEnabled is now a distinct, explicit opt-in; every
+// existing call site in this file expects its todo's reminder to actually
+// fire, so the helper sets it (at the default "at due time" offset) rather
+// than repeating it at every call site.
 function todoInput(title: string, dueDate: string, scheduledTime: string): NewTodoInput {
-  return { spaceId: SPACE_ID, title, dueDate, scheduledTime, criticalReminder: false }
+  return {
+    spaceId: SPACE_ID,
+    title,
+    dueDate,
+    scheduledTime,
+    criticalReminder: false,
+    reminderEnabled: true,
+    reminderOffsetMinutes: 0,
+  }
 }
 
 beforeEach(async () => {
@@ -81,8 +93,14 @@ describe('tickReminders — initial firing (Articles 40/41)', () => {
     expect(state?.state).toBe('sent')
   })
 
-  it('a todo with a dueDate but no scheduledTime never fires a reminder — scheduledTime is the only trigger', async () => {
-    await createTodo({ spaceId: SPACE_ID, title: 'Pay rent', dueDate: '2026-07-16', criticalReminder: false })
+  it('a todo with a dueDate but no scheduledTime never fires a reminder, even with reminderEnabled true — there is no time to compute a trigger from', async () => {
+    await createTodo({
+      spaceId: SPACE_ID,
+      title: 'Pay rent',
+      dueDate: '2026-07-16',
+      criticalReminder: false,
+      reminderEnabled: true,
+    })
     const notify = vi.fn()
 
     // Well past any reasonable time-of-day, and again the next day, to rule
@@ -92,6 +110,78 @@ describe('tickReminders — initial firing (Articles 40/41)', () => {
 
     expect(notify).not.toHaveBeenCalled()
     expect(await db.reminderStates.count()).toBe(0)
+  })
+
+  it('Article B.2 State 3 — a todo with scheduledTime set but reminderEnabled left off never fires, even well past its time', async () => {
+    await createTodo({
+      spaceId: SPACE_ID,
+      title: 'Pay rent',
+      dueDate: '2026-07-16',
+      scheduledTime: '09:00',
+      criticalReminder: false,
+      // reminderEnabled intentionally omitted — must never be inferred
+      // from scheduledTime's mere presence.
+    })
+    const notify = vi.fn()
+
+    await tickReminders(SPACE_ID, new Date(2026, 6, 16, 23, 59), notify)
+
+    expect(notify).not.toHaveBeenCalled()
+    expect(await db.reminderStates.count()).toBe(0)
+  })
+
+  describe('Article B.2 — reminder offset', () => {
+    it('"30 minutes before" fires 30 minutes ahead of the due datetime, on the same calendar day', async () => {
+      const todo = await createTodo({
+        spaceId: SPACE_ID,
+        title: 'Pick up prescription',
+        dueDate: '2026-07-16',
+        scheduledTime: '09:00',
+        criticalReminder: false,
+        reminderEnabled: true,
+        reminderOffsetMinutes: 30,
+      })
+      const notify = vi.fn()
+
+      await tickReminders(SPACE_ID, new Date(2026, 6, 16, 8, 29), notify)
+      expect(notify).not.toHaveBeenCalled()
+
+      await tickReminders(SPACE_ID, new Date(2026, 6, 16, 8, 30), notify)
+      expect(notify).toHaveBeenCalledWith('Pick up prescription', expect.any(String))
+      const state = await db.reminderStates
+        .where('[entityType+entityId+date]')
+        .equals(['todo', todo.id, '2026-07-16'])
+        .first()
+      expect(state?.state).toBe('sent')
+    })
+
+    it('"1 day before" fires the day before dueDate and keys ReminderState to that earlier day, not dueDate', async () => {
+      const todo = await createTodo({
+        spaceId: SPACE_ID,
+        title: 'Submit report',
+        dueDate: '2026-07-16',
+        scheduledTime: '09:00',
+        criticalReminder: false,
+        reminderEnabled: true,
+        reminderOffsetMinutes: 1440,
+      })
+      const notify = vi.fn()
+
+      // Still the 15th, but past 09:00 — should already have fired.
+      await tickReminders(SPACE_ID, new Date(2026, 6, 15, 9, 5), notify)
+
+      expect(notify).toHaveBeenCalledWith('Submit report', expect.any(String))
+      const stateOnDueDate = await db.reminderStates
+        .where('[entityType+entityId+date]')
+        .equals(['todo', todo.id, '2026-07-16'])
+        .first()
+      expect(stateOnDueDate).toBeUndefined() // not keyed to dueDate itself
+      const stateOnTriggerDay = await db.reminderStates
+        .where('[entityType+entityId+date]')
+        .equals(['todo', todo.id, '2026-07-15'])
+        .first()
+      expect(stateOnTriggerDay?.state).toBe('sent')
+    })
   })
 
   describe('quiet hours (Article 41)', () => {
@@ -119,19 +209,34 @@ describe('tickReminders — initial firing (Articles 40/41)', () => {
       expect(state?.state).toBe('sent')
     })
 
-    it('drops silently rather than firing stale once the day is genuinely over', async () => {
+    it('never fires once the day is genuinely over, instead recording an explicit lapsed_for_day state', async () => {
       // A one-off todo (not a recurring daily habit) isolates staleness
       // cleanly — a daily habit would have a legitimately new, non-stale
       // occurrence the very next day that could confound this check.
+      //
+      // Article B.2 note: a Todo's trigger instant is computed directly
+      // from (dueDate, scheduledTime, offset) and re-evaluated on every
+      // tick regardless of how many days have passed (unlike the Habit
+      // loop above, which only walks a fixed [today, yesterday] lookback)
+      // — an offset like "1 day before" requires this, since it must still
+      // be found on a tick that happens well after its own trigger day.
+      // That means a long-unopened stale todo now correctly reaches
+      // resolveQuietHoursDelivery's own 'drop' path and gets an explicit
+      // lapsed_for_day record, rather than silently never being
+      // reconsidered at all once outside a 1-day lookback window.
       await db.appSettings.update('singleton', { quietHours: { enabled: true, start: '22:00', end: '07:00' } })
-      await createTodo(todoInput('One-off task', '2026-07-16', '23:00'))
+      const todo = await createTodo(todoInput('One-off task', '2026-07-16', '23:00'))
       const notify = vi.fn()
 
       await tickReminders(SPACE_ID, new Date(2026, 6, 16, 23, 30), notify) // queued
       await tickReminders(SPACE_ID, new Date(2026, 6, 18, 8, 0), notify) // two days later — stale
 
-      expect(notify).not.toHaveBeenCalled()
-      expect(await db.reminderStates.count()).toBe(0) // never resolved, never fired — simply forgotten
+      expect(notify).not.toHaveBeenCalled() // never actually notified
+      const state = await db.reminderStates
+        .where('[entityType+entityId+date]')
+        .equals(['todo', todo.id, '2026-07-16'])
+        .first()
+      expect(state?.state).toBe('lapsed_for_day')
     })
   })
 })
@@ -232,6 +337,19 @@ describe('tickReminders — escalation (Article 40)', () => {
     const state = await db.reminderStates.where('[entityType+entityId+date]').equals(['habit', habit.id, '2026-07-16']).first()
     expect(state?.state).toBe('lapsed_for_day')
     expect(state?.followUpSent).toBe(true)
+  })
+
+  it('Article B.2 State 6 — snoozing a todo reminder bumps its durable, user-visible snoozeCount', async () => {
+    const todo = await createTodo(todoInput('Pay rent', '2026-07-16', '09:00'))
+    await tickReminders(SPACE_ID, new Date(2026, 6, 16, 9, 0), vi.fn()) // initial send
+
+    expect((await db.todos.get(todo.id))?.snoozeCount).toBeUndefined()
+
+    await snoozeReminder('todo', todo.id, '2026-07-16', 30, new Date(2026, 6, 16, 9, 10))
+    expect((await db.todos.get(todo.id))?.snoozeCount).toBe(1)
+
+    await snoozeReminder('todo', todo.id, '2026-07-16', 30, new Date(2026, 6, 16, 9, 41))
+    expect((await db.todos.get(todo.id))?.snoozeCount).toBe(2)
   })
 
   it('snoozing after the follow-up already fired is a no-op — the cap is not reset', async () => {

@@ -54,6 +54,8 @@ export async function markTodoDone(id: string): Promise<Todo | undefined> {
     domainId: current.domainId,
     projectId: current.projectId,
     criticalReminder: current.criticalReminder,
+    reminderEnabled: current.reminderEnabled,
+    reminderOffsetMinutes: current.reminderOffsetMinutes,
     recurrence: current.recurrence,
     status: 'open',
     createdAt: new Date().toISOString(),

@@ -44,7 +44,15 @@ export async function dismissReminder(
 }
 
 /** Reschedules the one still-pending follow-up nudge to now+minutes. A no-op once the
- * follow-up has already fired — there's nothing left to reschedule. */
+ * follow-up has already fired — there's nothing left to reschedule.
+ *
+ * Article B.2 — State 6: for a Todo, also bumps a durable, user-visible
+ * `snoozeCount` on the task itself ("Snoozed ×N" in the list). This is
+ * separate from ReminderState.snoozeUntil, which is internal escalation
+ * bookkeeping that resets every cycle and was never surfaced — the count
+ * on the Todo persists across the whole task's lifetime. Habits have no
+ * equivalent field (out of this article's stated scope), so this only
+ * applies to entityType 'todo'. */
 export async function snoozeReminder(
   entityType: ReminderEntityType,
   entityId: string,
@@ -56,4 +64,8 @@ export async function snoozeReminder(
   if (!existing || existing.followUpSent) return
   const snoozeUntil = new Date(now.getTime() + minutes * 60000).toISOString()
   await db.reminderStates.update(existing.id, { state: 'snoozed', snoozeUntil, lastActionAt: now.toISOString() })
+  if (entityType === 'todo') {
+    const todo = await db.todos.get(entityId)
+    if (todo) await db.todos.update(entityId, { snoozeCount: (todo.snoozeCount ?? 0) + 1 })
+  }
 }

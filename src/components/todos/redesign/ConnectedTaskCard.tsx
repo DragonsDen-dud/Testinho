@@ -13,6 +13,8 @@ import { useDomains } from '../../../state/useDomains'
 import { markTodoDone, reopenTodo, rescheduleTodo, deleteTodo, restoreTodo, toggleSubtask } from '../../../data/todos'
 import { showUndoToast } from '../../../state/toast'
 import { todayKey } from '../../../lib/date'
+import { todoReminderTriggerDateKey } from '../../../lib/reminderTiming'
+import { todoMetadataPieces } from '../../../lib/todoMetadata'
 import { RescheduleMenu } from '../RescheduleMenu'
 import { ActiveReminderRow } from '../../reminders/ActiveReminderRow'
 
@@ -41,6 +43,25 @@ export function ConnectedTaskCard({ todo, onOpen }: { todo: Todo; onOpen: () => 
         todo.scheduledTime ? ` · ${todo.scheduledTime}` : ''
       }`
     : undefined
+
+  // Article B.3 — [Due] · [Reminder offset] · [Snooze count] · [Calendar
+  // tag], each shown only when it applies.
+  const metadata = todoMetadataPieces(todo)
+  const reminderLabel = metadata.reminderAtDueTime
+    ? t('todos.reminderTag')
+    : metadata.reminderTime
+      ? t('todos.reminderTagWithTime', { time: metadata.reminderTime })
+      : undefined
+  const snoozeLabel = metadata.snoozeCount > 0 ? t('todos.snoozedCount', { count: metadata.snoozeCount }) : undefined
+  const calendarExportedLabel = metadata.showCalendarTag ? t('todos.calendarExportedTag') : undefined
+  // ActiveReminderRow's lookup key is the reminder's own trigger day, which
+  // an offset can push earlier than dueDate itself — never the raw
+  // dueDate, or a "1 day before" reminder that already fired wouldn't be
+  // found (see the parallel note in TodoItem.tsx).
+  const reminderStateDate =
+    todo.reminderEnabled && todo.dueDate && todo.scheduledTime
+      ? todoReminderTriggerDateKey(todo.dueDate, todo.scheduledTime, todo.reminderOffsetMinutes ?? 0)
+      : todo.dueDate
 
   // Project.color wins over LifeDomain.color if the task has both set —
   // falls through to the domain's color if the project didn't set its own,
@@ -71,6 +92,9 @@ export function ConnectedTaskCard({ todo, onOpen }: { todo: Todo; onOpen: () => 
           title={todo.title}
           status={status}
           dueLabel={dueLabel}
+          reminderLabel={reminderLabel}
+          snoozeLabel={snoozeLabel}
+          calendarExportedLabel={calendarExportedLabel}
           hasRecurrence={!!todo.recurrence}
           prioritySortOrder={priority?.sortOrder ?? 0}
           projectLabel={projectLabel}
@@ -98,7 +122,9 @@ export function ConnectedTaskCard({ todo, onOpen }: { todo: Todo; onOpen: () => 
         </div>
       )}
 
-      {todo.dueDate && todo.status === 'open' && <ActiveReminderRow entityType="todo" entityId={todo.id} date={todo.dueDate} />}
+      {reminderStateDate && todo.status === 'open' && (
+        <ActiveReminderRow entityType="todo" entityId={todo.id} date={reminderStateDate} />
+      )}
     </div>
   )
 }

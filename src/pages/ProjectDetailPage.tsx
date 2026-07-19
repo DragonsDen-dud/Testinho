@@ -111,10 +111,9 @@ export function ProjectDetailPage() {
           onSave={async (data) => {
             if (editingTodo !== 'new') {
               await updateTodo(editingTodo.id, data)
-            } else {
-              await createTodo(data)
+              return { ...editingTodo, ...data }
             }
-            setEditingTodo(null)
+            return createTodo(data)
           }}
           onArchive={
             editingTodo !== 'new'

@@ -190,6 +190,22 @@ export interface Todo {
   domainId?: string
   projectId?: string
   criticalReminder: boolean
+  // Article B.2 — State 3: an explicit, separate opt-in for the in-app
+  // reminder. Never inferred from the mere presence of scheduledTime.
+  reminderEnabled?: boolean
+  // Signed minutes before the (dueDate + scheduledTime) instant; 0 = "at
+  // due time". Only meaningful while reminderEnabled is true. See
+  // lib/reminderTiming.ts's REMINDER_OFFSET_MINUTES for the fixed set.
+  reminderOffsetMinutes?: number
+  // Article B.2 — State 6: a durable, user-visible count of how many times
+  // this task's fired reminder has been snoozed, surfaced as "Snoozed ×N"
+  // in the list — distinct from ReminderState's internal snoozeUntil,
+  // which resets with every new reminder cycle and was never itself shown.
+  snoozeCount?: number
+  // Article B.2 — State 5: set the first time "Add to Calendar" is tapped
+  // for this task, so the list can show a persistent tag confirming the
+  // export happened, without the user needing to remember doing it.
+  calendarExportedAt?: string
   subtasks?: TodoSubtask[]
   recurrence?: TodoRecurrence // Article 28 — regenerates on completion, not a Habit
   status: TodoStatus

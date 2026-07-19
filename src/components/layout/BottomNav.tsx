@@ -1,18 +1,26 @@
 import { useTranslation } from 'react-i18next'
 import { NavLink } from 'react-router-dom'
+import { Home, Repeat, ListChecks, NotebookPen, CalendarDays, BarChart3, Search, Settings } from 'lucide-react'
 import { useAppSettings } from '../../state/useAppSettings'
 import { useHasUnviewedScheduledReport } from '../../state/useDiagnostics'
 
+// Article-A.3 consistency audit: all 8 tabs resolve to the same icon
+// package (lucide-react), the same size/stroke-width (set once below, no
+// per-icon override), and inherit color via currentColor from the same
+// active/inactive class logic — never a hardcoded per-icon color.
 const items = [
-  { to: '/', key: 'dashboard', icon: '◎' },
-  { to: '/habits', key: 'habits', icon: '↻' },
-  { to: '/todos', key: 'todos', icon: '☑' },
-  { to: '/journal', key: 'journal', icon: '✍' },
-  { to: '/planning', key: 'planning', icon: '✎' },
-  { to: '/analytics', key: 'analytics', icon: '📊' },
-  { to: '/search', key: 'search', icon: '🔍' },
-  { to: '/settings', key: 'settings', icon: '⚙' },
-]
+  { to: '/', key: 'dashboard', Icon: Home },
+  { to: '/habits', key: 'habits', Icon: Repeat },
+  { to: '/todos', key: 'todos', Icon: ListChecks },
+  { to: '/journal', key: 'journal', Icon: NotebookPen },
+  { to: '/planning', key: 'planning', Icon: CalendarDays },
+  { to: '/analytics', key: 'analytics', Icon: BarChart3 },
+  { to: '/search', key: 'search', Icon: Search },
+  { to: '/settings', key: 'settings', Icon: Settings },
+] as const
+
+const ICON_SIZE = 24
+const ICON_STROKE_WIDTH = 1.75
 
 export function BottomNav() {
   const { t } = useTranslation()
@@ -28,14 +36,14 @@ export function BottomNav() {
     // a fully solid background, consistent with the no-glass decision
     // already made for the Tasks tab redesign.
     <nav className="sticky bottom-0 border-t border-[var(--stoa-border)] bg-[var(--stoa-bg)] pb-[env(safe-area-inset-bottom)]">
-      <div className="max-w-md mx-auto flex justify-around">
+      <div className="max-w-md mx-auto flex">
         {items.map((item) => (
           <NavLink
             key={item.to}
             to={item.to}
             end={item.to === '/'}
             className={({ isActive }) =>
-              `flex flex-col items-center justify-center gap-0.5 min-h-11 flex-1 text-[10px] transition-opacity duration-150 ${
+              `flex flex-col items-center justify-center gap-1 min-h-11 flex-1 text-[10px] transition-opacity duration-150 ${
                 isActive ? 'text-[var(--stoa-accent)] opacity-100' : 'text-[var(--stoa-text-muted)] opacity-50'
               }`
             }
@@ -43,11 +51,11 @@ export function BottomNav() {
             {({ isActive }) => (
               <>
                 <span
-                  className={`relative flex items-center justify-center w-8 h-8 rounded-full text-base leading-none transition-transform duration-150 active:scale-90 ${
+                  className={`relative flex items-center justify-center w-8 h-8 rounded-full transition-transform duration-150 active:scale-90 ${
                     isActive ? 'bg-[var(--stoa-accent-soft)]' : ''
                   }`}
                 >
-                  {item.icon}
+                  <item.Icon size={ICON_SIZE} strokeWidth={ICON_STROKE_WIDTH} aria-hidden />
                   {item.key === 'analytics' && hasUnviewedReport && (
                     <span
                       aria-label={t('analytics.unviewedReportBadge')}

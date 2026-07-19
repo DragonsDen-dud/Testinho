@@ -9,9 +9,11 @@ import { usePriorityLevels } from '../../state/useTimeBlocks'
 import { useProjects } from '../../state/useProjects'
 import type { Todo, TodoSubtask, TodoRecurrenceType } from '../../db/types'
 import type { NewTodoInput } from '../../data/todos'
+import { updateTodo } from '../../data/todos'
 import { newId } from '../../lib/id'
 import { AddToCalendarButton } from '../calendar/AddToCalendarButton'
 import { buildTodoIcs } from '../../lib/ics'
+import { REMINDER_OFFSET_OPTIONS } from '../../lib/reminderTiming'
 
 export function TodoForm({
   spaceId,
@@ -31,7 +33,11 @@ export function TodoForm({
    * editing an existing todo, `initial` always wins. */
   initialTitle?: string
   defaultProjectId?: string
-  onSave: (data: NewTodoInput) => void
+  /** Returns the saved Todo (not void) so this form can show the Article
+   * B.2 State 5 post-save "Add to Calendar" confirmation before actually
+   * closing, when criticalReminder is set — the caller no longer closes
+   * the sheet itself, this form does, once truly done. */
+  onSave: (data: NewTodoInput) => Promise<Todo>
   onClose: () => void
   onArchive?: () => void
   onDelete?: () => void
@@ -51,11 +57,21 @@ export function TodoForm({
   const [domainId, setDomainId] = useState(initial?.domainId ?? '')
   const [projectId, setProjectId] = useState(initial?.projectId ?? defaultProjectId ?? '')
   const [criticalReminder, setCriticalReminder] = useState(initial?.criticalReminder ?? false)
+  // Article B.2 — State 3: a distinct, explicit opt-in, never inferred from
+  // scheduledTime's mere presence.
+  const [reminderEnabled, setReminderEnabled] = useState(initial?.reminderEnabled ?? false)
+  const [reminderOffsetMinutes, setReminderOffsetMinutes] = useState(initial?.reminderOffsetMinutes ?? 0)
+  const [reminderNeedsTimeError, setReminderNeedsTimeError] = useState(false)
   const [subtasks, setSubtasks] = useState<TodoSubtask[]>(initial?.subtasks ?? [])
   const [subtaskDraft, setSubtaskDraft] = useState('')
   const [recurring, setRecurring] = useState(!!initial?.recurrence)
   const [recurrenceType, setRecurrenceType] = useState<TodoRecurrenceType>(initial?.recurrence?.type ?? 'weekly')
   const [recurrenceInterval, setRecurrenceInterval] = useState(initial?.recurrence?.params.interval ?? 1)
+  // Article B.2 — State 5: once set, this form shows the "Add to Calendar"
+  // confirmation instead of closing immediately, so a checked
+  // criticalReminder box is never a silent no-op the user has to remember
+  // to come back and act on.
+  const [savedTodo, setSavedTodo] = useState<Todo | null>(null)
 
   function addSubtask() {
     if (!subtaskDraft.trim()) return
@@ -63,9 +79,13 @@ export function TodoForm({
     setSubtaskDraft('')
   }
 
-  function submit() {
+  async function submit() {
     if (!title.trim()) return
     if (recurring && !dueDate) return // recurrence needs a due date as its anchor
+    if (reminderEnabled && !scheduledTime) {
+      setReminderNeedsTimeError(true)
+      return
+    }
     const data: NewTodoInput = {
       spaceId,
       title: title.trim(),
@@ -77,10 +97,41 @@ export function TodoForm({
       domainId: domainId || undefined,
       projectId: projectId || undefined,
       criticalReminder,
+      reminderEnabled: reminderEnabled || undefined,
+      reminderOffsetMinutes: reminderEnabled ? reminderOffsetMinutes : undefined,
+      snoozeCount: initial?.snoozeCount,
+      calendarExportedAt: initial?.calendarExportedAt,
       subtasks: subtasks.length ? subtasks : undefined,
       recurrence: recurring ? { type: recurrenceType, params: { interval: recurrenceInterval } } : undefined,
     }
-    onSave(data)
+    const saved = await onSave(data)
+    if (criticalReminder) {
+      setSavedTodo(saved)
+    } else {
+      onClose()
+    }
+  }
+
+  if (savedTodo) {
+    return (
+      <Sheet title={t('todos.savedConfirmTitle')} onClose={onClose}>
+        <div className="flex flex-col gap-3">
+          <p className="text-sm">{savedTodo.title}</p>
+          <AddToCalendarButton
+            build={buildTodoIcs(savedTodo)}
+            onExported={() => {
+              // Direct update, not another onSave() round-trip — savedTodo
+              // already has its real id at this point, and onSave's
+              // create/update branching lives in the parent (TodosPage),
+              // keyed off page-level state that a second call here
+              // wouldn't see, risking a duplicate create instead of a patch.
+              updateTodo(savedTodo.id, { calendarExportedAt: new Date().toISOString() })
+            }}
+          />
+          <Button onClick={onClose}>{t('common.close')}</Button>
+        </div>
+      </Sheet>
+    )
   }
 
   return (
@@ -113,10 +164,43 @@ export function TodoForm({
             <Input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
           </Field>
           <Field label={t('todos.scheduledTime')}>
-            <Input type="time" value={scheduledTime} onChange={(e) => setScheduledTime(e.target.value)} />
+            <Input
+              type="time"
+              value={scheduledTime}
+              onChange={(e) => {
+                setScheduledTime(e.target.value)
+                if (e.target.value) setReminderNeedsTimeError(false)
+              }}
+            />
           </Field>
         </div>
-        <p className="text-xs text-[var(--stoa-text-muted)] -mt-2">{t('todos.scheduledTimeHint')}</p>
+
+        <label className="flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={reminderEnabled}
+            onChange={(e) => {
+              setReminderEnabled(e.target.checked)
+              if (e.target.checked && scheduledTime) setReminderNeedsTimeError(false)
+            }}
+          />
+          {t('todos.addReminder')}
+        </label>
+        {reminderEnabled && (
+          <div className="flex flex-col gap-2 pl-1 border-l-2 border-[var(--stoa-border)] ml-1">
+            {reminderNeedsTimeError && <p className="text-xs text-[var(--stoa-danger)]">{t('todos.reminderNeedsTime')}</p>}
+            <Field label={t('todos.reminderOffsetLabel')}>
+              <Select value={reminderOffsetMinutes} onChange={(e) => setReminderOffsetMinutes(Number(e.target.value))}>
+                {REMINDER_OFFSET_OPTIONS.map((opt) => (
+                  <option key={opt.key} value={opt.minutes}>
+                    {t(`todos.reminderOffset_${opt.key}`)}
+                  </option>
+                ))}
+              </Select>
+            </Field>
+            <p className="text-xs text-[var(--stoa-text-muted)]">{t('todos.reminderForegroundNote')}</p>
+          </div>
+        )}
 
         <Field label={t('todos.priority')}>
           <Select value={priorityLevelId} onChange={(e) => setPriorityLevelId(e.target.value)}>
@@ -222,7 +306,12 @@ export function TodoForm({
           {t('todos.criticalReminder')}
         </label>
 
-        {initial && initial.criticalReminder && <AddToCalendarButton build={buildTodoIcs(initial)} />}
+        {initial && initial.criticalReminder && (
+          <AddToCalendarButton
+            build={buildTodoIcs(initial)}
+            onExported={() => updateTodo(initial.id, { calendarExportedAt: new Date().toISOString() })}
+          />
+        )}
 
         <div className="flex gap-2 justify-between mt-2 flex-wrap">
           {initial && (onArchive || onDelete || onMoveToSomeday) ? (
