@@ -17,6 +17,15 @@ import { shouldShowOverdueBanner } from '../lib/overdueBanner'
 import { usePullToRefresh } from '../lib/usePullToRefresh'
 import { isBackupReminderDue } from '../lib/backupReminder'
 import { todayKey } from '../lib/date'
+import type { Todo } from '../db/types'
+
+// Completion-moment animation duration (Articles 3/6/19 round) — must
+// outlast .stoa-check-pop (350ms) + .stoa-checkmark-draw's 80ms delay +
+// 250ms draw, with a small margin. useOpenTodosToday's live query would
+// otherwise drop a just-checked todo from "today" within a single frame
+// of the write resolving, which raced the animation to invisibility (see
+// scratchpad frame-by-frame capture: gone by frame 1, ~16ms in).
+const TODO_CHECK_GRACE_MS = 650
 
 export function DashboardPage() {
   const { t } = useTranslation()
@@ -41,6 +50,25 @@ export function DashboardPage() {
     setJustCompletedIds((prev) => (prev.has(habitId) ? prev : new Set(prev).add(habitId)))
   }
   const { today: todosToday, overdue, loaded: todosLoaded } = useOpenTodosToday(settings?.activeSpaceId)
+  const [pendingDoneTodos, setPendingDoneTodos] = useState<Map<string, Todo>>(new Map())
+  function handleTodoChecked(todo: Todo) {
+    setPendingDoneTodos((prev) => new Map(prev).set(todo.id, { ...todo, status: 'done' }))
+    setTimeout(() => {
+      setPendingDoneTodos((prev) => {
+        if (!prev.has(todo.id)) return prev
+        const next = new Map(prev)
+        next.delete(todo.id)
+        return next
+      })
+    }, TODO_CHECK_GRACE_MS)
+  }
+  // Same key as the live list, so React keeps reusing the mounted
+  // TodoItem instance (and its local justChecked state) as its `todo`
+  // prop swaps from the live "open" object to this done snapshot.
+  const visibleTodosToday = [
+    ...todosToday,
+    ...[...pendingDoneTodos.values()].filter((t) => !todosToday.some((td) => td.id === t.id)),
+  ]
   const { statuses: connectivityStatuses, recheck: recheckConnectivity } = useConnectivity()
   const { pullDistance, refreshing, threshold } = usePullToRefresh(recheckConnectivity)
   const backupReminderDue = settings ? isBackupReminderDue(settings, date) : false
@@ -82,6 +110,7 @@ export function DashboardPage() {
                 allHabits={allHabits}
                 logsToday={logsToday}
                 onLogged={() => handleHabitLogged(h.id)}
+                vibrant
               />
             ))}
             {doneHabits.length > 0 && (
@@ -101,12 +130,18 @@ export function DashboardPage() {
     todos: (
       <section key="todos" className="flex flex-col gap-3">
         <h2 className="text-sm font-semibold text-[var(--stoa-text-muted)]">{t('dashboard.todosSection')}</h2>
-        {todosToday.length === 0 ? (
+        {visibleTodosToday.length === 0 ? (
           <EmptyState text={t('dashboard.noTodosToday')} />
         ) : (
           <div className="flex flex-col gap-2">
-            {todosToday.map((td) => (
-              <TodoItem key={td.id} todo={td} onOpen={() => navigate(`/todos/${td.id}`)} />
+            {visibleTodosToday.map((td) => (
+              <TodoItem
+                key={td.id}
+                todo={td}
+                onOpen={() => navigate(`/todos/${td.id}`)}
+                onChecked={handleTodoChecked}
+                vibrant
+              />
             ))}
           </div>
         )}
@@ -115,7 +150,7 @@ export function DashboardPage() {
   }
 
   return (
-    <div className="p-4 max-w-md mx-auto w-full flex flex-col gap-5">
+    <div className="stoa-vibrant p-4 max-w-md mx-auto w-full flex flex-col gap-5">
       {(pullDistance > 0 || refreshing) && (
         <div
           className="flex items-center justify-center text-xs text-[var(--stoa-text-muted)] overflow-hidden transition-[height]"

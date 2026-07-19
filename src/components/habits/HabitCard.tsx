@@ -36,6 +36,7 @@ export function HabitCard({
   allHabits = [],
   logsToday = new Map(),
   onLogged,
+  vibrant = false,
 }: {
   habit: Habit
   todayLog?: HabitLog
@@ -49,6 +50,11 @@ export function HabitCard({
    * re-render, which would race Dexie's async resolution.
    */
   onLogged?: () => void
+  /** Today-screen-only vibrant treatment (Articles 3/6/19 round) — the
+   * Done button becomes the primary-blue CTA before completion and a
+   * green success fill (with a one-shot pop) after. False everywhere
+   * else, which keeps Habits-tab rendering exactly as before. */
+  vibrant?: boolean
 }) {
   const { t, i18n } = useTranslation()
   const navigate = useNavigate()
@@ -154,6 +160,7 @@ export function HabitCard({
             />
             <span className="text-xs text-[var(--stoa-text-muted)]">{habit.measurable.unit}</span>
             <Button
+              vibrant={vibrant}
               onClick={async () => {
                 await logMeasurableEntry(habit.id, date, value)
                 setLoggingValue(false)
@@ -165,7 +172,12 @@ export function HabitCard({
           </div>
         ) : (
           <div className="flex items-center gap-2">
-            <Button variant={entryCount > 0 ? 'secondary' : 'primary'} className="flex-1" onClick={() => setLoggingValue(true)}>
+            <Button
+              variant={entryCount > 0 ? 'secondary' : 'primary'}
+              vibrant={vibrant}
+              className="flex-1"
+              onClick={() => setLoggingValue(true)}
+            >
               {entryCount > 0 ? t('habits.logAnother') : t('habits.logValue')}
             </Button>
             {entryCount > 0 && (
@@ -180,7 +192,8 @@ export function HabitCard({
         <>
           <div className="flex gap-2">
             <Button
-              variant={todayLog?.status === 'done' ? 'primary' : 'secondary'}
+              variant={todayLog?.status === 'done' ? (vibrant ? 'success' : 'primary') : 'secondary'}
+              vibrant={vibrant}
               className="flex-1"
               onClick={async () => {
                 await logHabit(habit.id, date, 'done')

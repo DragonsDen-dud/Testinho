@@ -30,6 +30,10 @@ export function QuickAddFab() {
   const [quickCreating, setQuickCreating] = useState<'habit' | 'todo' | null>(null)
 
   if (!FAB_ROUTES.includes(location.pathname)) return null
+  // Articles 3/6/19 round — the vibrant treatment is scoped to Today only
+  // this round; the FAB keeps its current teal look on Habits/Todos/
+  // Journal until those screens get their own pass.
+  const vibrant = location.pathname === '/'
 
   function choose(key: (typeof MENU_ITEMS)[number]) {
     setOpen(false)
@@ -81,8 +85,12 @@ export function QuickAddFab() {
         aria-label={t('quickAdd.fabLabel')}
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
-        className="w-12 h-12 rounded-full bg-[var(--stoa-accent)] text-[var(--stoa-bg)] text-2xl leading-none flex items-center justify-center shadow-lg hover:opacity-90 transition-transform"
-        style={{ transform: open ? 'rotate(45deg)' : 'none' }}
+        className={
+          vibrant
+            ? 'w-12 h-12 rounded-full stoa-btn-primary-vibrant text-2xl leading-none flex items-center justify-center transition-transform'
+            : 'w-12 h-12 rounded-full bg-[var(--stoa-accent)] text-[var(--stoa-bg)] text-2xl leading-none flex items-center justify-center shadow-lg hover:opacity-90 transition-transform'
+        }
+        style={{ transform: open ? 'rotate(45deg)' : 'none', borderRadius: vibrant ? '9999px' : undefined }}
       >
         +
       </button>

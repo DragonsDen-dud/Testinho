@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { CalendarCheck } from 'lucide-react'
 import type { Todo } from '../../db/types'
@@ -7,16 +8,44 @@ import { todoReminderTriggerDateKey } from '../../lib/reminderTiming'
 import { todoMetadataPieces } from '../../lib/todoMetadata'
 import { usePriorityLevels } from '../../state/useTimeBlocks'
 import { useProject } from '../../state/useProjects'
+import { priorityDotTone } from '../../styles/tokens'
 import { RescheduleMenu } from './RescheduleMenu'
 import { ActiveReminderRow } from '../reminders/ActiveReminderRow'
 
-export function TodoItem({ todo, onOpen }: { todo: Todo; onOpen: () => void }) {
+/**
+ * Today-screen-only vibrant treatment (Articles 3/6/19 round). `false`
+ * everywhere else, which keeps Habits/Tasks-tab rendering exactly as it
+ * was before this round.
+ */
+export function TodoItem({
+  todo,
+  onOpen,
+  vibrant = false,
+  onChecked,
+}: {
+  todo: Todo
+  onOpen: () => void
+  vibrant?: boolean
+  /**
+   * Fired synchronously, before markTodoDone, only from the checkbox's own
+   * explicit click — lets a vibrant-mode parent (Today) keep rendering this
+   * row for a moment after it drops out of the "open" list, so the
+   * completion animation actually gets a chance to play instead of racing
+   * an unmount that otherwise wins by the very next frame.
+   */
+  onChecked?: (todo: Todo) => void
+}) {
   const { t, i18n } = useTranslation()
   const priorities = usePriorityLevels(todo.spaceId)
   const priority = priorities.find((p) => p.id === todo.priorityLevelId)
+  const priorityTone = priority ? priorityDotTone(priority.sortOrder) : 'neutral'
   const project = useProject(todo.projectId)
   const isOverdue = !!todo.dueDate && todo.dueDate < todayKey() && todo.status === 'open'
   const doneSubtasks = todo.subtasks?.filter((s) => s.done).length ?? 0
+  // Local, click-driven only (never derived from todo.status) so the
+  // completion animation never replays for a todo already done before
+  // this page load — same gating discipline as HabitCard's justPopped.
+  const [justChecked, setJustChecked] = useState(false)
 
   // Article B.3 — [Due] · [Reminder offset] · [Snooze count] · [Calendar tag]
   const metadata = todoMetadataPieces(todo)
@@ -36,12 +65,38 @@ export function TodoItem({ todo, onOpen }: { todo: Todo; onOpen: () => void }) {
       <div className="flex items-start gap-3">
         <button
           aria-label={todo.status === 'done' ? t('todos.reopen') : t('todos.markDone')}
-          onClick={() => (todo.status === 'done' ? reopenTodo(todo.id) : markTodoDone(todo.id))}
+          onClick={() => {
+            if (todo.status === 'done') {
+              reopenTodo(todo.id)
+            } else {
+              setJustChecked(true)
+              onChecked?.(todo)
+              markTodoDone(todo.id)
+            }
+          }}
           className={`mt-0.5 w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${
-            todo.status === 'done' ? 'bg-[var(--stoa-accent)] border-[var(--stoa-accent)]' : 'border-[var(--stoa-border)]'
-          }`}
+            todo.status === 'done'
+              ? vibrant
+                ? 'bg-[var(--stoa-success)] border-[var(--stoa-success)]'
+                : 'bg-[var(--stoa-accent)] border-[var(--stoa-accent)]'
+              : 'border-[var(--stoa-border)]'
+          } ${vibrant && justChecked ? 'stoa-check-pop' : ''}`}
         >
-          {todo.status === 'done' && <span className="text-[var(--stoa-bg)] text-xs">✓</span>}
+          {todo.status === 'done' &&
+            (vibrant ? (
+              <svg width="10" height="8" viewBox="0 0 10 8" fill="none" aria-hidden>
+                <path
+                  d="M1 4L3.5 6.5L9 1"
+                  stroke="white"
+                  strokeWidth="1.6"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className={justChecked ? 'stoa-checkmark-draw' : undefined}
+                />
+              </svg>
+            ) : (
+              <span className="text-[var(--stoa-bg)] text-xs">✓</span>
+            ))}
         </button>
         <button className="flex-1 text-left" onClick={onOpen}>
           <div className={`text-sm font-medium ${todo.status === 'done' ? 'line-through text-[var(--stoa-text-muted)]' : ''}`}>
@@ -72,7 +127,20 @@ export function TodoItem({ todo, onOpen }: { todo: Todo; onOpen: () => void }) {
               </span>
             )}
             {priority && (
-              <span className="text-xs px-1.5 py-0.5 rounded bg-[var(--stoa-border)]/50 text-[var(--stoa-text-muted)]">
+              <span
+                className={
+                  vibrant && priorityTone !== 'neutral'
+                    ? 'text-xs px-1.5 py-0.5 rounded'
+                    : 'text-xs px-1.5 py-0.5 rounded bg-[var(--stoa-border)]/50 text-[var(--stoa-text-muted)]'
+                }
+                style={
+                  vibrant && priorityTone === 'alert'
+                    ? { background: 'var(--stoa-danger-tint)', color: 'var(--stoa-danger)' }
+                    : vibrant && priorityTone === 'info'
+                      ? { background: 'var(--stoa-primary-tint)', color: 'var(--stoa-primary-text)' }
+                      : undefined
+                }
+              >
                 {priority.name}
               </span>
             )}
