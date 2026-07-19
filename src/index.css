@@ -155,14 +155,32 @@ body {
    on an actual tab switch (Habits -> Tasks) but not on in-tab navigation
    (opening a Todo's edit sheet), which would otherwise re-fade on every
    detail-screen push. */
+/* Opacity only — deliberately no `transform` anywhere in this keyframe
+   set (an earlier version slid in via translateY, dropped here). With
+   animation-fill-mode: both the *last* keyframe's computed style becomes
+   this element's permanent resting style, and it turns out omitting
+   `transform` from just the `to` block isn't enough to avoid that:
+   verified live that the browser still resolves it to a lingering
+   `matrix(1,0,0,1,0,0)` (an identity transform), not literally `none`.
+   ANY non-`none` transform — even a no-op identity matrix — creates a
+   new containing block. This div wraps every routed page, including
+   every full-screen <Sheet> (HabitForm/TodoForm/etc, all
+   `position: fixed; inset: 0`), so that lingering identity transform was
+   silently breaking their fixed positioning: the sheet was being clipped
+   to this wrapper's own box instead of the real viewport, cutting off
+   most of the form (reported live: tapping a habit's Detail View looked
+   fine, but its "Edit" button opened a form with roughly the bottom half
+   missing). Confirmed no other ancestor triggers the same issue
+   (translate/scale/rotate/container-type/contain/filter/backdrop-filter
+   all checked at `none`/`normal`/default), and confirmed the fix by
+   measuring the Sheet's real getBoundingClientRect() before and after —
+   it now matches the full viewport. */
 @keyframes tab-fade-in {
   from {
     opacity: 0;
-    transform: translateY(4px);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
   }
 }
 .tab-fade-in {
