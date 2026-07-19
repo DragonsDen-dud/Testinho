@@ -457,5 +457,16 @@
   "pwa": {
     "updateAvailable": "Готова новая версия.",
     "refresh": "Обновить"
+  },
+  "quickCreate": {
+    "categoryPrompt": "Категория?",
+    "whenPrompt": "Когда?",
+    "timeChip": "{{time}}",
+    "calendarChip": "Добавится в Календарь",
+    "moreDetails": "Подробнее",
+    "hideDetails": "Скрыть подробности",
+    "openFullEditor": "Открыть полную форму",
+    "savedTitle": "Добавлено",
+    "savedBody": "«{{name}}» сохранено."
   }
 }

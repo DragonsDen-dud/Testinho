@@ -22,16 +22,22 @@ export function HabitsPage() {
     todayKey(),
   )
   const [creating, setCreating] = useState(false)
+  const [quickCreateTitle, setQuickCreateTitle] = useState<string | undefined>(undefined)
   const [searchParams, setSearchParams] = useSearchParams()
 
   // Article 49 — the quick-add FAB navigates here with ?new=1 rather than
   // opening the form itself, so this is the same "New habit" flow whether
-  // reached from this page's own button or from any other screen.
+  // reached from this page's own button or from any other screen. `title`
+  // additionally carries over whatever was typed into the Part 1 compact
+  // quick-create modal before the user chose "Open full editor", so
+  // switching to the full form doesn't lose it.
   useEffect(() => {
     if (searchParams.get('new') === '1') {
       setCreating(true)
+      setQuickCreateTitle(searchParams.get('title') ?? undefined)
       setSearchParams((prev) => {
         prev.delete('new')
+        prev.delete('title')
         return prev
       })
     }
@@ -42,6 +48,7 @@ export function HabitsPage() {
 
   function closeForm() {
     setCreating(false)
+    setQuickCreateTitle(undefined)
     if (params.id) navigate('/habits')
   }
 
@@ -64,6 +71,7 @@ export function HabitsPage() {
         <HabitForm
           spaceId={settings.activeSpaceId}
           initial={editingHabit}
+          initialTitle={quickCreateTitle}
           allHabits={habits}
           onClose={closeForm}
           onSave={async (data) => {

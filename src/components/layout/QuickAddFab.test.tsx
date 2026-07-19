@@ -1,17 +1,24 @@
 // @vitest-environment jsdom
-import { describe, expect, it, afterEach } from 'vitest'
+import { describe, expect, it, beforeEach, afterEach } from 'vitest'
 import { render, screen, fireEvent, cleanup } from '@testing-library/react'
 import { MemoryRouter, Routes, Route } from 'react-router-dom'
 import '../../i18n/i18n'
 import { QuickAddFab } from './QuickAddFab'
-
-afterEach(() => cleanup())
+import { db, ensureAppSettings } from '../../db/db'
+import { createSpace } from '../../data/spaces'
+import { updateAppSettings } from '../../state/useAppSettings'
 
 /**
- * Article 49 — the FAB is a navigation shortcut, not a second
- * implementation: every menu item must route to the real screen that owns
- * the actual creation flow (via ?new=1, which each page already watches
- * for), never render a form of its own.
+ * Article 49 — the FAB is a navigation shortcut for Journal (still routes
+ * to the real screen via ?new=1, which that page watches for). Habit and
+ * Task are different as of Part 1 (quick-create): they open the compact
+ * quick-create modal in place, rather than navigating away — but that
+ * modal itself calls the exact same createHabit/createTodo the full forms
+ * use, so it's still "the real creation flow", just reached without a
+ * route change. These tests seed a real Space (Dexie, not mocked) so the
+ * modal has the domains/timeBlocks/priorities it needs to actually render,
+ * matching how it behaves for a real user rather than asserting against a
+ * stub.
  */
 function renderAt(path: string) {
   return render(
@@ -26,6 +33,19 @@ function renderAt(path: string) {
     </MemoryRouter>,
   )
 }
+
+beforeEach(async () => {
+  await db.appSettings.clear()
+  await db.spaces.clear()
+  await db.timeBlocks.clear()
+  await db.priorityLevels.clear()
+  await db.journalPrompts.clear()
+  await ensureAppSettings()
+  const space = await createSpace({ name: 'Test Space', color: '#000', icon: '🏠' })
+  await updateAppSettings({ activeSpaceId: space.id })
+})
+
+afterEach(() => cleanup())
 
 describe('QuickAddFab visibility', () => {
   it('renders on Dashboard/Habits/Todos/Journal', () => {
@@ -42,21 +62,25 @@ describe('QuickAddFab visibility', () => {
   })
 })
 
-describe('QuickAddFab routing', () => {
-  it('routes "Habit" to /habits?new=1, landing on the real Habits screen', () => {
+describe('QuickAddFab — Habit and Task open the compact quick-create modal in place', () => {
+  it('"Habit" opens the quick-create modal without navigating away', async () => {
     renderAt('/')
     fireEvent.click(screen.getByLabelText('Quick add'))
     fireEvent.click(screen.getByText('Habit'))
-    expect(screen.getByText('habits-marker')).toBeTruthy()
+    expect(await screen.findByRole('heading', { name: 'New habit' })).toBeTruthy()
+    expect(screen.getByText('dashboard-marker')).toBeTruthy() // still on Dashboard, no route change
   })
 
-  it('routes "Task" to /todos?new=1, landing on the real Todos screen', () => {
+  it('"Task" opens the quick-create modal without navigating away', async () => {
     renderAt('/')
     fireEvent.click(screen.getByLabelText('Quick add'))
     fireEvent.click(screen.getByText('Task'))
-    expect(screen.getByText('todos-marker')).toBeTruthy()
+    expect(await screen.findByRole('heading', { name: 'New task' })).toBeTruthy()
+    expect(screen.getByText('dashboard-marker')).toBeTruthy()
   })
+})
 
+describe('QuickAddFab — Journal entry still routes to its own real screen', () => {
   it('routes "Journal entry" to /journal?new=1, landing on the real Journal screen', () => {
     renderAt('/')
     fireEvent.click(screen.getByLabelText('Quick add'))

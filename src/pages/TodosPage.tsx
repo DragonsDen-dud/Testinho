@@ -27,6 +27,7 @@ export function TodosPage() {
   const overdueTodos = useOverdueTodos(settings?.activeSpaceId)
   const [creating, setCreating] = useState(false)
   const [creatingSomeday, setCreatingSomeday] = useState(false)
+  const [quickCreateTitle, setQuickCreateTitle] = useState<string | undefined>(undefined)
   const [tab, setTab] = useState<Tab>('open')
   const [somedayExpanded, setSomedayExpanded] = useState(false)
   const [promoting, setPromoting] = useState<Todo | null>(null)
@@ -35,11 +36,15 @@ export function TodosPage() {
 
   // Article 49 — the FAB's "Task" option opens the real full TodoForm (not
   // the title-only quick-add row above), navigating here with ?new=1.
+  // `title` carries over whatever was typed into the Part 1 compact
+  // quick-create modal before the user chose "Open full editor".
   useEffect(() => {
     if (searchParams.get('new') === '1') {
       setCreating(true)
+      setQuickCreateTitle(searchParams.get('title') ?? undefined)
       setSearchParams((prev) => {
         prev.delete('new')
+        prev.delete('title')
         return prev
       })
     }
@@ -58,6 +63,7 @@ export function TodosPage() {
   function closeForm() {
     setCreating(false)
     setCreatingSomeday(false)
+    setQuickCreateTitle(undefined)
     if (params.id) navigate('/todos')
   }
 
@@ -203,6 +209,7 @@ export function TodosPage() {
         <TodoForm
           spaceId={settings.activeSpaceId}
           initial={editingTodo}
+          initialTitle={quickCreateTitle}
           onClose={closeForm}
           onSave={async (data) => {
             if (editingTodo) {

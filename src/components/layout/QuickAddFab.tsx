@@ -1,48 +1,77 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useLocation, useNavigate } from 'react-router-dom'
+import { useAppSettings } from '../../state/useAppSettings'
+import { QuickCreateHabitModal } from '../quickcreate/QuickCreateHabitModal'
+import { QuickCreateTodoModal } from '../quickcreate/QuickCreateTodoModal'
 
 // Article 49 — only on the screens the article names: Dashboard, Habits,
 // Todos, Journal. Not on Planning/Settings/Projects/Trash/etc.
 const FAB_ROUTES = ['/', '/habits', '/todos', '/journal']
 
-const MENU_ITEMS = [
-  { key: 'habit', to: '/habits?new=1' },
-  { key: 'todo', to: '/todos?new=1' },
-  { key: 'journal', to: '/journal?new=1' },
-] as const
+const MENU_ITEMS = ['habit', 'todo', 'journal'] as const
 
 /**
- * Article 49 — a navigation shortcut, not a second implementation: every
- * menu item routes to the same real creation flow its own screen already
- * has (HabitForm, the full TodoForm, JournalEntryForm's free-entry
- * composer), via the ?new=1 convention each page already watches for.
+ * Article 49 — a navigation shortcut, not a second implementation. Journal
+ * still routes straight to its own real full flow via ?new=1 (unchanged —
+ * Part 1's compact quick-create is scoped to Habit and Todo only). Habit
+ * and Todo now open the compact quick-create modal instead of navigating
+ * away — that modal itself calls the exact same createHabit/createTodo the
+ * full forms use (see QuickCreateHabitModal.tsx / QuickCreateTodoModal.tsx),
+ * and its own "Open full editor" link is what still reaches the full form
+ * via the same ?new=1 convention, carrying over whatever title was typed.
  */
 export function QuickAddFab() {
   const { t } = useTranslation()
   const location = useLocation()
   const navigate = useNavigate()
+  const settings = useAppSettings()
   const [open, setOpen] = useState(false)
+  const [quickCreating, setQuickCreating] = useState<'habit' | 'todo' | null>(null)
 
   if (!FAB_ROUTES.includes(location.pathname)) return null
 
-  function choose(to: string) {
+  function choose(key: (typeof MENU_ITEMS)[number]) {
     setOpen(false)
-    navigate(to)
+    if (key === 'journal') {
+      navigate('/journal?new=1')
+    } else {
+      setQuickCreating(key)
+    }
+  }
+
+  function openFullEditor(base: '/habits' | '/todos', initialTitle: string) {
+    setQuickCreating(null)
+    const query = initialTitle.trim() ? `?new=1&title=${encodeURIComponent(initialTitle.trim())}` : '?new=1'
+    navigate(`${base}${query}`)
   }
 
   return (
     <div className="fixed right-4 bottom-20 z-20 flex flex-col items-end gap-2">
+      {quickCreating === 'habit' && settings?.activeSpaceId && (
+        <QuickCreateHabitModal
+          spaceId={settings.activeSpaceId}
+          onClose={() => setQuickCreating(null)}
+          onOpenFullEditor={(title) => openFullEditor('/habits', title)}
+        />
+      )}
+      {quickCreating === 'todo' && settings?.activeSpaceId && (
+        <QuickCreateTodoModal
+          spaceId={settings.activeSpaceId}
+          onClose={() => setQuickCreating(null)}
+          onOpenFullEditor={(title) => openFullEditor('/todos', title)}
+        />
+      )}
       {open && (
         <div className="rounded-xl border border-[var(--stoa-border)] bg-[var(--stoa-surface)] shadow-lg py-1.5 flex flex-col min-w-[10rem]">
-          {MENU_ITEMS.map((item) => (
+          {MENU_ITEMS.map((key) => (
             <button
-              key={item.key}
+              key={key}
               type="button"
               className="text-left text-sm px-4 py-2.5 hover:bg-[var(--stoa-border)]/30"
-              onClick={() => choose(item.to)}
+              onClick={() => choose(key)}
             >
-              {t(`quickAdd.${item.key}`)}
+              {t(`quickAdd.${key}`)}
             </button>
           ))}
         </div>

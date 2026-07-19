@@ -20,6 +20,7 @@ const WEEKDAY_KEYS = [0, 1, 2, 3, 4, 5, 6]
 export function HabitForm({
   spaceId,
   initial,
+  initialTitle,
   allHabits = [],
   onSave,
   onClose,
@@ -30,6 +31,10 @@ export function HabitForm({
 }: {
   spaceId: string
   initial?: Habit
+  /** Pre-fills the name field for a new habit (e.g. carried over from the
+   * Part 1 compact quick-create's "Open full editor" link) — ignored when
+   * editing an existing habit, `initial` always wins. */
+  initialTitle?: string
   allHabits?: Habit[]
   onSave: (data: NewHabitInput) => void
   onClose: () => void
@@ -42,7 +47,7 @@ export function HabitForm({
   const domains = useDomains(spaceId)
   const timeBlocks = useTimeBlocks(spaceId)
 
-  const [name, setName] = useState(initial?.name ?? '')
+  const [name, setName] = useState(initial?.name ?? initialTitle ?? '')
   const [habitType, setHabitType] = useState<HabitType>(initial?.habitType ?? 'build')
   const [domainId, setDomainId] = useState(initial?.domainId ?? '')
   const [timeBlockId, setTimeBlockId] = useState(initial?.timeBlockId ?? '')

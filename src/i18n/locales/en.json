@@ -436,5 +436,16 @@
   "pwa": {
     "updateAvailable": "A new version is ready.",
     "refresh": "Refresh"
+  },
+  "quickCreate": {
+    "categoryPrompt": "Category?",
+    "whenPrompt": "When?",
+    "timeChip": "{{time}}",
+    "calendarChip": "Will add to Calendar",
+    "moreDetails": "More details",
+    "hideDetails": "Hide details",
+    "openFullEditor": "Open full editor",
+    "savedTitle": "Added",
+    "savedBody": "\"{{name}}\" was saved."
   }
 }

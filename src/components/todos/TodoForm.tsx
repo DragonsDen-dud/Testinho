@@ -16,6 +16,7 @@ import { buildTodoIcs } from '../../lib/ics'
 export function TodoForm({
   spaceId,
   initial,
+  initialTitle,
   defaultProjectId,
   onSave,
   onClose,
@@ -25,6 +26,10 @@ export function TodoForm({
 }: {
   spaceId: string
   initial?: Todo
+  /** Pre-fills the title field for a new todo (e.g. carried over from the
+   * Part 1 compact quick-create's "Open full editor" link) — ignored when
+   * editing an existing todo, `initial` always wins. */
+  initialTitle?: string
   defaultProjectId?: string
   onSave: (data: NewTodoInput) => void
   onClose: () => void
@@ -37,7 +42,7 @@ export function TodoForm({
   const priorities = usePriorityLevels(spaceId)
   const projects = useProjects(spaceId)
 
-  const [title, setTitle] = useState(initial?.title ?? '')
+  const [title, setTitle] = useState(initial?.title ?? initialTitle ?? '')
   const [description, setDescription] = useState(initial?.description ?? '')
   const [photo, setPhoto] = useState<Blob | undefined>(initial?.photo)
   const [dueDate, setDueDate] = useState(initial?.dueDate ?? '')
