@@ -129,6 +129,7 @@
     "daysCleanLabel_other": "{{count}} days without a slip",
     "streakLabel_one": "{{count}} day streak",
     "streakLabel_other": "{{count}} day streak",
+    "doneTodaySection": "Done today",
     "markDone": "Done",
     "markNotDone": "Not done",
     "markSkip": "Skip",

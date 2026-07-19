@@ -11,6 +11,13 @@
   --stoa-accent: #0d9488;
   --stoa-accent-soft: #ccfbf1;
   --stoa-danger: #b45454;
+  /* Streak flame warm tone (Article 6/14 streak-visualization round) — a
+     new token, not reused from --stoa-accent/--stoa-danger: neither reads
+     as genuinely warm/fire-colored, and forcing the flame motif into teal
+     or muted red would undercut the exact "hero visual" effect this
+     feature exists to create. Defined here following this file's own
+     existing per-theme pattern rather than as an inline hex value. */
+  --stoa-streak-warm: #ea580c;
 }
 
 :root[data-theme="dark"] {
@@ -22,6 +29,7 @@
   --stoa-accent: #5eead4;
   --stoa-accent-soft: #134e4a;
   --stoa-danger: #e2a5a5;
+  --stoa-streak-warm: #fb923c;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -34,6 +42,7 @@
     --stoa-accent: #5eead4;
     --stoa-accent-soft: #134e4a;
     --stoa-danger: #e2a5a5;
+    --stoa-streak-warm: #fb923c;
   }
 }
 
@@ -46,6 +55,7 @@
   --stoa-accent: #ffee00;
   --stoa-accent-soft: #3a3600;
   --stoa-danger: #ff6b6b;
+  --stoa-streak-warm: #ff9500;
 }
 
 html, body, #root {
@@ -83,4 +93,58 @@ body {
 }
 .tab-fade-in {
   animation: tab-fade-in 180ms ease-out both;
+}
+
+/* Habit "done today" collapse — the completed habit settles into its
+   compact tray row, 250-300ms ease-out per spec, one-shot on the row's
+   first mount (see CompletedHabitRow's justCompleted gating, driven by
+   an explicit completion action, never replayed on an unrelated
+   re-render or on page reload for a habit that was already done). */
+@keyframes habit-collapse-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(-2px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+.habit-collapse-in {
+  animation: habit-collapse-in 280ms ease-out both;
+}
+
+/* Milestone variant — the one moment Article 19's restraint deliberately
+   loosens (per the research this round is grounded in): a warmer, longer
+   settle plus a brief glow pulse, layered on top of the plain collapse
+   above, only at the exact tick a habit's streak crosses into a new
+   visual tier. Still no confetti/takeover — just a bit more warmth on
+   the one element that already exists. */
+@keyframes habit-collapse-in-milestone {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(-3px);
+  }
+  60% {
+    transform: scale(1.05) translateY(0);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+.habit-collapse-in-milestone {
+  animation: habit-collapse-in-milestone 450ms ease-out both;
+}
+@keyframes streak-glow-pulse {
+  0%,
+  100% {
+    filter: drop-shadow(0 0 2px var(--stoa-streak-warm));
+  }
+  50% {
+    filter: drop-shadow(0 0 7px var(--stoa-streak-warm));
+  }
+}
+.streak-glow-pulse {
+  animation: streak-glow-pulse 450ms ease-out;
 }

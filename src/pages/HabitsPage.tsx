@@ -7,6 +7,7 @@ import { createHabit, updateHabit, archiveHabit, deleteHabit, restoreHabit, paus
 import { showUndoToast } from '../state/toast'
 import { HabitForm } from '../components/habits/HabitForm'
 import { HabitCard } from '../components/habits/HabitCard'
+import { CompletedHabitRow } from '../components/habits/CompletedHabitRow'
 import { HabitDetailSheet } from '../components/habits/HabitDetailSheet'
 import { Button } from '../components/ui/Button'
 import { EmptyState } from '../components/ui/EmptyState'
@@ -26,6 +27,11 @@ export function HabitsPage() {
   const [creating, setCreating] = useState(false)
   const [quickCreateTitle, setQuickCreateTitle] = useState<string | undefined>(undefined)
   const [searchParams, setSearchParams] = useSearchParams()
+  // Tracks habits completed by an explicit click *in this session*, so the
+  // one-shot collapse/milestone animation only ever plays for the action
+  // that caused it — never replayed for a habit already done earlier today
+  // on page load/reload (see HabitCard's onLogged contract).
+  const [justCompletedIds, setJustCompletedIds] = useState<Set<string>>(new Set())
 
   // A tap on a habit card lands on /habits/:id (read-only Detail View,
   // below) — /habits/:id/edit is reached only via that view's explicit
@@ -54,6 +60,13 @@ export function HabitsPage() {
   const editingHabit = params.id && isEditRoute ? habits.find((h) => h.id === params.id) : undefined
   const formOpen = creating || (!!params.id && isEditRoute && !!editingHabit)
 
+  const notDoneHabits = habits.filter((h) => logsToday.get(h.id)?.status !== 'done')
+  const doneHabits = habits.filter((h) => logsToday.get(h.id)?.status === 'done')
+
+  function handleLogged(habitId: string) {
+    setJustCompletedIds((prev) => (prev.has(habitId) ? prev : new Set(prev).add(habitId)))
+  }
+
   function closeForm() {
     setCreating(false)
     setQuickCreateTitle(undefined)
@@ -70,10 +83,28 @@ export function HabitsPage() {
       {habits.length === 0 && <EmptyState text={t('habits.empty')} />}
 
       <div className="flex flex-col gap-3">
-        {habits.map((habit) => (
-          <HabitCard key={habit.id} habit={habit} todayLog={logsToday.get(habit.id)} allHabits={habits} logsToday={logsToday} />
+        {notDoneHabits.map((habit) => (
+          <HabitCard
+            key={habit.id}
+            habit={habit}
+            todayLog={logsToday.get(habit.id)}
+            allHabits={habits}
+            logsToday={logsToday}
+            onLogged={() => handleLogged(habit.id)}
+          />
         ))}
       </div>
+
+      {doneHabits.length > 0 && (
+        <div className="flex flex-col gap-2">
+          <h2 className="text-xs font-semibold text-[var(--stoa-text-muted)] uppercase tracking-wide">
+            {t('habits.doneTodaySection')}
+          </h2>
+          {doneHabits.map((habit) => (
+            <CompletedHabitRow key={habit.id} habit={habit} justCompleted={justCompletedIds.has(habit.id)} />
+          ))}
+        </div>
+      )}
 
       {viewingHabit && (
         <HabitDetailSheet

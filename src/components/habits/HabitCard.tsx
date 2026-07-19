@@ -35,11 +35,20 @@ export function HabitCard({
   todayLog,
   allHabits = [],
   logsToday = new Map(),
+  onLogged,
 }: {
   habit: Habit
   todayLog?: HabitLog
   allHabits?: Habit[]
   logsToday?: Map<string, HabitLog>
+  /**
+   * Fired only after an explicit "done" completion (the plain Done button,
+   * or a measurable-value save) — never for not_done/skip, which don't
+   * move a habit into the "done today" tray. Lets the parent page track
+   * "just completed in this click" without inferring it from a live-query
+   * re-render, which would race Dexie's async resolution.
+   */
+  onLogged?: () => void
 }) {
   const { t, i18n } = useTranslation()
   const navigate = useNavigate()
@@ -148,6 +157,7 @@ export function HabitCard({
               onClick={async () => {
                 await logMeasurableEntry(habit.id, date, value)
                 setLoggingValue(false)
+                onLogged?.()
               }}
             >
               {t('common.save')}
@@ -172,7 +182,10 @@ export function HabitCard({
             <Button
               variant={todayLog?.status === 'done' ? 'primary' : 'secondary'}
               className="flex-1"
-              onClick={() => logHabit(habit.id, date, 'done')}
+              onClick={async () => {
+                await logHabit(habit.id, date, 'done')
+                onLogged?.()
+              }}
             >
               {t('habits.markDone')}
             </Button>

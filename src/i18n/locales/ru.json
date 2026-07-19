@@ -135,6 +135,7 @@
     "streakLabel_few": "{{count}} дня подряд",
     "streakLabel_many": "{{count}} дней подряд",
     "streakLabel_other": "{{count}} дней подряд",
+    "doneTodaySection": "Выполнено сегодня",
     "markDone": "Выполнено",
     "markNotDone": "Не выполнено",
     "markSkip": "Пропустить",

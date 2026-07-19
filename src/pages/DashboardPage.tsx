@@ -7,6 +7,7 @@ import { useHabits, useLogsForDate } from '../state/useHabits'
 import { useOpenTodosToday } from '../state/useTodos'
 import { useConnectivity } from '../state/useConnectivity'
 import { HabitCard } from '../components/habits/HabitCard'
+import { CompletedHabitRow } from '../components/habits/CompletedHabitRow'
 import { ConnectivityPanel } from '../components/dashboard/ConnectivityPanel'
 import { BackupReminderBanner } from '../components/dashboard/BackupReminderBanner'
 import { TodoItem } from '../components/todos/TodoItem'
@@ -33,6 +34,12 @@ export function DashboardPage() {
     allHabits.map((h) => h.id),
     date,
   )
+  const [justCompletedIds, setJustCompletedIds] = useState<Set<string>>(new Set())
+  const notDoneHabits = todaysHabits.filter((h) => logsToday.get(h.id)?.status !== 'done')
+  const doneHabits = todaysHabits.filter((h) => logsToday.get(h.id)?.status === 'done')
+  function handleHabitLogged(habitId: string) {
+    setJustCompletedIds((prev) => (prev.has(habitId) ? prev : new Set(prev).add(habitId)))
+  }
   const { today: todosToday, overdue, loaded: todosLoaded } = useOpenTodosToday(settings?.activeSpaceId)
   const { statuses: connectivityStatuses, recheck: recheckConnectivity } = useConnectivity()
   const { pullDistance, refreshing, threshold } = usePullToRefresh(recheckConnectivity)
@@ -66,9 +73,28 @@ export function DashboardPage() {
         {todaysHabits.length === 0 ? (
           <EmptyState text={t('dashboard.noHabitsToday')} />
         ) : (
-          todaysHabits.map((h) => (
-            <HabitCard key={h.id} habit={h} todayLog={logsToday.get(h.id)} allHabits={allHabits} logsToday={logsToday} />
-          ))
+          <>
+            {notDoneHabits.map((h) => (
+              <HabitCard
+                key={h.id}
+                habit={h}
+                todayLog={logsToday.get(h.id)}
+                allHabits={allHabits}
+                logsToday={logsToday}
+                onLogged={() => handleHabitLogged(h.id)}
+              />
+            ))}
+            {doneHabits.length > 0 && (
+              <div className="flex flex-col gap-2 mt-1">
+                <h3 className="text-xs font-semibold text-[var(--stoa-text-muted)] uppercase tracking-wide">
+                  {t('habits.doneTodaySection')}
+                </h3>
+                {doneHabits.map((h) => (
+                  <CompletedHabitRow key={h.id} habit={h} justCompleted={justCompletedIds.has(h.id)} />
+                ))}
+              </div>
+            )}
+          </>
         )}
       </section>
     ),
