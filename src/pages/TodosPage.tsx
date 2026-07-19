@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
+import { useParams, useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import { useAppSettings } from '../state/useAppSettings'
 import { useTodos, useOverdueTodos } from '../state/useTodos'
 import { createTodo, updateTodo, archiveTodo, deleteTodo, restoreTodo, moveToSomeday, promoteSomeday } from '../data/todos'
 import { showUndoToast } from '../state/toast'
 import { TodoForm } from '../components/todos/TodoForm'
 import { ConnectedTaskCard } from '../components/todos/redesign/ConnectedTaskCard'
+import { TodoDetailSheet } from '../components/todos/redesign/TodoDetailSheet'
 import { SectionHeading } from '../components/todos/redesign/SectionHeading'
 import { SomedayPromoteForm } from '../components/todos/SomedayPromoteForm'
 import { Button } from '../components/ui/Button'
@@ -22,6 +23,7 @@ export function TodosPage() {
   const { t, i18n } = useTranslation()
   const navigate = useNavigate()
   const params = useParams()
+  const location = useLocation()
   const settings = useAppSettings()
   const todos = useTodos(settings?.activeSpaceId)
   const overdueTodos = useOverdueTodos(settings?.activeSpaceId)
@@ -57,8 +59,13 @@ export function TodosPage() {
     setQuickAddTitle('')
   }
 
-  const editingTodo = params.id ? todos.find((td) => td.id === params.id) : undefined
-  const formOpen = creating || (!!params.id && !!editingTodo)
+  // A tap on a task card lands on /todos/:id (read-only Detail View, below)
+  // — /todos/:id/edit is reached only via that view's explicit "Edit"
+  // button, never directly from the list anymore.
+  const isEditRoute = location.pathname.endsWith('/edit')
+  const viewingTodo = params.id && !isEditRoute ? todos.find((td) => td.id === params.id) : undefined
+  const editingTodo = params.id && isEditRoute ? todos.find((td) => td.id === params.id) : undefined
+  const formOpen = creating || (!!params.id && isEditRoute && !!editingTodo)
 
   function closeForm() {
     setCreating(false)
@@ -73,7 +80,7 @@ export function TodosPage() {
   }
 
   function openTodo(id: string) {
-    navigate(`/todos/${id}/edit`)
+    navigate(`/todos/${id}`)
   }
 
   const overdueIds = new Set(overdueTodos.map((t) => t.id))
@@ -204,6 +211,14 @@ export function TodosPage() {
             ))}
           </div>
         ))}
+
+      {viewingTodo && (
+        <TodoDetailSheet
+          todo={viewingTodo}
+          onClose={() => navigate('/todos')}
+          onEdit={() => navigate(`/todos/${viewingTodo.id}/edit`)}
+        />
+      )}
 
       {formOpen && settings?.activeSpaceId && (
         <TodoForm

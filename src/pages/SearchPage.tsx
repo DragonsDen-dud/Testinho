@@ -54,7 +54,7 @@ export function SearchPage() {
             <button
               key={h.id}
               className="text-left text-sm rounded-xl border border-[var(--stoa-border)] bg-[var(--stoa-surface)] px-3.5 py-2.5"
-              onClick={() => navigate(`/habits/${h.id}/edit`)}
+              onClick={() => navigate(`/habits/${h.id}`)}
             >
               {h.name}
             </button>
@@ -69,7 +69,7 @@ export function SearchPage() {
             <button
               key={td.id}
               className="text-left text-sm rounded-xl border border-[var(--stoa-border)] bg-[var(--stoa-surface)] px-3.5 py-2.5"
-              onClick={() => navigate(`/todos/${td.id}/edit`)}
+              onClick={() => navigate(`/todos/${td.id}`)}
             >
               {td.title}
             </button>

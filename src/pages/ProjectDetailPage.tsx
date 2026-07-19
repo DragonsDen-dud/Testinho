@@ -10,6 +10,7 @@ import { showUndoToast } from '../state/toast'
 import { ProjectForm } from '../components/projects/ProjectForm'
 import { TodoForm } from '../components/todos/TodoForm'
 import { TodoItem } from '../components/todos/TodoItem'
+import { TodoDetailSheet } from '../components/todos/redesign/TodoDetailSheet'
 import { ProgressBar } from '../components/ui/ProgressBar'
 import { Button } from '../components/ui/Button'
 import { EmptyState } from '../components/ui/EmptyState'
@@ -24,6 +25,7 @@ export function ProjectDetailPage() {
   const todos = useTodos(settings?.activeSpaceId)
   const [editingProject, setEditingProject] = useState(false)
   const [editingTodo, setEditingTodo] = useState<Todo | 'new' | null>(null)
+  const [viewingTodo, setViewingTodo] = useState<Todo | null>(null)
 
   const project = projects.find((p) => p.id === id)
   const linkedTodos = todos.filter((td) => td.projectId === id && td.status !== 'archived')
@@ -76,9 +78,20 @@ export function ProjectDetailPage() {
 
       <div className="flex flex-col gap-2">
         {linkedTodos.map((td) => (
-          <TodoItem key={td.id} todo={td} onOpen={() => setEditingTodo(td)} />
+          <TodoItem key={td.id} todo={td} onOpen={() => setViewingTodo(td)} />
         ))}
       </div>
+
+      {viewingTodo && (
+        <TodoDetailSheet
+          todo={viewingTodo}
+          onClose={() => setViewingTodo(null)}
+          onEdit={() => {
+            setEditingTodo(viewingTodo)
+            setViewingTodo(null)
+          }}
+        />
+      )}
 
       {editingProject && settings?.activeSpaceId && (
         <ProjectForm

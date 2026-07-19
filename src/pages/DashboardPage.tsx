@@ -80,7 +80,7 @@ export function DashboardPage() {
         ) : (
           <div className="flex flex-col gap-2">
             {todosToday.map((td) => (
-              <TodoItem key={td.id} todo={td} onOpen={() => navigate(`/todos/${td.id}/edit`)} />
+              <TodoItem key={td.id} todo={td} onOpen={() => navigate(`/todos/${td.id}`)} />
             ))}
           </div>
         )}

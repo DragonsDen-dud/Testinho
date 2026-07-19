@@ -79,7 +79,7 @@ export function HabitCard({
   if (paused) {
     return (
       <div className="rounded-xl border border-dashed border-[var(--stoa-border)] bg-[var(--stoa-surface)]/60 p-3.5 flex items-center justify-between gap-2">
-        <button className="text-left" onClick={() => navigate(`/habits/${habit.id}/edit`)}>
+        <button className="text-left" onClick={() => navigate(`/habits/${habit.id}`)}>
           <div className="text-sm font-medium text-[var(--stoa-text-muted)]">{habit.name}</div>
           <div className="text-xs text-[var(--stoa-text-muted)]">
             {t('habits.pausedUntilLabel', { date: habit.pausedUntil })}
@@ -95,7 +95,7 @@ export function HabitCard({
   return (
     <div className="rounded-xl border border-[var(--stoa-border)] bg-[var(--stoa-surface)] p-3.5 flex flex-col gap-3">
       <div className="flex items-start justify-between gap-2">
-        <button className="text-left" onClick={() => navigate(`/habits/${habit.id}/edit`)}>
+        <button className="text-left" onClick={() => navigate(`/habits/${habit.id}`)}>
           <div className="text-sm font-semibold">{habit.name}</div>
           {primaryStat}
           {secondaryStat}

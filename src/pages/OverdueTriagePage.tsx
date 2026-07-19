@@ -58,7 +58,7 @@ export function OverdueTriagePage() {
             <div className="flex flex-col gap-2">
               {overdue.map((td) => (
                 <div key={td.id} className="flex flex-col gap-2">
-                  <TodoItem todo={td} onOpen={() => navigate(`/todos/${td.id}/edit`)} />
+                  <TodoItem todo={td} onOpen={() => navigate(`/todos/${td.id}`)} />
                   <RescheduleMenu onReschedule={(newDueDate) => rescheduleTodo(td.id, newDueDate)} />
                 </div>
               ))}

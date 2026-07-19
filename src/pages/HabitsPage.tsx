@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useAppSettings } from '../state/useAppSettings'
 import { useHabits, useLogsForDate } from '../state/useHabits'
 import { createHabit, updateHabit, archiveHabit, deleteHabit, restoreHabit, pauseHabit, resumeHabit } from '../data/habits'
 import { showUndoToast } from '../state/toast'
 import { HabitForm } from '../components/habits/HabitForm'
 import { HabitCard } from '../components/habits/HabitCard'
+import { HabitDetailSheet } from '../components/habits/HabitDetailSheet'
 import { Button } from '../components/ui/Button'
 import { EmptyState } from '../components/ui/EmptyState'
 import { todayKey } from '../lib/date'
@@ -15,6 +16,7 @@ export function HabitsPage() {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const params = useParams()
+  const location = useLocation()
   const settings = useAppSettings()
   const habits = useHabits(settings?.activeSpaceId)
   const logsToday = useLogsForDate(
@@ -24,6 +26,11 @@ export function HabitsPage() {
   const [creating, setCreating] = useState(false)
   const [quickCreateTitle, setQuickCreateTitle] = useState<string | undefined>(undefined)
   const [searchParams, setSearchParams] = useSearchParams()
+
+  // A tap on a habit card lands on /habits/:id (read-only Detail View,
+  // below) — /habits/:id/edit is reached only via that view's explicit
+  // "Edit" button, never directly from the list anymore.
+  const isEditRoute = location.pathname.endsWith('/edit')
 
   // Article 49 — the quick-add FAB navigates here with ?new=1 rather than
   // opening the form itself, so this is the same "New habit" flow whether
@@ -43,8 +50,9 @@ export function HabitsPage() {
     }
   }, [searchParams, setSearchParams])
 
-  const editingHabit = params.id ? habits.find((h) => h.id === params.id) : undefined
-  const formOpen = creating || (!!params.id && !!editingHabit)
+  const viewingHabit = params.id && !isEditRoute ? habits.find((h) => h.id === params.id) : undefined
+  const editingHabit = params.id && isEditRoute ? habits.find((h) => h.id === params.id) : undefined
+  const formOpen = creating || (!!params.id && isEditRoute && !!editingHabit)
 
   function closeForm() {
     setCreating(false)
@@ -66,6 +74,14 @@ export function HabitsPage() {
           <HabitCard key={habit.id} habit={habit} todayLog={logsToday.get(habit.id)} allHabits={habits} logsToday={logsToday} />
         ))}
       </div>
+
+      {viewingHabit && (
+        <HabitDetailSheet
+          habit={viewingHabit}
+          onClose={() => navigate('/habits')}
+          onEdit={() => navigate(`/habits/${viewingHabit.id}/edit`)}
+        />
+      )}
 
       {formOpen && settings?.activeSpaceId && (
         <HabitForm

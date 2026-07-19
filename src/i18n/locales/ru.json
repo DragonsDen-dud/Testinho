@@ -168,7 +168,15 @@
     "askAiIncludeNorthStar": "Включить мою Главную цель",
     "askAiThinking": "Думаю…",
     "askAiError": "Не удалось связаться с ИИ. Попробуйте ещё раз через минуту.",
-    "exportCsv": "Экспортировать историю в CSV"
+    "exportCsv": "Экспортировать историю в CSV",
+    "scheduleWeeklyNTimesCount_one": "{{count}} раз в неделю",
+    "scheduleWeeklyNTimesCount_few": "{{count}} раза в неделю",
+    "scheduleWeeklyNTimesCount_many": "{{count}} раз в неделю",
+    "scheduleWeeklyNTimesCount_other": "{{count}} раза в неделю",
+    "latestNoteLabel": "Последняя заметка",
+    "hasStakeChip": "Есть ставка",
+    "hasCalendarBackupChip": "Резерв в Календаре",
+    "viewDetails": "Просмотр привычки"
   },
   "todos": {
     "title": "Задачи",
@@ -241,7 +249,9 @@
     "calendarExportedTag": "Добавлено в Календарь",
     "savedConfirmTitle": "Сохранено",
     "reminderTag": "Напоминание",
-    "reminderTagWithTime": "Напоминание {{time}}"
+    "reminderTagWithTime": "Напоминание {{time}}",
+    "subtasksDoneCount": "{{done}}/{{total}} выполнено",
+    "viewDetails": "Просмотр задачи"
   },
   "planning": {
     "title": "Планирование",

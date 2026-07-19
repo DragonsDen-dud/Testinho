@@ -94,8 +94,10 @@ function App() {
         <Route element={<AppShell />}>
           <Route path="/" element={<DashboardPage />} />
           <Route path="/habits" element={<HabitsPage />} />
+          <Route path="/habits/:id" element={<HabitsPage />} />
           <Route path="/habits/:id/edit" element={<HabitsPage />} />
           <Route path="/todos" element={<TodosPage />} />
+          <Route path="/todos/:id" element={<TodosPage />} />
           <Route path="/todos/:id/edit" element={<TodosPage />} />
           <Route path="/todos/overdue" element={<OverdueTriagePage />} />
           <Route path="/projects" element={<ProjectsPage />} />

@@ -160,7 +160,13 @@
     "askAiIncludeNorthStar": "Include my North Star",
     "askAiThinking": "Thinking…",
     "askAiError": "Couldn't reach the AI service. Try again in a moment.",
-    "exportCsv": "Export history as CSV"
+    "exportCsv": "Export history as CSV",
+    "scheduleWeeklyNTimesCount_one": "{{count}} time a week",
+    "scheduleWeeklyNTimesCount_other": "{{count}} times a week",
+    "latestNoteLabel": "Latest note",
+    "hasStakeChip": "Stake set",
+    "hasCalendarBackupChip": "Calendar backup",
+    "viewDetails": "View habit"
   },
   "todos": {
     "title": "Tasks",
@@ -230,7 +236,9 @@
     "calendarExportedTag": "Added to Calendar",
     "savedConfirmTitle": "Saved",
     "reminderTag": "Reminder",
-    "reminderTagWithTime": "Reminder {{time}}"
+    "reminderTagWithTime": "Reminder {{time}}",
+    "subtasksDoneCount": "{{done}}/{{total}} done",
+    "viewDetails": "View task"
   },
   "planning": {
     "title": "Planning",
