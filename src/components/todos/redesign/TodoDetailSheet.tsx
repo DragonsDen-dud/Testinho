@@ -44,7 +44,15 @@ export function TodoDetailSheet({ todo, onClose, onEdit }: { todo: Todo; onClose
   const snoozeLabel = metadata.snoozeCount > 0 ? t('todos.snoozedCount', { count: metadata.snoozeCount }) : undefined
 
   return (
-    <Sheet title={todo.title} onClose={onClose}>
+    <Sheet
+      title={todo.title}
+      onClose={onClose}
+      footer={
+        <Button className="w-full" onClick={onEdit}>
+          {t('common.edit')}
+        </Button>
+      }
+    >
       <div className="flex flex-col gap-4">
         <div>
           <div className={`text-2xl font-semibold ${isOverdue ? '' : 'text-ink'}`} style={isOverdue ? { color: 'var(--color-accent-alert)' } : undefined}>
@@ -90,10 +98,6 @@ export function TodoDetailSheet({ todo, onClose, onEdit }: { todo: Todo; onClose
           </div>
         )}
       </div>
-
-      <Button className="w-full mt-5" onClick={onEdit}>
-        {t('common.edit')}
-      </Button>
     </Sheet>
   )
 }

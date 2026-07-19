@@ -98,14 +98,17 @@ export function QuickCreateTodoModal({
 
   if (saved) {
     return (
-      <Sheet title={t('quickCreate.savedTitle')} onClose={onClose}>
+      <Sheet
+        title={t('quickCreate.savedTitle')}
+        onClose={onClose}
+        footer={<Button className="w-full" onClick={onClose}>{t('common.close')}</Button>}
+      >
         <div className="flex flex-col gap-3">
           <p className="text-sm text-[var(--stoa-text-muted)]">{t('quickCreate.savedBody', { name: saved.title })}</p>
           <AddToCalendarButton
             build={buildTodoIcs(saved)}
             onExported={() => updateTodo(saved.id, { calendarExportedAt: new Date().toISOString() })}
           />
-          <Button onClick={onClose}>{t('common.close')}</Button>
         </div>
       </Sheet>
     )
@@ -114,9 +117,21 @@ export function QuickCreateTodoModal({
   const domainLabel = domains.find((d) => d.id === domainId)?.name
   const whenLabel = dueDate ? `${dueDate}${scheduledTime ? ` · ${scheduledTime}` : ''}` : undefined
 
+  const footer = (
+    <div className="flex gap-2 justify-end">
+      <Button type="button" variant="secondary" onClick={onClose}>
+        {t('common.cancel')}
+      </Button>
+      <Button type="submit" form="quick-create-todo-form" disabled={!title.trim()}>
+        {t('common.save')}
+      </Button>
+    </div>
+  )
+
   return (
-    <Sheet title={t('todos.newTodo')} onClose={onClose}>
+    <Sheet title={t('todos.newTodo')} onClose={onClose} footer={footer}>
       <form
+        id="quick-create-todo-form"
         className="flex flex-col gap-3"
         onSubmit={(e) => {
           e.preventDefault()
@@ -205,15 +220,6 @@ export function QuickCreateTodoModal({
         >
           {t('quickCreate.openFullEditor')}
         </button>
-
-        <div className="flex gap-2 justify-end mt-2">
-          <Button type="button" variant="secondary" onClick={onClose}>
-            {t('common.cancel')}
-          </Button>
-          <Button type="submit" disabled={!title.trim()}>
-            {t('common.save')}
-          </Button>
-        </div>
       </form>
     </Sheet>
   )

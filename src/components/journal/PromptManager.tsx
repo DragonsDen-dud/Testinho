@@ -12,7 +12,15 @@ export function PromptManager({ spaceId, onClose }: { spaceId: string; onClose: 
   const [draft, setDraft] = useState('')
 
   return (
-    <Sheet title={t('journal.managePrompts')} onClose={onClose}>
+    <Sheet
+      title={t('journal.managePrompts')}
+      onClose={onClose}
+      footer={
+        <Button variant="secondary" className="w-full" onClick={onClose}>
+          {t('common.close')}
+        </Button>
+      }
+    >
       <div className="flex flex-col gap-3">
         {prompts.map((p) => (
           <div key={p.id} className="flex items-center gap-2">
@@ -67,10 +75,6 @@ export function PromptManager({ spaceId, onClose }: { spaceId: string; onClose: 
             {t('common.add')}
           </Button>
         </div>
-
-        <Button variant="secondary" onClick={onClose}>
-          {t('common.close')}
-        </Button>
       </div>
     </Sheet>
   )

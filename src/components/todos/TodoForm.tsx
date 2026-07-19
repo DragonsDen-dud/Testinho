@@ -114,7 +114,11 @@ export function TodoForm({
 
   if (savedTodo) {
     return (
-      <Sheet title={t('todos.savedConfirmTitle')} onClose={onClose}>
+      <Sheet
+        title={t('todos.savedConfirmTitle')}
+        onClose={onClose}
+        footer={<Button className="w-full" onClick={onClose}>{t('common.close')}</Button>}
+      >
         <div className="flex flex-col gap-3">
           <p className="text-sm">{savedTodo.title}</p>
           <AddToCalendarButton
@@ -128,15 +132,68 @@ export function TodoForm({
               updateTodo(savedTodo.id, { calendarExportedAt: new Date().toISOString() })
             }}
           />
-          <Button onClick={onClose}>{t('common.close')}</Button>
         </div>
       </Sheet>
     )
   }
 
+  const footer = (
+    <div className="flex gap-2 justify-between flex-wrap">
+      {initial && (onArchive || onDelete || onMoveToSomeday) ? (
+        <div className="flex gap-2 flex-wrap">
+          {onMoveToSomeday && initial.status === 'open' && (
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => {
+                onMoveToSomeday()
+                onClose()
+              }}
+            >
+              {t('todos.moveToSomeday')}
+            </Button>
+          )}
+          {onArchive && (
+            <Button
+              type="button"
+              variant="danger"
+              onClick={() => {
+                if (confirm(t('todos.archiveConfirm'))) onArchive()
+              }}
+            >
+              {t('common.archive')}
+            </Button>
+          )}
+          {onDelete && (
+            <Button
+              type="button"
+              variant="danger"
+              onClick={() => {
+                if (confirm(t('todos.deleteConfirm'))) onDelete()
+              }}
+            >
+              {t('common.delete')}
+            </Button>
+          )}
+        </div>
+      ) : (
+        <span />
+      )}
+      <div className="flex gap-2">
+        <Button type="button" variant="secondary" onClick={onClose}>
+          {t('common.cancel')}
+        </Button>
+        <Button type="submit" form="todo-form">
+          {t('common.save')}
+        </Button>
+      </div>
+    </div>
+  )
+
   return (
-    <Sheet title={initial ? t('todos.editTodo') : t('todos.newTodo')} onClose={onClose}>
+    <Sheet title={initial ? t('todos.editTodo') : t('todos.newTodo')} onClose={onClose} footer={footer}>
       <form
+        id="todo-form"
         className="flex flex-col gap-4"
         onSubmit={(e) => {
           e.preventDefault()
@@ -312,55 +369,6 @@ export function TodoForm({
             onExported={() => updateTodo(initial.id, { calendarExportedAt: new Date().toISOString() })}
           />
         )}
-
-        <div className="flex gap-2 justify-between mt-2 flex-wrap">
-          {initial && (onArchive || onDelete || onMoveToSomeday) ? (
-            <div className="flex gap-2 flex-wrap">
-              {onMoveToSomeday && initial.status === 'open' && (
-                <Button
-                  type="button"
-                  variant="secondary"
-                  onClick={() => {
-                    onMoveToSomeday()
-                    onClose()
-                  }}
-                >
-                  {t('todos.moveToSomeday')}
-                </Button>
-              )}
-              {onArchive && (
-                <Button
-                  type="button"
-                  variant="danger"
-                  onClick={() => {
-                    if (confirm(t('todos.archiveConfirm'))) onArchive()
-                  }}
-                >
-                  {t('common.archive')}
-                </Button>
-              )}
-              {onDelete && (
-                <Button
-                  type="button"
-                  variant="danger"
-                  onClick={() => {
-                    if (confirm(t('todos.deleteConfirm'))) onDelete()
-                  }}
-                >
-                  {t('common.delete')}
-                </Button>
-              )}
-            </div>
-          ) : (
-            <span />
-          )}
-          <div className="flex gap-2">
-            <Button type="button" variant="secondary" onClick={onClose}>
-              {t('common.cancel')}
-            </Button>
-            <Button type="submit">{t('common.save')}</Button>
-          </div>
-        </div>
       </form>
     </Sheet>
   )

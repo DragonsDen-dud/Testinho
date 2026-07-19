@@ -20,15 +20,20 @@ export function WhatsNewSheet() {
   }
 
   return (
-    <Sheet title={t('whatsNew.title', { version: latest.version })} onClose={dismiss}>
-      <ul className="flex flex-col gap-2 mb-4 text-sm list-disc pl-4">
+    <Sheet
+      title={t('whatsNew.title', { version: latest.version })}
+      onClose={dismiss}
+      footer={
+        <Button className="w-full" onClick={dismiss}>
+          {t('whatsNew.gotIt')}
+        </Button>
+      }
+    >
+      <ul className="flex flex-col gap-2 text-sm list-disc pl-4">
         {latest.bullets.map((bullet) => (
           <li key={bullet}>{bullet}</li>
         ))}
       </ul>
-      <Button className="w-full" onClick={dismiss}>
-        {t('whatsNew.gotIt')}
-      </Button>
     </Sheet>
   )
 }

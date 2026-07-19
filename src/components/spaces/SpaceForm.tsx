@@ -22,9 +22,21 @@ export function SpaceForm({
   const [icon, setIcon] = useState(initial?.icon ?? PRESET_ICONS[0])
   const [northStar, setNorthStar] = useState(initial?.northStar ?? '')
 
+  const footer = (
+    <div className="flex gap-2 justify-end">
+      <Button type="button" variant="secondary" onClick={onClose}>
+        {t('common.cancel')}
+      </Button>
+      <Button type="submit" form="space-form">
+        {t('common.save')}
+      </Button>
+    </div>
+  )
+
   return (
-    <Sheet title={initial ? t('spaces.editSpace') : t('spaces.newSpace')} onClose={onClose}>
+    <Sheet title={initial ? t('spaces.editSpace') : t('spaces.newSpace')} onClose={onClose} footer={footer}>
       <form
+        id="space-form"
         className="flex flex-col gap-4"
         onSubmit={(e) => {
           e.preventDefault()
@@ -49,12 +61,6 @@ export function SpaceForm({
             onChange={(e) => setNorthStar(e.target.value)}
           />
         </Field>
-        <div className="flex gap-2 justify-end mt-2">
-          <Button type="button" variant="secondary" onClick={onClose}>
-            {t('common.cancel')}
-          </Button>
-          <Button type="submit">{t('common.save')}</Button>
-        </div>
       </form>
     </Sheet>
   )

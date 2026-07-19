@@ -30,9 +30,51 @@ export function ProjectForm({
   const [domainId, setDomainId] = useState(initial?.domainId ?? '')
   const [color, setColor] = useState(initial?.color ?? PRESET_COLORS[0])
 
+  const footer = (
+    <div className="flex gap-2 justify-between">
+      {initial && (onArchive || onDelete) ? (
+        <div className="flex gap-2">
+          {onArchive && (
+            <Button
+              type="button"
+              variant="danger"
+              onClick={() => {
+                if (confirm(t('projects.archiveConfirm'))) onArchive()
+              }}
+            >
+              {t('common.archive')}
+            </Button>
+          )}
+          {onDelete && (
+            <Button
+              type="button"
+              variant="danger"
+              onClick={() => {
+                if (confirm(t('projects.deleteConfirm'))) onDelete()
+              }}
+            >
+              {t('common.delete')}
+            </Button>
+          )}
+        </div>
+      ) : (
+        <span />
+      )}
+      <div className="flex gap-2">
+        <Button type="button" variant="secondary" onClick={onClose}>
+          {t('common.cancel')}
+        </Button>
+        <Button type="submit" form="project-form">
+          {t('common.save')}
+        </Button>
+      </div>
+    </div>
+  )
+
   return (
-    <Sheet title={initial ? t('projects.editProject') : t('projects.newProject')} onClose={onClose}>
+    <Sheet title={initial ? t('projects.editProject') : t('projects.newProject')} onClose={onClose} footer={footer}>
       <form
+        id="project-form"
         className="flex flex-col gap-4"
         onSubmit={(e) => {
           e.preventDefault()
@@ -62,43 +104,6 @@ export function ProjectForm({
         <Field label={t('projects.color')}>
           <SwatchPicker kind="color" options={PRESET_COLORS} value={color} onChange={setColor} />
         </Field>
-
-        <div className="flex gap-2 justify-between mt-2">
-          {initial && (onArchive || onDelete) ? (
-            <div className="flex gap-2">
-              {onArchive && (
-                <Button
-                  type="button"
-                  variant="danger"
-                  onClick={() => {
-                    if (confirm(t('projects.archiveConfirm'))) onArchive()
-                  }}
-                >
-                  {t('common.archive')}
-                </Button>
-              )}
-              {onDelete && (
-                <Button
-                  type="button"
-                  variant="danger"
-                  onClick={() => {
-                    if (confirm(t('projects.deleteConfirm'))) onDelete()
-                  }}
-                >
-                  {t('common.delete')}
-                </Button>
-              )}
-            </div>
-          ) : (
-            <span />
-          )}
-          <div className="flex gap-2">
-            <Button type="button" variant="secondary" onClick={onClose}>
-              {t('common.cancel')}
-            </Button>
-            <Button type="submit">{t('common.save')}</Button>
-          </div>
-        </div>
       </form>
     </Sheet>
   )

@@ -113,9 +113,51 @@ export function HabitForm({
     onSave(data)
   }
 
+  const footer = (
+    <div className="flex gap-2 justify-between">
+      {initial && (onArchive || onDelete) ? (
+        <div className="flex gap-2">
+          {onArchive && (
+            <Button
+              type="button"
+              variant="danger"
+              onClick={() => {
+                if (confirm(t('habits.archiveConfirm'))) onArchive()
+              }}
+            >
+              {t('common.archive')}
+            </Button>
+          )}
+          {onDelete && (
+            <Button
+              type="button"
+              variant="danger"
+              onClick={() => {
+                if (confirm(t('habits.deleteConfirm'))) onDelete()
+              }}
+            >
+              {t('common.delete')}
+            </Button>
+          )}
+        </div>
+      ) : (
+        <span />
+      )}
+      <div className="flex gap-2">
+        <Button type="button" variant="secondary" onClick={onClose}>
+          {t('common.cancel')}
+        </Button>
+        <Button type="submit" form="habit-form">
+          {t('common.save')}
+        </Button>
+      </div>
+    </div>
+  )
+
   return (
-    <Sheet title={initial ? t('habits.editHabit') : t('habits.newHabit')} onClose={onClose}>
+    <Sheet title={initial ? t('habits.editHabit') : t('habits.newHabit')} onClose={onClose} footer={footer}>
       <form
+        id="habit-form"
         className="flex flex-col gap-4"
         onSubmit={(e) => {
           e.preventDefault()
@@ -362,43 +404,6 @@ export function HabitForm({
         {initial && <ExportHabitCsvButton habit={initial} />}
 
         {initial && <AskAiHabitPanel habit={initial} />}
-
-        <div className="flex gap-2 justify-between mt-2">
-          {initial && (onArchive || onDelete) ? (
-            <div className="flex gap-2">
-              {onArchive && (
-                <Button
-                  type="button"
-                  variant="danger"
-                  onClick={() => {
-                    if (confirm(t('habits.archiveConfirm'))) onArchive()
-                  }}
-                >
-                  {t('common.archive')}
-                </Button>
-              )}
-              {onDelete && (
-                <Button
-                  type="button"
-                  variant="danger"
-                  onClick={() => {
-                    if (confirm(t('habits.deleteConfirm'))) onDelete()
-                  }}
-                >
-                  {t('common.delete')}
-                </Button>
-              )}
-            </div>
-          ) : (
-            <span />
-          )}
-          <div className="flex gap-2">
-            <Button type="button" variant="secondary" onClick={onClose}>
-              {t('common.cancel')}
-            </Button>
-            <Button type="submit">{t('common.save')}</Button>
-          </div>
-        </div>
       </form>
     </Sheet>
   )

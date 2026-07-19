@@ -22,9 +22,21 @@ export function SomedayPromoteForm({
   const [dueDate, setDueDate] = useState(todayKey())
   const [priorityLevelId, setPriorityLevelId] = useState('')
 
+  const footer = (
+    <div className="flex gap-2 justify-end">
+      <Button type="button" variant="secondary" onClick={onClose}>
+        {t('common.cancel')}
+      </Button>
+      <Button type="submit" form="someday-promote-form" disabled={!dueDate || !priorityLevelId}>
+        {t('todos.startDoingThis')}
+      </Button>
+    </div>
+  )
+
   return (
-    <Sheet title={t('todos.startDoingThis')} onClose={onClose}>
+    <Sheet title={t('todos.startDoingThis')} onClose={onClose} footer={footer}>
       <form
+        id="someday-promote-form"
         className="flex flex-col gap-4"
         onSubmit={(e) => {
           e.preventDefault()
@@ -48,14 +60,6 @@ export function SomedayPromoteForm({
             ))}
           </Select>
         </Field>
-        <div className="flex gap-2 justify-end mt-2">
-          <Button type="button" variant="secondary" onClick={onClose}>
-            {t('common.cancel')}
-          </Button>
-          <Button type="submit" disabled={!dueDate || !priorityLevelId}>
-            {t('todos.startDoingThis')}
-          </Button>
-        </div>
       </form>
     </Sheet>
   )

@@ -83,8 +83,22 @@ export function DomainsPage() {
       </Button>
 
       {formOpen && settings?.activeSpaceId && (
-        <Sheet title={editing ? t('domains.editDomain') : t('domains.newDomain')} onClose={() => setFormOpen(false)}>
+        <Sheet
+          title={editing ? t('domains.editDomain') : t('domains.newDomain')}
+          onClose={() => setFormOpen(false)}
+          footer={
+            <div className="flex gap-2 justify-end">
+              <Button type="button" variant="secondary" onClick={() => setFormOpen(false)}>
+                {t('common.cancel')}
+              </Button>
+              <Button type="submit" form="domain-form">
+                {t('common.save')}
+              </Button>
+            </div>
+          }
+        >
           <form
+            id="domain-form"
             className="flex flex-col gap-4"
             onSubmit={async (e) => {
               e.preventDefault()
@@ -106,12 +120,6 @@ export function DomainsPage() {
             <Field label={t('spaces.color')}>
               <SwatchPicker kind="color" options={PRESET_COLORS} value={color} onChange={setColor} />
             </Field>
-            <div className="flex gap-2 justify-end mt-2">
-              <Button type="button" variant="secondary" onClick={() => setFormOpen(false)}>
-                {t('common.cancel')}
-              </Button>
-              <Button type="submit">{t('common.save')}</Button>
-            </div>
           </form>
         </Sheet>
       )}

@@ -99,11 +99,14 @@ export function QuickCreateHabitModal({
 
   if (saved) {
     return (
-      <Sheet title={t('quickCreate.savedTitle')} onClose={onClose}>
+      <Sheet
+        title={t('quickCreate.savedTitle')}
+        onClose={onClose}
+        footer={<Button className="w-full" onClick={onClose}>{t('common.close')}</Button>}
+      >
         <div className="flex flex-col gap-3">
           <p className="text-sm text-[var(--stoa-text-muted)]">{t('quickCreate.savedBody', { name: saved.name })}</p>
           <AddToCalendarButton build={buildHabitIcs(saved)} />
-          <Button onClick={onClose}>{t('common.close')}</Button>
         </div>
       </Sheet>
     )
@@ -111,9 +114,21 @@ export function QuickCreateHabitModal({
 
   const domainLabel = domains.find((d) => d.id === domainId)?.name
 
+  const footer = (
+    <div className="flex gap-2 justify-end">
+      <Button type="button" variant="secondary" onClick={onClose}>
+        {t('common.cancel')}
+      </Button>
+      <Button type="submit" form="quick-create-habit-form" disabled={!name.trim()}>
+        {t('common.save')}
+      </Button>
+    </div>
+  )
+
   return (
-    <Sheet title={t('habits.newHabit')} onClose={onClose}>
+    <Sheet title={t('habits.newHabit')} onClose={onClose} footer={footer}>
       <form
+        id="quick-create-habit-form"
         className="flex flex-col gap-3"
         onSubmit={(e) => {
           e.preventDefault()
@@ -187,15 +202,6 @@ export function QuickCreateHabitModal({
         >
           {t('quickCreate.openFullEditor')}
         </button>
-
-        <div className="flex gap-2 justify-end mt-2">
-          <Button type="button" variant="secondary" onClick={onClose}>
-            {t('common.cancel')}
-          </Button>
-          <Button type="submit" disabled={!name.trim()}>
-            {t('common.save')}
-          </Button>
-        </div>
       </form>
     </Sheet>
   )

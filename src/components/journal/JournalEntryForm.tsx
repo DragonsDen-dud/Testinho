@@ -29,9 +29,36 @@ export function JournalEntryForm({
   const [mood, setMood] = useState<number | undefined>(initial?.mood)
   const [photo, setPhoto] = useState<Blob | undefined>(initial?.photo)
 
+  const footer = (
+    <div className="flex gap-2 justify-between">
+      {initial && onDelete ? (
+        <Button
+          type="button"
+          variant="danger"
+          onClick={() => {
+            if (confirm(t('common.confirmDelete'))) onDelete()
+          }}
+        >
+          {t('common.delete')}
+        </Button>
+      ) : (
+        <span />
+      )}
+      <div className="flex gap-2">
+        <Button type="button" variant="secondary" onClick={onClose}>
+          {t('common.cancel')}
+        </Button>
+        <Button type="submit" form="journal-entry-form">
+          {t('common.save')}
+        </Button>
+      </div>
+    </div>
+  )
+
   return (
-    <Sheet title={prompt ? prompt.text : t('journal.freeEntry')} onClose={onClose}>
+    <Sheet title={prompt ? prompt.text : t('journal.freeEntry')} onClose={onClose} footer={footer}>
       <form
+        id="journal-entry-form"
         className="flex flex-col gap-4"
         onSubmit={(e) => {
           e.preventDefault()
@@ -72,28 +99,6 @@ export function JournalEntryForm({
             ))}
           </div>
         </Field>
-
-        <div className="flex gap-2 justify-between mt-2">
-          {initial && onDelete ? (
-            <Button
-              type="button"
-              variant="danger"
-              onClick={() => {
-                if (confirm(t('common.confirmDelete'))) onDelete()
-              }}
-            >
-              {t('common.delete')}
-            </Button>
-          ) : (
-            <span />
-          )}
-          <div className="flex gap-2">
-            <Button type="button" variant="secondary" onClick={onClose}>
-              {t('common.cancel')}
-            </Button>
-            <Button type="submit">{t('common.save')}</Button>
-          </div>
-        </div>
       </form>
     </Sheet>
   )

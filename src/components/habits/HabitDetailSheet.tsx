@@ -55,7 +55,15 @@ export function HabitDetailSheet({ habit, onClose, onEdit }: { habit: Habit; onC
     habit.habitType === 'avoid' ? `${strength}% ${t('habits.strength').toLowerCase()}` : t('habits.streakLabel', { count: streak })
 
   return (
-    <Sheet title={habit.name} onClose={onClose}>
+    <Sheet
+      title={habit.name}
+      onClose={onClose}
+      footer={
+        <Button className="w-full" onClick={onEdit}>
+          {t('common.edit')}
+        </Button>
+      }
+    >
       <div className="flex flex-col gap-4">
         <div className="flex items-center gap-3">
           <div className="flex-1">
@@ -94,10 +102,6 @@ export function HabitDetailSheet({ habit, onClose, onEdit }: { habit: Habit; onC
           </div>
         )}
       </div>
-
-      <Button className="w-full mt-5" onClick={onEdit}>
-        {t('common.edit')}
-      </Button>
     </Sheet>
   )
 }
