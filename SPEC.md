@@ -300,6 +300,16 @@ Space { id, name, icon, color, sortOrder, createdAt, archivedAt?, northStar?: st
 LifeDomain { id, spaceId, name, color, icon, createdAt, archivedAt?, sortOrder }
 TimeBlock { id, spaceId, name, sortOrder, approxTimeRange?: { start: string, end: string } }
 PriorityLevel { id, spaceId, name, sortOrder, weight }
+// Примечание (реконсиляция после раунда "Vibrant Today-screen", src/styles/tokens.ts): PriorityLevel
+// сознательно не имеет поля color. Название/порядок/вес каждого уровня остаются полностью
+// пользовательскими (Статья 3) — но цветовая кодировка приоритета в UI строится не как
+// per-level custom color, а как фиксированная функция от sortOrder (три уровня: высший →
+// тревожный/alert, следующий → info, остальные → нейтральный), тем же способом, каким уже
+// был закодирован priority-индикатор в редизайне вкладки Tasks. Это не нарушает Статью 3:
+// не "зашивается" содержимое (имя/число уровней — по-прежнему в БД), фиксируется только
+// сама тиерная схема раскраски, аналогично status-light с 3 состояниями. Если в будущем
+// раунде понадобится per-level произвольный цвет — это осознанное расширение схемы, а не
+// починка "недостающего" поля.
 
 Project { id, spaceId, name, domainId?, color?, createdAt, archivedAt?, deletedAt? }
 
