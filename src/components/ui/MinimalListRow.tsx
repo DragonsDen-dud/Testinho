@@ -25,6 +25,12 @@ import type { ReactNode } from 'react'
  * trailing layout and the same min-h-11 touch target. Added here rather
  * than forking a second row component, so both variants stay one
  * source of truth for the layout itself.
+ *
+ * `title` (Tasks round, Part 3): widened from `string` to `ReactNode` so
+ * a row can prefix small inline icons (recurrence/someday) before the
+ * title text — `truncate` on the wrapping span still clips correctly
+ * either way, string-only callers (Habits, Pro Settings) are unaffected.
+ * A minimal, backward-compatible type widening, not a new variant.
  */
 export function MinimalListRow({
   badge,
@@ -35,7 +41,7 @@ export function MinimalListRow({
   variant = 'card',
 }: {
   badge: ReactNode
-  title: string
+  title: ReactNode
   subtitle?: string
   trailing?: ReactNode
   onClick?: () => void

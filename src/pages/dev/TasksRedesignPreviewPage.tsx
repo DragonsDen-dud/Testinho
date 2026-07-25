@@ -1,56 +1,61 @@
-// Stage-1-only preview, v5 (approved) + status-as-border refinement +
-// category/project color. Today/Overdue/Someday status is now a border
-// ring (see .section-overdue/.section-someday in tokens.css), and each
-// card's background comes from its resolved LifeDomain/Project color
-// (categoryColor prop) with computed-contrast text, or the neutral theme
-// fallback when a task has neither. Pure visual states, no live data, no
-// interaction. Not linked from any nav — reachable only by direct URL.
+// Stage-1-only preview, v6 (Part 3 badge-based redesign) — category
+// identity now lives in a ColorIconBadge (matching Pro Settings/Habits),
+// not a full-card color wash. Today/Overdue/Someday status now comes
+// through the trailing DueDateChip's tone (overdue/today/neutral) and,
+// for Someday, the whole-row dim — not a card-level border/background.
+// Pure visual states, no live data, no interaction. Not linked from any
+// nav — reachable only by direct URL.
 
 import { TaskCard } from '../../components/todos/redesign/TaskCard'
 import { SectionHeading } from '../../components/todos/redesign/SectionHeading'
+import { ColorIconBadge } from '../../components/ui/ColorIconBadge'
 
-// Representative LifeDomain/Project colors a real user might pick —
+// Representative Project/LifeDomain colors+icons a real user might pick —
 // deliberately spanning light, mid-saturation, and an intentionally dark
 // one (Deep Work) to exercise the contrast-computation path for real.
-const MARKETING_ORANGE = '#F5A623' // Project.color
-const DEEP_WORK_NAVY = '#12213A' // Project.color — intentionally dark
-const HEALTH_MINT = '#B8E6D3' // LifeDomain.color
+const MARKETING_BADGE = <ColorIconBadge color="#F5A623" icon="Megaphone" size="row" />
+const DEEP_WORK_BADGE = <ColorIconBadge color="#12213A" icon="BookOpen" size="row" />
+const HEALTH_BADGE = <ColorIconBadge color="#B8E6D3" icon="Heart" size="row" />
+const NO_PROJECT_BADGE = <ColorIconBadge color="#9ca3af" icon="Inbox" size="row" />
 
 export function TasksRedesignPreviewPage() {
   return (
     <div className="min-h-screen p-6 flex flex-col gap-6" style={{ background: 'var(--color-canvas)' }}>
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-2">
         <SectionHeading label="Today" />
         <TaskCard
           title="Draft the quarterly review"
           status="upcoming"
-          dueLabel="18 Jul · 14:00"
-          prioritySortOrder={0}
-          projectLabel="Marketing"
-          categoryColor={MARKETING_ORANGE}
+          badge={MARKETING_BADGE}
+          priorityTier="high"
+          priorityLabel="High"
+          dueInfo={{ label: '14:00', tone: 'today' }}
+          subtitle="Marketing"
         />
       </div>
 
-      <div className="section-overdue flex flex-col gap-4">
+      <div className="flex flex-col gap-2">
         <SectionHeading label="Overdue" />
         <TaskCard
           title="Finish the deep-work retro"
           status="overdue"
-          dueLabel="12 Jul"
-          prioritySortOrder={0}
-          projectLabel="Deep Work"
-          categoryColor={DEEP_WORK_NAVY}
+          badge={DEEP_WORK_BADGE}
+          priorityTier="medium"
+          priorityLabel="Medium"
+          dueInfo={{ label: '6d overdue', tone: 'overdue' }}
+          subtitle="Deep Work"
         />
       </div>
 
-      <div className="section-someday flex flex-col gap-4">
+      <div className="flex flex-col gap-2">
         <SectionHeading label="Someday" />
         <TaskCard
           title="Plan the trip itinerary"
           status="someday"
-          prioritySortOrder={1}
-          projectLabel="Health"
-          categoryColor={HEALTH_MINT}
+          badge={HEALTH_BADGE}
+          priorityTier="none"
+          somedayLabel="Someday"
+          subtitle="Health"
           subtasks={[
             { id: 's1', title: 'Book flights', done: true },
             { id: 's2', title: 'Reserve hotel', done: true },
@@ -58,7 +63,28 @@ export function TasksRedesignPreviewPage() {
           ]}
           subtasksExpanded
         />
-        <TaskCard title="Update onboarding copy" status="someday" prioritySortOrder={2} />
+        <TaskCard title="Update onboarding copy" status="someday" badge={NO_PROJECT_BADGE} priorityTier="none" somedayLabel="Someday" />
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <SectionHeading label="Recurring + completed" />
+        <TaskCard
+          title="Water the plants"
+          status="upcoming"
+          badge={HEALTH_BADGE}
+          priorityTier="none"
+          hasRecurrence
+          recurrenceLabel="Repeats"
+          dueInfo={{ label: 'Tomorrow', tone: 'neutral' }}
+        />
+        <TaskCard
+          title="Renew passport"
+          status="done"
+          badge={MARKETING_BADGE}
+          priorityTier="none"
+          checked
+          checkColor="#F5A623"
+        />
       </div>
     </div>
   )
