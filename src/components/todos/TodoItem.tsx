@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { CalendarCheck } from 'lucide-react'
+import { CalendarCheck, Repeat } from 'lucide-react'
 import type { Todo } from '../../db/types'
 import { markTodoDone, reopenTodo, rescheduleTodo } from '../../data/todos'
 import { todayKey } from '../../lib/date'
@@ -82,25 +82,26 @@ export function TodoItem({
               : 'border-[var(--stoa-border)]'
           } ${vibrant && justChecked ? 'stoa-check-pop' : ''}`}
         >
-          {todo.status === 'done' &&
-            (vibrant ? (
-              <svg width="10" height="8" viewBox="0 0 10 8" fill="none" aria-hidden>
-                <path
-                  d="M1 4L3.5 6.5L9 1"
-                  stroke="white"
-                  strokeWidth="1.6"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className={justChecked ? 'stoa-checkmark-draw' : undefined}
-                />
-              </svg>
-            ) : (
-              <span className="text-[var(--stoa-bg)] text-xs">✓</span>
-            ))}
+          {todo.status === 'done' && (
+            <svg width="10" height="8" viewBox="0 0 10 8" fill="none" aria-hidden>
+              <path
+                d="M1 4L3.5 6.5L9 1"
+                stroke={vibrant ? 'white' : 'var(--stoa-bg)'}
+                strokeWidth="1.6"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className={vibrant && justChecked ? 'stoa-checkmark-draw' : undefined}
+              />
+            </svg>
+          )}
         </button>
         <button className="flex-1 text-left" onClick={onOpen}>
           <div className={`text-sm font-medium ${todo.status === 'done' ? 'line-through text-[var(--stoa-text-muted)]' : ''}`}>
-            {todo.recurrence && <span className="mr-1 text-[var(--stoa-text-muted)]">↻</span>}
+            {todo.recurrence && (
+              <span className="mr-1 text-[var(--stoa-text-muted)] inline-flex align-text-bottom">
+                <Repeat size={12} strokeWidth={1.75} />
+              </span>
+            )}
             {todo.title}
           </div>
           <div className="flex gap-2 mt-1 flex-wrap items-center">

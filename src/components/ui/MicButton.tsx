@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next'
+import { CircleDot, Mic } from 'lucide-react'
 import { SPEECH_RECOGNITION_SUPPORTED } from '../../lib/speechRecognition'
 import { useSpeechToText } from '../../lib/useSpeechToText'
 
@@ -27,13 +28,13 @@ export function MicButton({
       aria-label={listening ? t('voice.stopListening') : t('voice.startListening')}
       aria-pressed={listening}
       onClick={toggle}
-      className={`shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-base transition-colors ${
+      className={`shrink-0 w-9 h-9 rounded-full flex items-center justify-center transition-colors ${
         listening
           ? 'bg-[var(--stoa-danger)]/15 text-[var(--stoa-danger)]'
           : 'bg-[var(--stoa-border)]/50 text-[var(--stoa-text-muted)] hover:text-[var(--stoa-text)]'
       } ${className ?? ''}`}
     >
-      {listening ? '●' : '🎤'}
+      {listening ? <CircleDot size={16} strokeWidth={1.75} /> : <Mic size={16} strokeWidth={1.75} />}
     </button>
   )
 }
