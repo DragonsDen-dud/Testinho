@@ -16,6 +16,15 @@ import type { ReactNode } from 'react'
  * element, specifically so "arbitrary" trailing content is free to
  * include its own button without landing inside invalid nested-button
  * HTML.
+ *
+ * `variant` (Habits round, Part 2): `'card'` (default) is Part 1's
+ * original bordered/surfaced treatment, used unchanged by Pro Settings.
+ * `'flat'` drops the border and background entirely — Habits' brief
+ * explicitly bans a card border/shadow per row, with separation coming
+ * from spacing alone — while keeping the exact same badge/title/subtitle/
+ * trailing layout and the same min-h-11 touch target. Added here rather
+ * than forking a second row component, so both variants stay one
+ * source of truth for the layout itself.
  */
 export function MinimalListRow({
   badge,
@@ -23,15 +32,19 @@ export function MinimalListRow({
   subtitle,
   trailing,
   onClick,
+  variant = 'card',
 }: {
   badge: ReactNode
   title: string
   subtitle?: string
   trailing?: ReactNode
   onClick?: () => void
+  variant?: 'card' | 'flat'
 }) {
   const className =
-    'flex items-center gap-3 w-full min-h-11 rounded-xl border border-[var(--stoa-border)] bg-[var(--stoa-surface)] px-3.5 py-3 text-start'
+    variant === 'flat'
+      ? 'flex items-center gap-3 w-full min-h-11 px-1 py-2.5 text-start'
+      : 'flex items-center gap-3 w-full min-h-11 rounded-xl border border-[var(--stoa-border)] bg-[var(--stoa-surface)] px-3.5 py-3 text-start'
 
   const content = (
     <>

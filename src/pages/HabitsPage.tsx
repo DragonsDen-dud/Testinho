@@ -9,7 +9,6 @@ import { HabitForm } from '../components/habits/HabitForm'
 import { HabitCard } from '../components/habits/HabitCard'
 import { CompletedHabitRow } from '../components/habits/CompletedHabitRow'
 import { HabitDetailSheet } from '../components/habits/HabitDetailSheet'
-import { Button } from '../components/ui/Button'
 import { EmptyState } from '../components/ui/EmptyState'
 import { todayKey } from '../lib/date'
 
@@ -75,14 +74,11 @@ export function HabitsPage() {
 
   return (
     <div className="p-4 max-w-md mx-auto w-full flex flex-col gap-3">
-      <div className="flex items-center justify-between">
-        <h1 className="text-lg font-semibold">{t('habits.title')}</h1>
-        <Button onClick={() => setCreating(true)}>+ {t('habits.newHabit')}</Button>
-      </div>
+      <h1 className="text-lg font-semibold">{t('habits.title')}</h1>
 
       {habits.length === 0 && <EmptyState text={t('habits.empty')} />}
 
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-4">
         {notDoneHabits.map((habit) => (
           <HabitCard
             key={habit.id}
@@ -96,13 +92,15 @@ export function HabitsPage() {
       </div>
 
       {doneHabits.length > 0 && (
-        <div className="flex flex-col gap-2">
-          <h2 className="text-xs font-semibold text-[var(--stoa-text-muted)] uppercase tracking-wide">
+        <div className="flex flex-col gap-2 bg-canvas rounded-card p-3">
+          <h2 className="text-xs font-semibold text-[var(--stoa-text-muted)] uppercase tracking-wide px-1">
             {t('habits.doneTodaySection')}
           </h2>
-          {doneHabits.map((habit) => (
-            <CompletedHabitRow key={habit.id} habit={habit} justCompleted={justCompletedIds.has(habit.id)} />
-          ))}
+          <div className="flex flex-col gap-1">
+            {doneHabits.map((habit) => (
+              <CompletedHabitRow key={habit.id} habit={habit} justCompleted={justCompletedIds.has(habit.id)} />
+            ))}
+          </div>
         </div>
       )}
 

@@ -33,7 +33,7 @@ export function CompletedHabitRow({ habit, justCompleted = false }: { habit: Hab
     <button
       type="button"
       onClick={() => navigate(`/habits/${habit.id}`)}
-      className={`w-full flex items-center justify-between gap-2 rounded-xl border border-[var(--stoa-border)] bg-[var(--stoa-surface)]/70 px-3.5 py-2 text-left ${
+      className={`w-full min-h-11 flex items-center justify-between gap-2 px-1 py-2 text-left ${
         justCompleted ? (crossedTier ? 'habit-collapse-in-milestone' : 'habit-collapse-in') : ''
       }`}
     >

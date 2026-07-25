@@ -125,6 +125,8 @@
     "checkInNotePlaceholder": "Add a note about today (optional)",
     "strength": "Strength",
     "streak": "Streak",
+    "heroCaptionStreak": "day streak",
+    "heroCaptionClean": "days clean",
     "daysCleanLabel_one": "{{count}} day without a slip",
     "daysCleanLabel_other": "{{count}} days without a slip",
     "streakLabel_one": "{{count}} day streak",
@@ -475,7 +477,7 @@
   },
   "proSettings": {
     "title": "Pro Settings",
-    "subtitle": "Colors and icons for every life domain and project. Changes here don't affect Habits or Tasks yet.",
+    "subtitle": "Colors and icons for every life domain and project. Habits reflects changes here immediately; Tasks doesn't yet.",
     "empty": "No life domains or projects yet.",
     "color": "Color",
     "icon": "Icon",
