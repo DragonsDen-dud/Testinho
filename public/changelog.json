@@ -1,0 +1,25 @@
+[
+  {
+    "version": "1.2.0",
+    "bullets": [
+      "The update banner now shows what changed before you tap Refresh.",
+      "New Pro Settings screen to customize each life domain and project's color and icon."
+    ]
+  },
+  {
+    "version": "1.1.0",
+    "bullets": [
+      "Photo attachments on habit check-ins, tasks, and journal entries — compressed automatically before saving.",
+      "Full app backup and restore from Settings, including photos.",
+      "A Data Integrity Check in Settings to find and fix orphaned records."
+    ]
+  },
+  {
+    "version": "1.0.0",
+    "bullets": [
+      "Voice input, a quick-add shortcut, and search across your habits, tasks, and journal.",
+      "Smarter reminders: quiet hours, a follow-up nudge, and a morning digest.",
+      "Calendar export for critical reminders, and CSV export of a habit’s history."
+    ]
+  }
+]

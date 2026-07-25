@@ -484,6 +484,7 @@
   },
   "pwa": {
     "updateAvailable": "Готова новая версия.",
+    "updateAvailableVersion": "Что нового в {{version}}:",
     "refresh": "Обновить"
   },
   "quickCreate": {

@@ -459,6 +459,7 @@
   },
   "pwa": {
     "updateAvailable": "A new version is ready.",
+    "updateAvailableVersion": "What's new in {{version}}:",
     "refresh": "Refresh"
   },
   "quickCreate": {
