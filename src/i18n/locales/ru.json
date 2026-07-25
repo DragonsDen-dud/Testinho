@@ -102,6 +102,7 @@
     "typeBuild": "Формируемая",
     "typeAvoid": "Искореняемая",
     "domain": "Сфера жизни",
+    "icon": "Иконка",
     "timeBlock": "Время дня",
     "schedule": "Расписание",
     "scheduleDaily": "Каждый день",

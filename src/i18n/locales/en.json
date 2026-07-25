@@ -100,6 +100,7 @@
     "typeBuild": "Build",
     "typeAvoid": "Avoid",
     "domain": "Domain",
+    "icon": "Icon",
     "timeBlock": "Time of day",
     "schedule": "Schedule",
     "scheduleDaily": "Every day",
