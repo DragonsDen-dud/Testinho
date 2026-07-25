@@ -14,6 +14,7 @@ import type {
   JournalEntry,
   DiagnosticEntry,
   ReminderState,
+  CategoryStyle,
 } from './types'
 import { CURRENT_VERSION } from '../lib/changelog'
 
@@ -32,6 +33,7 @@ export class StoaDatabase extends Dexie {
   journalEntries!: Table<JournalEntry, string>
   diagnosticEntries!: Table<DiagnosticEntry, string>
   reminderStates!: Table<ReminderState, string>
+  categoryStyles!: Table<CategoryStyle, string>
 
   constructor() {
     super('stoa')
@@ -93,6 +95,14 @@ export class StoaDatabase extends Dexie {
           })
         }
       })
+    // v6: STOA Design System Part 1 — additive-only, no existing table's
+    // shape changes. Explicit color/icon overrides for a category, keyed
+    // by entityType+entityId; rows are created lazily on first edit/reset,
+    // never backfilled in bulk on upgrade (see lib/categoryStyle.ts for
+    // why a lazy per-read fallback is used instead of a one-time seed).
+    this.version(6).stores({
+      categoryStyles: 'id, entityType, entityId, [entityType+entityId]',
+    })
   }
 }
 

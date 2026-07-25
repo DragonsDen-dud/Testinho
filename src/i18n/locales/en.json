@@ -268,6 +268,7 @@
     "activeSpace": "Active Space",
     "manageSpaces": "Manage Spaces",
     "manageDomains": "Manage life domains",
+    "manageCategoryStyles": "Category colors & icons",
     "manageTimeBlocks": "Time Blocks",
     "manageTrash": "Trash",
     "checkDatabase": "Check Database",
@@ -470,5 +471,21 @@
     "openFullEditor": "Open full editor",
     "savedTitle": "Added",
     "savedBody": "\"{{name}}\" was saved."
+  },
+  "proSettings": {
+    "title": "Pro Settings",
+    "subtitle": "Colors and icons for every life domain and project. Changes here don't affect Habits or Tasks yet.",
+    "empty": "No life domains or projects yet.",
+    "color": "Color",
+    "icon": "Icon",
+    "reset": "Reset to default",
+    "resetAll": "Reset all to default",
+    "resetAllConfirm": "Reset every category's color and icon to its generated default? This can't be undone.",
+    "viewSummary": "View design summary",
+    "summaryTitle": "Design summary",
+    "entityTypeLifeDomain": "Life domain",
+    "entityTypeProject": "Project",
+    "entityTypeLifeDomainPlural": "Life domains",
+    "entityTypeProjectPlural": "Projects"
   }
 }

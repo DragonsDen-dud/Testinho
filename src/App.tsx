@@ -25,6 +25,8 @@ import { TimeBlocksPage } from './pages/TimeBlocksPage'
 import { DiagnosticDetailPage } from './pages/DiagnosticDetailPage'
 import { SearchPage } from './pages/SearchPage'
 import { IntegrityCheckPage } from './pages/IntegrityCheckPage'
+import { ProSettingsPage } from './pages/ProSettingsPage'
+import { ProSettingsSummaryPage } from './pages/ProSettingsSummaryPage'
 import { TasksRedesignPreviewPage } from './pages/dev/TasksRedesignPreviewPage'
 
 // Lazy — recharts is the single largest dependency in this app and
@@ -115,6 +117,8 @@ function App() {
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="/settings/spaces" element={<SpacesPage />} />
           <Route path="/settings/domains" element={<DomainsPage />} />
+          <Route path="/settings/pro-settings" element={<ProSettingsPage />} />
+          <Route path="/settings/pro-settings/summary" element={<ProSettingsSummaryPage />} />
           <Route path="/settings/trash" element={<TrashPage />} />
           <Route path="/settings/integrity-check" element={<IntegrityCheckPage />} />
           <Route path="/settings/time-blocks" element={<TimeBlocksPage />} />

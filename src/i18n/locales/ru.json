@@ -281,6 +281,7 @@
     "activeSpace": "Активное пространство",
     "manageSpaces": "Управление пространствами",
     "manageDomains": "Управление сферами жизни",
+    "manageCategoryStyles": "Цвета и иконки категорий",
     "manageTimeBlocks": "Время дня",
     "manageTrash": "Корзина",
     "checkDatabase": "Проверить базу данных",
@@ -495,5 +496,21 @@
     "openFullEditor": "Открыть полную форму",
     "savedTitle": "Добавлено",
     "savedBody": "«{{name}}» сохранено."
+  },
+  "proSettings": {
+    "title": "Pro Settings",
+    "subtitle": "Цвета и иконки для каждой сферы жизни и проекта. Изменения здесь пока не влияют на Привычки и Задачи.",
+    "empty": "Пока нет сфер жизни или проектов.",
+    "color": "Цвет",
+    "icon": "Иконка",
+    "reset": "Сбросить по умолчанию",
+    "resetAll": "Сбросить всё по умолчанию",
+    "resetAllConfirm": "Сбросить цвет и иконку каждой категории на автоматически сгенерированные значения? Действие необратимо.",
+    "viewSummary": "Показать сводку оформления",
+    "summaryTitle": "Сводка оформления",
+    "entityTypeLifeDomain": "Сфера жизни",
+    "entityTypeProject": "Проект",
+    "entityTypeLifeDomainPlural": "Сферы жизни",
+    "entityTypeProjectPlural": "Проекты"
   }
 }
