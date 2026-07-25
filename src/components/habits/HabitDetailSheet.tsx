@@ -1,5 +1,4 @@
 import { useTranslation } from 'react-i18next'
-import type { TFunction } from 'i18next'
 import { CalendarCheck, Flag } from 'lucide-react'
 import { Sheet } from '../ui/Sheet'
 import { InfoChip } from '../ui/InfoChip'
@@ -9,24 +8,8 @@ import { useDomains } from '../../state/useDomains'
 import { useTimeBlocks } from '../../state/useTimeBlocks'
 import { useHabitLogs } from '../../state/useHabits'
 import { computeHabitStrength, computeBuildStreak, computeAvoidStreak } from '../../lib/habitStrength'
-import { weekdayName } from '../../lib/date'
+import { formatHabitCadence } from '../../lib/habitCadence'
 import type { Habit } from '../../db/types'
-
-function formatSchedule(habit: Habit, t: TFunction, locale: string): string {
-  switch (habit.schedule.type) {
-    case 'daily':
-      return t('habits.scheduleDaily')
-    case 'specific_weekdays': {
-      const days = habit.schedule.params.weekdays ?? []
-      if (days.length === 0) return t('habits.scheduleSpecificWeekdays')
-      return days.map((d) => weekdayName(d, locale)).join(', ')
-    }
-    case 'weekly_n_times':
-      return t('habits.scheduleWeeklyNTimesCount', { count: habit.schedule.params.n ?? 0 })
-    case 'custom':
-      return t('habits.scheduleCustom')
-  }
-}
 
 /**
  * Read-only summary reached by tapping a habit's card in the list — the
@@ -82,7 +65,7 @@ export function HabitDetailSheet({ habit, onClose, onEdit }: { habit: Habit; onC
             </InfoChip>
           )}
           {timeBlock && <InfoChip>{timeBlock.name}</InfoChip>}
-          <InfoChip>{formatSchedule(habit, t, i18n.language)}</InfoChip>
+          <InfoChip>{formatHabitCadence(habit, t, i18n.language)}</InfoChip>
           {habit.stake && (
             <InfoChip>
               <Flag size={12} strokeWidth={1.75} aria-hidden /> {t('habits.hasStakeChip')}

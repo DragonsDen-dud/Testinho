@@ -16,6 +16,7 @@ import type {
   JournalEntry,
   DiagnosticEntry,
   ReminderState,
+  CategoryStyle,
 } from '../db/types'
 
 async function clearAllTables() {
@@ -86,6 +87,14 @@ async function seedOneRowPerTable() {
     sentAt: '2026-07-18T08:00:00.000Z',
     followUpSent: false,
   }
+  const categoryStyle: CategoryStyle = {
+    id: 'lifeDomain:domain-1',
+    entityType: 'lifeDomain',
+    entityId: 'domain-1',
+    color: '#654321',
+    icon: 'Heart',
+    updatedAt: '2026-07-18T00:00:00.000Z',
+  }
 
   await db.appSettings.put(appSettings)
   await db.spaces.put(space)
@@ -101,6 +110,7 @@ async function seedOneRowPerTable() {
   await db.journalEntries.put(journalEntry)
   await db.diagnosticEntries.put(diagnosticEntry)
   await db.reminderStates.put(reminderState)
+  await db.categoryStyles.put(categoryStyle)
 }
 
 beforeEach(async () => {

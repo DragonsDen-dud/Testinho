@@ -278,6 +278,34 @@ export interface DiagnosticEntry {
   viewedAt?: string
 }
 
+// STOA Design System — Part 1. The only two genuine per-item
+// categorization concepts that actually exist in the schema (per SPEC.md,
+// LifeDomain is literally "the user category within a Space"; Project is
+// the other grouping Todos render color by). Space is a top-level
+// container, not a category of items within it, and PriorityLevel is
+// deliberately function-only (see styles/tokens.ts's priorityDotTone) —
+// neither belongs here; see the Part 1 report for why they were left out
+// despite being named as examples in the brief.
+export type CategoryStyleEntityType = 'lifeDomain' | 'project'
+
+/**
+ * An explicit color/icon override for a category, keyed by
+ * `${entityType}:${entityId}`. Deliberately does NOT duplicate
+ * LifeDomain.color/icon or Project.color as a standing mirror — this row
+ * only exists once a user edits or resets a category via Pro Settings (or
+ * once Part 2+ starts reading category styling directly from here instead
+ * of the native fields). Absence of a row is a valid, common state; see
+ * lib/categoryStyle.ts's getEffectiveCategoryStyle for the fallback chain.
+ */
+export interface CategoryStyle {
+  id: string // `${entityType}:${entityId}`
+  entityType: CategoryStyleEntityType
+  entityId: string
+  color: string
+  icon: string // lucide-react icon name, e.g. "Folder"
+  updatedAt: string
+}
+
 export type ReminderEntityType = 'habit' | 'todo'
 export type ReminderStateValue = 'sent' | 'acknowledged' | 'snoozed' | 'dismissed' | 'lapsed_for_day'
 

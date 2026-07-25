@@ -125,6 +125,8 @@
     "checkInNotePlaceholder": "Add a note about today (optional)",
     "strength": "Strength",
     "streak": "Streak",
+    "heroCaptionStreak": "day streak",
+    "heroCaptionClean": "days clean",
     "daysCleanLabel_one": "{{count}} day without a slip",
     "daysCleanLabel_other": "{{count}} days without a slip",
     "streakLabel_one": "{{count}} day streak",
@@ -268,6 +270,7 @@
     "activeSpace": "Active Space",
     "manageSpaces": "Manage Spaces",
     "manageDomains": "Manage life domains",
+    "manageCategoryStyles": "Category colors & icons",
     "manageTimeBlocks": "Time Blocks",
     "manageTrash": "Trash",
     "checkDatabase": "Check Database",
@@ -458,6 +461,7 @@
   },
   "pwa": {
     "updateAvailable": "A new version is ready.",
+    "updateAvailableVersion": "What's new in {{version}}:",
     "refresh": "Refresh"
   },
   "quickCreate": {
@@ -470,5 +474,21 @@
     "openFullEditor": "Open full editor",
     "savedTitle": "Added",
     "savedBody": "\"{{name}}\" was saved."
+  },
+  "proSettings": {
+    "title": "Pro Settings",
+    "subtitle": "Colors and icons for every life domain and project. Habits reflects changes here immediately; Tasks doesn't yet.",
+    "empty": "No life domains or projects yet.",
+    "color": "Color",
+    "icon": "Icon",
+    "reset": "Reset to default",
+    "resetAll": "Reset all to default",
+    "resetAllConfirm": "Reset every category's color and icon to its generated default? This can't be undone.",
+    "viewSummary": "View design summary",
+    "summaryTitle": "Design summary",
+    "entityTypeLifeDomain": "Life domain",
+    "entityTypeProject": "Project",
+    "entityTypeLifeDomainPlural": "Life domains",
+    "entityTypeProjectPlural": "Projects"
   }
 }
