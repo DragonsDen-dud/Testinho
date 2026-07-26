@@ -51,12 +51,23 @@ export function CompletedHabitBubble({ habit, justCompleted = false }: { habit: 
   const crossedTier = justCompleted && justCrossedTier(daysBefore, days)
 
   return (
+    // The inner button repeats w-16 rather than inheriting it from this
+    // outer div: items-center (needed so the undo button's absolute
+    // -top-1/-left-1 offset stays anchored to the badge, not to whatever
+    // width a long habit name would otherwise stretch this div to) sizes
+    // flex children to their own content, not the container's width — so
+    // without its own explicit w-16, the inner button (and the name
+    // label's w-full inside it) would grow past 64px for any name longer
+    // than that, overflowing into a neighboring bubble instead of
+    // truncating (found via this round's Today-redesign verification,
+    // comparing against CompletedTaskBubble's simpler single-element
+    // structure, which never had this extra nesting level to break).
     <div
       className={`relative flex flex-col items-center gap-1 w-16 shrink-0 ${
         justCompleted ? (crossedTier ? 'habit-collapse-in-milestone' : 'habit-collapse-in') : ''
       }`}
     >
-      <button type="button" onClick={() => navigate(`/habits/${habit.id}`)} className="flex flex-col items-center gap-1">
+      <button type="button" onClick={() => navigate(`/habits/${habit.id}`)} className="flex flex-col items-center gap-1 w-16">
         <HabitCategoryBadge habit={habit} size="tray" />
         <span className="text-[11px] font-medium text-[var(--stoa-text-muted)] text-center truncate w-full">
           {habit.name}

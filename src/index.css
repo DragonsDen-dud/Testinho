@@ -19,17 +19,17 @@
      existing per-theme pattern rather than as an inline hex value. */
   --stoa-streak-warm: #ea580c;
 
-  /* Vibrant Today-screen palette (Articles 3/6/19 round). --stoa-primary/
-     --stoa-success are FILL colors (a button/checkbox's own local
-     background with white text/icon on top) and are deliberately the same
-     hex across all 4 themes below — the button supplies its own contrast
-     regardless of the page's theme, so there's nothing to vary per theme
-     for these two. Values were chosen (not copied verbatim from the
-     brief) specifically so white text clears 4.5:1 on top of them: see
-     scratchpad contrast checks — #2F5EDB gives 5.61:1, #177A4F gives
-     5.34:1. Everything else here (*-text, *-tint, *-bg, the scoped
-     .stoa-vibrant --stoa-danger override below) DOES vary per theme,
-     because those sit directly on the page/card background. */
+  /* Vibrant Today-screen palette (Articles 3/6/19 round) — Today's own
+     redesign (see DashboardPage.tsx) retired the .stoa-vibrant wrapper
+     class and stopped passing `vibrant` to Button/HabitCard/TodoItem, so
+     none of these four tokens render anywhere in the app any more. Left
+     defined (not deleted) because Button.tsx/HabitCard.tsx/TodoItem.tsx —
+     shared components also used by the Habits/Tasks tabs, out of scope
+     for this round — still reference them from their own optional
+     `vibrant` prop branches; deleting the tokens here while leaving those
+     className/style references in place would swap "unused" for "broken
+     if that prop is ever set true again." Flagged as dead-but-referenced,
+     a candidate for its own small cleanup round, not removed here. */
   --stoa-primary: #2f5edb;
   --stoa-primary-hover: #25499e;
   --stoa-primary-text: #2f5edb;
@@ -39,29 +39,6 @@
   --stoa-warning: #9c5700;
   --stoa-warning-bg: #fdf1e1;
   --stoa-danger-tint: #fbe4e2;
-}
-
-/* Today-screen-only scope (Articles 3/6/19 round) — wrapped around
-   DashboardPage's root element only, per the "Today screen only, this
-   round" instruction. Redefines --stoa-danger locally so every existing
-   var(--stoa-danger) usage already in TodoItem/HabitCard/Button (overdue
-   text, the "Not done" danger button) picks up the punchier vibrant red
-   automatically, with zero code changes to those files — while every
-   other screen (Habits/Todos/Journal tabs, which don't carry this class)
-   keeps the original, more muted --stoa-danger untouched. Values chosen
-   for real contrast, not copied from the brief verbatim: see scratchpad
-   contrast checks (light #B8271F: 6.27:1 on white, 5.17:1 on the tint;
-   dark #FF8A80: 7.16:1 on dark surface). */
-.stoa-vibrant {
-  --stoa-danger: #b8271f;
-}
-:root[data-theme='dark'] .stoa-vibrant {
-  --stoa-danger: #ff8a80;
-}
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme='light']):not([data-theme='contrast']) .stoa-vibrant {
-    --stoa-danger: #ff8a80;
-  }
 }
 
 :root[data-theme="dark"] {
