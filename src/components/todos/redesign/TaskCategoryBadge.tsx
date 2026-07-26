@@ -11,7 +11,7 @@ import type { Todo } from '../../../db/types'
  * resolveTaskCategoryStyle), never Project.color/LifeDomain.color
  * directly, so a Pro Settings edit shows up here immediately.
  */
-export function TaskCategoryBadge({ todo, size = 'row' }: { todo: Todo; size?: 'row' | 'detail' }) {
+export function TaskCategoryBadge({ todo, size = 'row' }: { todo: Todo; size?: 'row' | 'tray' | 'detail' }) {
   const domains = useDomains(todo.spaceId)
   const domain = domains.find((d) => d.id === todo.domainId)
   const project = useProject(todo.projectId)

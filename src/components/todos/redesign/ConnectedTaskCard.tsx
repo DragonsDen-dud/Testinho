@@ -32,7 +32,24 @@ const TIER_BY_TONE: Record<ReturnType<typeof priorityDotTone>, TaskCardPriorityT
   neutral: 'none',
 }
 
-export function ConnectedTaskCard({ todo, onOpen }: { todo: Todo; onOpen: () => void }) {
+export function ConnectedTaskCard({
+  todo,
+  onOpen,
+  onChecked,
+}: {
+  todo: Todo
+  onOpen: () => void
+  /**
+   * Today-redesign round — fired synchronously, before markTodoDone, only
+   * from an explicit "not done -> done" click. Mirrors the exact contract
+   * the pre-redesign TodoItem.tsx already used for this same purpose (see
+   * its own comment): lets a parent that renders a "done today" tray
+   * (Dashboard) know a completion just happened, without inferring it from
+   * a live-query re-render. Never fired for a reopen. Optional and unused
+   * by TodosPage's own rendering, which never passes it.
+   */
+  onChecked?: (todo: Todo) => void
+}) {
   const { t, i18n } = useTranslation()
   const priorities = usePriorityLevels(todo.spaceId)
   const priority = priorities.find((p) => p.id === todo.priorityLevelId)
@@ -81,8 +98,12 @@ export function ConnectedTaskCard({ todo, onOpen }: { todo: Todo; onOpen: () => 
   const categoryStyle = resolveTaskCategoryStyle(project, domain, styleMap)
 
   async function handleToggleChecked() {
-    if (isDone) await reopenTodo(todo.id)
-    else await markTodoDone(todo.id)
+    if (isDone) {
+      await reopenTodo(todo.id)
+    } else {
+      onChecked?.(todo)
+      await markTodoDone(todo.id)
+    }
   }
 
   async function handleDelete() {

@@ -39,3 +39,14 @@ export function useOverdueTodos(spaceId: string | null | undefined): Todo[] {
 export function useSomedayTodos(spaceId: string | null | undefined): Todo[] {
   return useTodos(spaceId).filter((t) => t.status === 'someday')
 }
+
+/** Today redesign round — the completed-task analog of useOpenTodosToday's
+ * `today` list: tasks that were due today and are now done, the source for
+ * Dashboard Module 2's task bubbles. Keyed on dueDate (not completedAt) so
+ * it only ever holds tasks that were also in Module 1's "Up next" list
+ * before being completed — a task due yesterday but finished today doesn't
+ * appear here, same as it never appeared in today's due list either. */
+export function useDoneTodosToday(spaceId: string | null | undefined): Todo[] {
+  const key = todayKey()
+  return useTodos(spaceId).filter((t) => t.status === 'done' && t.dueDate === key)
+}
