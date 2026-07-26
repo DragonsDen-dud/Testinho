@@ -1,17 +1,21 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Sheet } from '../ui/Sheet'
 import { Field, Input, Select, TextArea } from '../ui/Input'
 import { Button } from '../ui/Button'
 import { Chip } from '../ui/Chip'
+import { ColorIconBadge } from '../ui/ColorIconBadge'
+import { IconPicker } from '../ui/IconPicker'
 import { useDomains } from '../../state/useDomains'
 import { useTimeBlocks } from '../../state/useTimeBlocks'
+import { useCategoryStyleMap } from '../../state/useCategoryStyles'
 import { wouldCreateCycle } from '../../lib/habitDependencies'
 import { todayKey } from '../../lib/date'
 import { AskAiHabitPanel } from './AskAiHabitPanel'
 import { AddToCalendarButton } from '../calendar/AddToCalendarButton'
 import { ExportHabitCsvButton } from './ExportHabitCsvButton'
 import { buildHabitIcs } from '../../lib/ics'
+import { resolveHabitDomainStyle } from './HabitCategoryBadge'
 import type { Habit, HabitType, ScheduleType } from '../../db/types'
 import type { NewHabitInput } from '../../data/habits'
 
@@ -46,11 +50,24 @@ export function HabitForm({
   const { t, i18n } = useTranslation()
   const domains = useDomains(spaceId)
   const timeBlocks = useTimeBlocks(spaceId)
+  const styleMap = useCategoryStyleMap()
 
   const [name, setName] = useState(initial?.name ?? initialTitle ?? '')
   const [habitType, setHabitType] = useState<HabitType>(initial?.habitType ?? 'build')
   const [domainId, setDomainId] = useState(initial?.domainId ?? '')
   const [timeBlockId, setTimeBlockId] = useState(initial?.timeBlockId ?? '')
+  // Habits 2.0 Part A — pre-selects whatever this habit's badge would show
+  // today (its explicit icon if it has one, else the domain-resolved
+  // icon), and re-syncs to the domain's resolved icon as the Domain field
+  // changes, UNTIL the user actually taps a different icon themselves —
+  // at that point their explicit pick sticks regardless of further domain
+  // changes. `iconTouched` starts true for an existing habit that already
+  // has its own `icon` (editing it shouldn't silently re-sync away from a
+  // deliberate prior choice just because the sheet re-renders).
+  const [icon, setIcon] = useState(
+    () => initial?.icon ?? resolveHabitDomainStyle(initial?.domainId, domains, styleMap).icon,
+  )
+  const [iconTouched, setIconTouched] = useState(!!initial?.icon)
   const [scheduleType, setScheduleType] = useState<ScheduleType>(initial?.schedule.type ?? 'daily')
   const [weekdays, setWeekdays] = useState<number[]>(initial?.schedule.params.weekdays ?? [1, 2, 3, 4, 5])
   const [timesPerWeek, setTimesPerWeek] = useState(initial?.schedule.params.n ?? 3)
@@ -70,8 +87,20 @@ export function HabitForm({
   const [note, setNote] = useState(initial?.note ?? '')
   const [pauseUntilDraft, setPauseUntilDraft] = useState('')
 
+  // domains/styleMap deliberately left out of the dependency array — this
+  // only needs to react to the user changing the Domain field itself;
+  // re-running on every live-query tick (e.g. a Pro Settings edit landing
+  // while this sheet happens to be open) would fight a still-untouched
+  // selection in a confusing way without the user having done anything in
+  // this form.
+  useEffect(() => {
+    if (iconTouched) return
+    setIcon(resolveHabitDomainStyle(domainId, domains, styleMap).icon)
+  }, [domainId, iconTouched]) // eslint-disable-line react-hooks/exhaustive-deps
+
   const isPaused = !!(initial?.pausedFrom && initial?.pausedUntil)
   const candidateDependencies = allHabits.filter((h) => h.id !== initial?.id)
+  const previewColor = resolveHabitDomainStyle(domainId, domains, styleMap).color
 
   const weekdayFormatter = new Intl.DateTimeFormat(i18n.language, { weekday: 'short' })
   function weekdayLabel(dow: number) {
@@ -91,6 +120,15 @@ export function HabitForm({
       name: name.trim(),
       habitType,
       domainId: domainId || undefined,
+      // Only persisted once the user actually taps a different icon
+      // (iconTouched) — saving the pre-selected domain default
+      // unconditionally would freeze it against future domain-level
+      // changes (a Pro Settings edit or reset to that domain) for a habit
+      // whose icon was never actually chosen, silently undoing "existing
+      // habits are unaffected" for every *new* habit that just accepts
+      // the default. Untouched, it stays undefined and keeps dynamically
+      // resolving from the domain, exactly like a pre-Part-A habit.
+      icon: iconTouched ? icon : undefined,
       timeBlockId: timeBlockId || undefined,
       schedule: {
         type: scheduleType,
@@ -203,6 +241,21 @@ export function HabitForm({
             </Select>
           </Field>
         </div>
+
+        <Field label={t('habits.icon')}>
+          <div className="flex flex-col gap-3">
+            <div className="flex justify-center">
+              <ColorIconBadge color={previewColor} icon={icon} size="detail" />
+            </div>
+            <IconPicker
+              value={icon}
+              onChange={(next) => {
+                setIcon(next)
+                setIconTouched(true)
+              }}
+            />
+          </div>
+        </Field>
 
         <Field label={t('habits.schedule')}>
           <Select value={scheduleType} onChange={(e) => setScheduleType(e.target.value as ScheduleType)}>

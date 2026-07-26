@@ -7,7 +7,7 @@ import { createHabit, updateHabit, archiveHabit, deleteHabit, restoreHabit, paus
 import { showUndoToast } from '../state/toast'
 import { HabitForm } from '../components/habits/HabitForm'
 import { HabitCard } from '../components/habits/HabitCard'
-import { CompletedHabitRow } from '../components/habits/CompletedHabitRow'
+import { CompletedHabitBubble } from '../components/habits/CompletedHabitBubble'
 import { HabitDetailSheet } from '../components/habits/HabitDetailSheet'
 import { EmptyState } from '../components/ui/EmptyState'
 import { todayKey } from '../lib/date'
@@ -96,9 +96,9 @@ export function HabitsPage() {
           <h2 className="text-xs font-semibold text-[var(--stoa-text-muted)] uppercase tracking-wide px-1">
             {t('habits.doneTodaySection')}
           </h2>
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-wrap gap-x-3 gap-y-4 px-1 pt-1">
             {doneHabits.map((habit) => (
-              <CompletedHabitRow key={habit.id} habit={habit} justCompleted={justCompletedIds.has(habit.id)} />
+              <CompletedHabitBubble key={habit.id} habit={habit} justCompleted={justCompletedIds.has(habit.id)} />
             ))}
           </div>
         </div>

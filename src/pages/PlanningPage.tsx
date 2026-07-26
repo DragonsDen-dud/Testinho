@@ -11,6 +11,8 @@ import { Button } from '../components/ui/Button'
 import { addDays, todayKey, formatHumanDate } from '../lib/date'
 import { isScheduledOnDate } from '../lib/habitStrength'
 import { allTimeBlocksTimed, buildMergedTimeline } from '../lib/dayTimeline'
+import { HabitCategoryBadge } from '../components/habits/HabitCategoryBadge'
+import { TaskCategoryBadge } from '../components/todos/redesign/TaskCategoryBadge'
 
 export function PlanningPage() {
   const { t, i18n } = useTranslation()
@@ -146,6 +148,16 @@ export function PlanningPage() {
         )
       )}
 
+      {/* Habits 2.0 Part C, Option 1 — badges only, no change to the
+          checkbox linking itself. Still iterates the live `habits`/`todos`
+          lists (not linkedHabitIds/linkedTodoIds directly), so a linked id
+          that no longer resolves to a real record just produces no row —
+          the same silent-drop precedent unmetDependencyNames already uses
+          for a stale Habit.dependsOnHabitIds entry (lib/habitDependencies.ts).
+          A soft-deleted-but-not-purged habit/todo (Trash) is excluded here
+          too, same as it already was before this round: useHabits/useTodos
+          only return non-deleted rows, matching integrityCheck.ts's own
+          definition of what counts as a real (non-orphan) reference. */}
       {habits.length > 0 && (
         <div>
           <div className="text-xs font-medium text-[var(--stoa-text-muted)] mb-2">{t('planning.linkedHabits')}</div>
@@ -161,6 +173,7 @@ export function PlanningPage() {
                     )
                   }
                 />
+                <HabitCategoryBadge habit={h} />
                 {h.name}
               </label>
             ))}
@@ -183,6 +196,7 @@ export function PlanningPage() {
                     )
                   }
                 />
+                <TaskCategoryBadge todo={td} />
                 {td.title}
               </label>
             ))}

@@ -132,6 +132,14 @@ export interface Habit {
   name: string
   habitType: HabitType
   domainId?: string
+  // Habits 2.0 Part A — a lucide-react icon name (same CATEGORY_ICONS set
+  // Pro Settings uses), chosen explicitly in the creation/edit form.
+  // Undefined for every habit created before this round (and never
+  // backfilled) — HabitCategoryBadge falls back to the domain-resolved
+  // icon exactly as before when this is unset, so existing habits render
+  // unchanged. Color is deliberately NOT part of this: it keeps resolving
+  // from the habit's LifeDomain via categoryStyles, untouched by this field.
+  icon?: string
   timeBlockId?: string
   schedule: HabitSchedule
   measurable?: { targetValue: number; unit: string }

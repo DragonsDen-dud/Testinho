@@ -1,12 +1,10 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import * as LucideIcons from 'lucide-react'
-import type { LucideIcon } from 'lucide-react'
 import { Sheet } from '../ui/Sheet'
 import { Button } from '../ui/Button'
 import { ColorIconBadge } from '../ui/ColorIconBadge'
+import { IconPicker } from '../ui/IconPicker'
 import { PRESET_COLORS } from '../../lib/presets'
-import { CATEGORY_ICONS } from '../../lib/categoryStyle'
 
 // 44px — this round's own touch-target floor (acceptance criterion 4).
 // Kept local to this sheet rather than raising SwatchPicker's existing
@@ -74,27 +72,7 @@ export function CategoryStyleEditSheet({
 
         <div className="flex flex-col gap-2">
           <span className="text-xs font-medium text-[var(--stoa-text-muted)]">{t('proSettings.icon')}</span>
-          <div className="flex flex-wrap gap-2">
-            {CATEGORY_ICONS.map((name) => {
-              const Icon: LucideIcon = (LucideIcons as unknown as Record<string, LucideIcon>)[name]
-              const selected = icon === name
-              return (
-                <button
-                  type="button"
-                  key={name}
-                  onClick={() => setIcon(name)}
-                  aria-label={name}
-                  aria-pressed={selected}
-                  style={{ width: SWATCH_PX, height: SWATCH_PX }}
-                  className={`flex items-center justify-center rounded-full border-2 bg-[var(--stoa-surface)] transition-transform ${
-                    selected ? 'border-[var(--stoa-accent)] scale-105' : 'border-[var(--stoa-border)]'
-                  }`}
-                >
-                  <Icon size={20} strokeWidth={2} aria-hidden />
-                </button>
-              )
-            })}
-          </div>
+          <IconPicker value={icon} onChange={setIcon} />
         </div>
       </div>
     </Sheet>
