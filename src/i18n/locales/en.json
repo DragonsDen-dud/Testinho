@@ -133,6 +133,7 @@
     "streakLabel_one": "{{count}} day streak",
     "streakLabel_other": "{{count}} day streak",
     "doneTodaySection": "Done today",
+    "undoCompletion": "Undo completion",
     "markDone": "Done",
     "markNotDone": "Not done",
     "markSkip": "Skip",

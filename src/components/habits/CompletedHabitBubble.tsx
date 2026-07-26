@@ -1,5 +1,8 @@
+import { RotateCcw } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useHabitLogs } from '../../state/useHabits'
+import { logHabit } from '../../data/habits'
 import { computeBuildStreak, computeAvoidStreak } from '../../lib/habitStrength'
 import { justCrossedTier } from '../../lib/streakVisual'
 import { addDays, todayKey } from '../../lib/date'
@@ -23,8 +26,18 @@ import type { Habit } from '../../db/types'
  * explicit user click — never inferred from a render/diff, so a habit that
  * was already done earlier today (e.g. after a page reload) never replays
  * the collapse or milestone animation.
+ *
+ * Habits 2.0 Part C — undo affordance: a small corner button, separate
+ * from the tap-through-to-detail target, calling the exact same
+ * logHabit(..., 'not_done') HabitCard's own "Not done" button already
+ * calls (no new completion logic). Placed opposite corner from
+ * HabitCategoryBadge's build/avoid indicator (bottom-right) so the two
+ * never collide. Fire-and-forget on click, same as HabitCard's own
+ * "Not done" button — no onLogged-style callback exists for leaving the
+ * tray, only for entering it.
  */
 export function CompletedHabitBubble({ habit, justCompleted = false }: { habit: Habit; justCompleted?: boolean }) {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const allLogs = useHabitLogs(habit.id)
   const today = todayKey()
@@ -38,18 +51,26 @@ export function CompletedHabitBubble({ habit, justCompleted = false }: { habit: 
   const crossedTier = justCompleted && justCrossedTier(daysBefore, days)
 
   return (
-    <button
-      type="button"
-      onClick={() => navigate(`/habits/${habit.id}`)}
-      className={`flex flex-col items-center gap-1 w-16 shrink-0 ${
+    <div
+      className={`relative flex flex-col items-center gap-1 w-16 shrink-0 ${
         justCompleted ? (crossedTier ? 'habit-collapse-in-milestone' : 'habit-collapse-in') : ''
       }`}
     >
-      <HabitCategoryBadge habit={habit} size="tray" />
-      <span className="text-[11px] font-medium text-[var(--stoa-text-muted)] text-center truncate w-full">
-        {habit.name}
-      </span>
-      <StreakFlame days={days} milestoneAnimate={crossedTier} />
-    </button>
+      <button type="button" onClick={() => navigate(`/habits/${habit.id}`)} className="flex flex-col items-center gap-1">
+        <HabitCategoryBadge habit={habit} size="tray" />
+        <span className="text-[11px] font-medium text-[var(--stoa-text-muted)] text-center truncate w-full">
+          {habit.name}
+        </span>
+        <StreakFlame days={days} milestoneAnimate={crossedTier} />
+      </button>
+      <button
+        type="button"
+        aria-label={t('habits.undoCompletion')}
+        onClick={() => logHabit(habit.id, today, 'not_done')}
+        className="absolute -top-1 -left-1 flex items-center justify-center rounded-full w-5 h-5 bg-[var(--stoa-bg)] border border-[var(--stoa-border)] text-[var(--stoa-text-muted)]"
+      >
+        <RotateCcw size={11} strokeWidth={2.25} aria-hidden />
+      </button>
+    </div>
   )
 }
