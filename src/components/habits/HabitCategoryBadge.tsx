@@ -42,7 +42,7 @@ export function resolveHabitDomainStyle(
  * icon — color is untouched by this and always stays domain-resolved, per
  * that round's own explicit "color keeps resolving from LifeDomain" rule.
  */
-export function HabitCategoryBadge({ habit, size = 'row' }: { habit: Habit; size?: 'row' | 'detail' }) {
+export function HabitCategoryBadge({ habit, size = 'row' }: { habit: Habit; size?: 'row' | 'tray' | 'detail' }) {
   const { t } = useTranslation()
   const domains = useDomains(habit.spaceId)
   const styleMap = useCategoryStyleMap()

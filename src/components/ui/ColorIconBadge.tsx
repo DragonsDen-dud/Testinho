@@ -2,7 +2,11 @@ import * as LucideIcons from 'lucide-react'
 import { Folder, type LucideIcon } from 'lucide-react'
 import { accessibleTextColor } from '../../styles/tokens'
 
-const SIZE_PX = { row: 34, detail: 52 } as const
+// 'tray' (Habits 2.0 Part B) — the "done today" tray's completed-habit
+// bubbles: sized up from row (list density) but below detail (a
+// dedicated full-screen preview), landing at a home-screen-app-icon-like
+// size that still fits several per row in a flex-wrap tray.
+const SIZE_PX = { row: 34, tray: 44, detail: 52 } as const
 
 /**
  * Solid color fill + a black-or-white icon chosen by accessibleTextColor
@@ -45,7 +49,7 @@ export function ColorIconBadge({
 }: {
   color: string
   icon: string
-  size?: 'row' | 'detail'
+  size?: 'row' | 'tray' | 'detail'
   indicator?: ColorIconBadgeIndicator
 }) {
   const px = SIZE_PX[size]

@@ -189,7 +189,7 @@ body {
 
 /* Habit "done today" collapse — the completed habit settles into its
    compact tray row, 250-300ms ease-out per spec, one-shot on the row's
-   first mount (see CompletedHabitRow's justCompleted gating, driven by
+   first mount (see CompletedHabitBubble's justCompleted gating, driven by
    an explicit completion action, never replayed on an unrelated
    re-render or on page reload for a habit that was already done). */
 @keyframes habit-collapse-in {

@@ -33,7 +33,7 @@ export function isStreakAlive(days: number): boolean {
  * True the instant `currentDays` lands in a strictly higher tier than
  * `previousDays` was in. Used to gate the one-time milestone animation —
  * the caller is responsible for only checking this once per completion
- * action (see CompletedHabitRow), not on every render, so a habit that's
+ * action (see CompletedHabitBubble), not on every render, so a habit that's
  * already sitting in a tier from a prior day never replays it.
  */
 export function justCrossedTier(previousDays: number, currentDays: number): boolean {

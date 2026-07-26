@@ -7,7 +7,7 @@ import { useHabits, useLogsForDate } from '../state/useHabits'
 import { useOpenTodosToday } from '../state/useTodos'
 import { useConnectivity } from '../state/useConnectivity'
 import { HabitCard } from '../components/habits/HabitCard'
-import { CompletedHabitRow } from '../components/habits/CompletedHabitRow'
+import { CompletedHabitBubble } from '../components/habits/CompletedHabitBubble'
 import { ConnectivityPanel } from '../components/dashboard/ConnectivityPanel'
 import { BackupReminderBanner } from '../components/dashboard/BackupReminderBanner'
 import { TodoItem } from '../components/todos/TodoItem'
@@ -118,9 +118,11 @@ export function DashboardPage() {
                 <h3 className="text-xs font-semibold text-[var(--stoa-text-muted)] uppercase tracking-wide">
                   {t('habits.doneTodaySection')}
                 </h3>
-                {doneHabits.map((h) => (
-                  <CompletedHabitRow key={h.id} habit={h} justCompleted={justCompletedIds.has(h.id)} />
-                ))}
+                <div className="flex flex-wrap gap-x-3 gap-y-4 px-1 pt-1">
+                  {doneHabits.map((h) => (
+                    <CompletedHabitBubble key={h.id} habit={h} justCompleted={justCompletedIds.has(h.id)} />
+                  ))}
+                </div>
               </div>
             )}
           </>
