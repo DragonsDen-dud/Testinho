@@ -10,16 +10,20 @@ import { Sheet } from '../ui/Sheet'
 import { Field, Input, Select } from '../ui/Input'
 import { Button } from '../ui/Button'
 import { Chip } from '../ui/Chip'
+import { ColorIconBadge } from '../ui/ColorIconBadge'
+import { IconPicker } from '../ui/IconPicker'
 import { MicButton } from '../ui/MicButton'
 import { AddToCalendarButton } from '../calendar/AddToCalendarButton'
 import { useDomains } from '../../state/useDomains'
 import { useTimeBlocks } from '../../state/useTimeBlocks'
 import { useHabits } from '../../state/useHabits'
+import { useCategoryStyleMap } from '../../state/useCategoryStyles'
 import { createHabit, type NewHabitInput } from '../../data/habits'
 import { mostRecentDomainId, defaultTimeBlockId } from '../../lib/quickCreateDefaults'
 import { parseVoiceQuickCreate } from '../../lib/voiceQuickParse'
 import { appendTranscript } from '../../lib/speechRecognition'
 import { buildHabitIcs } from '../../lib/ics'
+import { resolveHabitDomainStyle } from '../habits/HabitCategoryBadge'
 import type { Habit } from '../../db/types'
 
 export function QuickCreateHabitModal({
@@ -35,6 +39,7 @@ export function QuickCreateHabitModal({
   const domains = useDomains(spaceId)
   const timeBlocks = useTimeBlocks(spaceId)
   const habits = useHabits(spaceId)
+  const styleMap = useCategoryStyleMap()
 
   const [name, setName] = useState('')
   const [domainId, setDomainId] = useState('')
@@ -43,6 +48,16 @@ export function QuickCreateHabitModal({
   const [criticalReminder, setCriticalReminder] = useState(false)
   const [moreOpen, setMoreOpen] = useState(false)
   const [saved, setSaved] = useState<Habit | null>(null)
+  // Habits 2.0 Part A follow-up — identical two-track behavior to the
+  // full HabitForm: pre-selects the domain's current resolved icon and
+  // keeps tracking it as the Domain field changes, until the user taps a
+  // different icon in the picker, at which point `icon` is only ever
+  // persisted (see submit()) if iconTouched — an untouched selection
+  // stays undefined and keeps resolving from the domain forever, exactly
+  // like a habit created before this round.
+  const [icon, setIcon] = useState(() => resolveHabitDomainStyle(domainId, domains, styleMap).icon)
+  const [iconTouched, setIconTouched] = useState(false)
+  const [iconPickerOpen, setIconPickerOpen] = useState(false)
 
   // useDomains/useTimeBlocks/useHabits are Dexie live queries: they start
   // out empty and resolve asynchronously, one tick after this component's
@@ -65,6 +80,15 @@ export function QuickCreateHabitModal({
     setTimeBlockId(defaultTimeBlockId(timeBlocks) ?? '')
   }, [timeBlocks])
 
+  // domains/styleMap intentionally left out of the dependency array — see
+  // the identical effect in HabitForm.tsx for why (only react to the
+  // user/smart-default actually changing domainId, not to every
+  // live-query tick).
+  useEffect(() => {
+    if (iconTouched) return
+    setIcon(resolveHabitDomainStyle(domainId, domains, styleMap).icon)
+  }, [domainId, iconTouched]) // eslint-disable-line react-hooks/exhaustive-deps
+
   function handleTranscript(transcript: string) {
     const result = parseVoiceQuickCreate(transcript, domains)
     setName((prev) => (prev.trim() ? appendTranscript(prev, result.title) : result.title))
@@ -84,6 +108,7 @@ export function QuickCreateHabitModal({
       name: name.trim(),
       habitType: 'build',
       domainId: domainId || undefined,
+      icon: iconTouched ? icon : undefined,
       timeBlockId: timeBlockId || undefined,
       schedule: { type: 'daily', params: {} },
       reminderTimes: reminderTime ? [reminderTime] : [],
@@ -113,6 +138,7 @@ export function QuickCreateHabitModal({
   }
 
   const domainLabel = domains.find((d) => d.id === domainId)?.name
+  const previewColor = resolveHabitDomainStyle(domainId, domains, styleMap).color
 
   const footer = (
     <div className="flex gap-2 justify-end">
@@ -147,10 +173,18 @@ export function QuickCreateHabitModal({
           <MicButton lang={i18n.language} onTranscript={handleTranscript} />
         </div>
 
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2 items-center">
           <Chip label={domainLabel ?? t('quickCreate.categoryPrompt')} selected={!!domainLabel} onClick={() => setMoreOpen(true)} />
           {reminderTime && <Chip label={t('quickCreate.timeChip', { time: reminderTime })} selected onClick={() => setMoreOpen(true)} />}
           {criticalReminder && <Chip label={t('quickCreate.calendarChip')} selected onClick={() => setMoreOpen(true)} />}
+          <button
+            type="button"
+            onClick={() => setIconPickerOpen(true)}
+            className="flex items-center gap-1.5 rounded-full border border-[var(--stoa-border)] bg-[var(--stoa-surface)] pl-1 pr-3 py-1 text-sm"
+          >
+            <ColorIconBadge color={previewColor} icon={icon} size="row" />
+            {t('habits.icon')}
+          </button>
         </div>
 
         <button
@@ -203,6 +237,23 @@ export function QuickCreateHabitModal({
           {t('quickCreate.openFullEditor')}
         </button>
       </form>
+
+      {iconPickerOpen && (
+        <Sheet title={t('habits.icon')} onClose={() => setIconPickerOpen(false)}>
+          <div className="flex flex-col gap-3">
+            <div className="flex justify-center">
+              <ColorIconBadge color={previewColor} icon={icon} size="detail" />
+            </div>
+            <IconPicker
+              value={icon}
+              onChange={(next) => {
+                setIcon(next)
+                setIconTouched(true)
+              }}
+            />
+          </div>
+        </Sheet>
+      )}
     </Sheet>
   )
 }
