@@ -1,5 +1,19 @@
 [
   {
+    "version": "1.4.0",
+    "bullets": [
+      "Today has a new look: a friendly greeting, one combined list of what's left for the day, and a calmer, less cluttered layout.",
+      "Completed tasks now join completed habits in the \"Done today\" tray."
+    ]
+  },
+  {
+    "version": "1.3.0",
+    "bullets": [
+      "Pick a custom icon for any habit — or leave it to automatically match its life domain. Completed habits now show up as colorful icon bubbles you can undo with one tap.",
+      "Habits and tasks linked to a day's plan now show their real color and icon, matching how they look everywhere else in the app."
+    ]
+  },
+  {
     "version": "1.2.0",
     "bullets": [
       "The update banner now shows what changed before you tap Refresh.",
