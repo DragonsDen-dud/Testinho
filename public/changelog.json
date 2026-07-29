@@ -1,5 +1,12 @@
 [
   {
+    "version": "1.5.0",
+    "bullets": [
+      "Catch up on habits you forgot to log for the last week — mark them done or not done for that specific day, right from the Habits tab.",
+      "Streaks now correctly reflect a day you backdated, instead of staying broken."
+    ]
+  },
+  {
     "version": "1.4.0",
     "bullets": [
       "Today has a new look: a friendly greeting, one combined list of what's left for the day, and a calmer, less cluttered layout.",
