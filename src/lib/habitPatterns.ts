@@ -1,6 +1,6 @@
 import type { Habit, HabitLog, TimeBlock } from '../db/types'
 import { addDays, todayKey, weekdayOf } from './date'
-import { isScheduledOnDate } from './habitStrength'
+import { isScheduledOnDate, safeCreatedDate } from './habitStrength'
 import { findTimeBlockForTime } from './timeBlockRange'
 
 const TRAILING_DAYS = 8 * 7
@@ -29,7 +29,7 @@ export function computeWeekdayPattern(
 ): WeekdayPattern | null {
   const byDate = new Map(logs.map((l) => [l.date, l]))
   const windowStart = addDays(asOfDate, -(TRAILING_DAYS - 1))
-  const habitStart = habit.createdAt.slice(0, 10)
+  const habitStart = safeCreatedDate(habit, asOfDate)
   const start = habitStart > windowStart ? habitStart : windowStart
 
   const perWeekday = Array.from({ length: 7 }, () => ({ done: 0, total: 0 }))

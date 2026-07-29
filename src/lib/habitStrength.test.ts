@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { computeHabitStrength, computeBuildStreak, isPausedOnDate, isScheduledOnDate } from './habitStrength'
+import { computeHabitStrength, computeBuildStreak, computeAvoidStreak, isPausedOnDate, isScheduledOnDate } from './habitStrength'
 import type { Habit, HabitLog } from '../db/types'
 
 function dailyHabit(overrides: Partial<Habit> = {}): Habit {
@@ -100,5 +100,37 @@ describe('computeBuildStreak treats paused days like skip — no break, no exten
     // asOf mid-pause: paused days are skipped by isScheduledOnDate, so the
     // streak walk should still find the 4 done days intact.
     expect(computeBuildStreak(habit, logs, '2026-06-10')).toBe(4)
+  })
+})
+
+describe('malformed/missing createdAt does not crash (black-screen incident)', () => {
+  // A real habit turning up with an undefined createdAt crashed the whole
+  // app with an uncaught TypeError in production — createdAt is typed as
+  // always a string, but nothing at the IndexedDB boundary actually
+  // guarantees that for real/legacy/imported data. These lock in the fix:
+  // every function below must degrade gracefully, never throw.
+  const habitWithBadCreatedAt = dailyHabit({ createdAt: undefined as unknown as string })
+
+  it('computeHabitStrength does not throw and returns a number', () => {
+    expect(() => computeHabitStrength(habitWithBadCreatedAt, [], '2026-06-15')).not.toThrow()
+    expect(typeof computeHabitStrength(habitWithBadCreatedAt, [], '2026-06-15')).toBe('number')
+  })
+
+  it('computeHabitStrength does not throw for a weekly_n_times habit either', () => {
+    const habit = dailyHabit({
+      createdAt: undefined as unknown as string,
+      schedule: { type: 'weekly_n_times', params: { n: 3 } },
+    })
+    expect(() => computeHabitStrength(habit, [], '2026-06-15')).not.toThrow()
+  })
+
+  it('computeBuildStreak does not throw and returns a number', () => {
+    expect(() => computeBuildStreak(habitWithBadCreatedAt, [], '2026-06-15')).not.toThrow()
+    expect(typeof computeBuildStreak(habitWithBadCreatedAt, [], '2026-06-15')).toBe('number')
+  })
+
+  it('computeAvoidStreak does not throw and returns a number', () => {
+    expect(() => computeAvoidStreak(habitWithBadCreatedAt, [], '2026-06-15')).not.toThrow()
+    expect(typeof computeAvoidStreak(habitWithBadCreatedAt, [], '2026-06-15')).toBe('number')
   })
 })

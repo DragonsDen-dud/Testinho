@@ -8,7 +8,10 @@ export function useHabits(spaceId: string | null | undefined): Habit[] {
     useLiveQuery(async () => {
       if (!spaceId) return []
       const rows = await listActiveHabits(spaceId)
-      return rows.sort((a, b) => a.createdAt.localeCompare(b.createdAt))
+      // Same defensive posture as safeCreatedDate (habitStrength.ts) — a
+      // malformed/missing createdAt on real data must not crash the sort
+      // that runs on every Habits-tab render (black-screen incident).
+      return rows.sort((a, b) => (a.createdAt ?? '').localeCompare(b.createdAt ?? ''))
     }, [spaceId]) ?? []
   )
 }

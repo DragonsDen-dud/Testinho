@@ -1,5 +1,5 @@
 import type { Habit, HabitLog, Todo, TodoStatus } from '../db/types'
-import { computeHabitStrength, isScheduledOnDate } from './habitStrength'
+import { computeHabitStrength, isScheduledOnDate, safeCreatedDate } from './habitStrength'
 import { computeMoodCorrelation, type MoodCorrelation } from './moodCorrelation'
 import { addDays, todayKey } from './date'
 
@@ -38,7 +38,7 @@ export function computeCompletionRates(
     for (const habit of habits) {
       const logs = logsByHabitId.get(habit.id) ?? []
       const byDate = new Map(logs.map((l) => [l.date, l]))
-      const habitStart = habit.createdAt.slice(0, 10)
+      const habitStart = safeCreatedDate(habit, asOfDate)
       const start = habitStart > windowStart ? habitStart : windowStart
 
       let cursor = start
