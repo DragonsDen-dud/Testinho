@@ -42,7 +42,14 @@ export function computeCatchUpDays(
     const date = addDays(today, -i)
     const pending = habits.filter((h) => {
       if (h.measurable) return false
-      if (h.createdAt.slice(0, 10) > date) return false
+      // Defensive, not just typed: a real habit found to be missing/
+      // malformed createdAt crashed this exact line in production with
+      // an uncaught TypeError (see the black-screen incident this round
+      // also added an ErrorBoundary for) — treat "we don't actually know
+      // when this was created" as "don't offer to backdate it" rather
+      // than trust the type system's promise that the field is always a
+      // real string.
+      if (typeof h.createdAt !== 'string' || h.createdAt.slice(0, 10) > date) return false
       if (!isScheduledOnDate(h, date)) return false
       const logs = logsByHabit.get(h.id) ?? []
       return !logs.some((l) => l.date === date)

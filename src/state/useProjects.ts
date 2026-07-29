@@ -8,7 +8,9 @@ export function useProjects(spaceId: string | null | undefined): Project[] {
     useLiveQuery(async () => {
       if (!spaceId) return []
       const rows = await listActiveProjects(spaceId)
-      return rows.sort((a, b) => a.createdAt.localeCompare(b.createdAt))
+      // Same defensive posture as useHabits.ts (black-screen incident) —
+      // don't trust real/legacy IndexedDB data to actually match the type.
+      return rows.sort((a, b) => (a.createdAt ?? '').localeCompare(b.createdAt ?? ''))
     }, [spaceId]) ?? []
   )
 }

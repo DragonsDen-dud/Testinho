@@ -1,5 +1,12 @@
 [
   {
+    "version": "1.5.1",
+    "bullets": [
+      "Fixed a bug where an older habit could cause the whole app to fail to open, showing a blank screen.",
+      "If something ever does go wrong now, the app will show a real error message with a way to recover, instead of just going blank."
+    ]
+  },
+  {
     "version": "1.5.0",
     "bullets": [
       "Catch up on habits you forgot to log for the last week — mark them done or not done for that specific day, right from the Habits tab.",

@@ -41,5 +41,7 @@ export async function deleteJournalEntry(id: string): Promise<void> {
 
 export async function listJournalEntries(spaceId: string): Promise<JournalEntry[]> {
   const rows = await db.journalEntries.where('spaceId').equals(spaceId).toArray()
-  return rows.sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+  // Same defensive posture as useHabits.ts/useProjects.ts (black-screen
+  // incident) — don't trust real/legacy IndexedDB data to match the type.
+  return rows.sort((a, b) => (b.createdAt ?? '').localeCompare(a.createdAt ?? ''))
 }

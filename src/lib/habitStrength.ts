@@ -26,6 +26,19 @@ function logByDate(logs: HabitLog[]): Map<string, HabitLog> {
   return map
 }
 
+/** Black-screen incident fix — every function below walks dates starting
+ * from habit.createdAt.slice(0, 10), which crashed the whole app with an
+ * uncaught TypeError the moment a real habit turned up with a missing/
+ * malformed createdAt (confirmed reproducing the exact "opens to a blank
+ * screen" symptom). createdAt is typed as always a real string, but nothing
+ * in this local-first app validates old/imported records at the IndexedDB
+ * boundary, so trusting the type here was the actual bug. Falls back to
+ * asOfDate itself — "we don't know when this started, so don't claim any
+ * history for it" — rather than crash or walk back indefinitely. */
+export function safeCreatedDate(habit: Habit, asOfDate: string): string {
+  return typeof habit.createdAt === 'string' ? habit.createdAt.slice(0, 10) : asOfDate
+}
+
 /**
  * Proportional decaying Habit Strength (0-100), per Article A/21.
  * Grows toward 100 on completed scheduled days, decays toward 0 on missed
@@ -39,7 +52,7 @@ export function computeHabitStrength(habit: Habit, logs: HabitLog[], asOfDate: s
   if (habit.schedule.type === 'weekly_n_times') {
     const target = habit.schedule.params.n ?? 1
     const weeks = new Map<string, { done: number; days: string[] }>()
-    let cursor = habit.createdAt.slice(0, 10)
+    let cursor = safeCreatedDate(habit, asOfDate)
     while (cursor <= asOfDate) {
       if (isPausedOnDate(habit, cursor)) {
         // Excluded entirely (Article 21) — a week made up only of paused
@@ -64,7 +77,7 @@ export function computeHabitStrength(habit: Habit, logs: HabitLog[], asOfDate: s
     return Math.round(strength)
   }
 
-  let cursor = habit.createdAt.slice(0, 10)
+  let cursor = safeCreatedDate(habit, asOfDate)
   while (cursor <= asOfDate) {
     if (isScheduledOnDate(habit, cursor)) {
       const log = byDate.get(cursor)
@@ -93,7 +106,8 @@ export function computeBuildStreak(habit: Habit, logs: HabitLog[], asOfDate: str
   if (!todayLog && isScheduledOnDate(habit, asOfDate)) {
     cursor = addDays(asOfDate, -1)
   }
-  while (cursor >= habit.createdAt.slice(0, 10)) {
+  const createdDate = safeCreatedDate(habit, asOfDate)
+  while (cursor >= createdDate) {
     if (!isScheduledOnDate(habit, cursor)) {
       cursor = addDays(cursor, -1)
       continue
@@ -116,7 +130,8 @@ export function computeAvoidStreak(habit: Habit, logs: HabitLog[], asOfDate: str
   const byDate = logByDate(logs)
   let streak = 0
   let cursor = asOfDate
-  while (cursor >= habit.createdAt.slice(0, 10)) {
+  const createdDate = safeCreatedDate(habit, asOfDate)
+  while (cursor >= createdDate) {
     const log = byDate.get(cursor)
     if (log?.status === 'not_done') break
     streak += 1
