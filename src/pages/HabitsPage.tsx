@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useAppSettings } from '../state/useAppSettings'
-import { useHabits, useLogsForDate } from '../state/useHabits'
+import { useHabits, useLogsForDate, useHabitLogsForHabits } from '../state/useHabits'
 import { createHabit, updateHabit, archiveHabit, deleteHabit, restoreHabit, pauseHabit, resumeHabit } from '../data/habits'
 import { showUndoToast } from '../state/toast'
 import { HabitForm } from '../components/habits/HabitForm'
@@ -11,6 +11,7 @@ import { CompletedHabitBubble } from '../components/habits/CompletedHabitBubble'
 import { HabitDetailSheet } from '../components/habits/HabitDetailSheet'
 import { EmptyState } from '../components/ui/EmptyState'
 import { todayKey } from '../lib/date'
+import { computeCatchUpDays, countCatchUpPending } from '../lib/habitCatchUp'
 
 export function HabitsPage() {
   const { t } = useTranslation()
@@ -62,6 +63,13 @@ export function HabitsPage() {
   const notDoneHabits = habits.filter((h) => logsToday.get(h.id)?.status !== 'done')
   const doneHabits = habits.filter((h) => logsToday.get(h.id)?.status === 'done')
 
+  // Habit catch-up round — entry-point banner only ever renders when
+  // there's something real pending in the lookback window (Article 19
+  // tone: state a fact, not a permanent fixture nagging every visit).
+  const catchUpLogsByHabit = useHabitLogsForHabits(habits.map((h) => h.id))
+  const catchUpDays = computeCatchUpDays(habits, catchUpLogsByHabit)
+  const catchUpPendingCount = countCatchUpPending(catchUpDays)
+
   function handleLogged(habitId: string) {
     setJustCompletedIds((prev) => (prev.has(habitId) ? prev : new Set(prev).add(habitId)))
   }
@@ -75,6 +83,19 @@ export function HabitsPage() {
   return (
     <div className="p-4 max-w-md mx-auto w-full flex flex-col gap-3">
       <h1 className="text-lg font-semibold">{t('habits.title')}</h1>
+
+      {catchUpPendingCount > 0 && (
+        <div className="rounded-xl bg-[var(--stoa-accent-soft)] px-3.5 py-2.5 text-sm flex items-center justify-between gap-2">
+          <span className="flex-1">{t('habits.catchUpBannerCount', { count: catchUpPendingCount })}</span>
+          <button
+            type="button"
+            className="text-xs font-medium underline underline-offset-2 shrink-0"
+            onClick={() => navigate('/habits/catch-up')}
+          >
+            {t('habits.catchUpBannerCta')}
+          </button>
+        </div>
+      )}
 
       {habits.length === 0 && <EmptyState text={t('habits.empty')} />}
 

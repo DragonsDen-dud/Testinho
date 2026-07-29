@@ -21,6 +21,7 @@ import { ProjectsPage } from './pages/ProjectsPage'
 import { ProjectDetailPage } from './pages/ProjectDetailPage'
 import { JournalPage } from './pages/JournalPage'
 import { OverdueTriagePage } from './pages/OverdueTriagePage'
+import { CatchUpPage } from './pages/CatchUpPage'
 import { TimeBlocksPage } from './pages/TimeBlocksPage'
 import { DiagnosticDetailPage } from './pages/DiagnosticDetailPage'
 import { SearchPage } from './pages/SearchPage'
@@ -98,6 +99,7 @@ function App() {
           <Route path="/habits" element={<HabitsPage />} />
           <Route path="/habits/:id" element={<HabitsPage />} />
           <Route path="/habits/:id/edit" element={<HabitsPage />} />
+          <Route path="/habits/catch-up" element={<CatchUpPage />} />
           <Route path="/todos" element={<TodosPage />} />
           <Route path="/todos/:id" element={<TodosPage />} />
           <Route path="/todos/:id/edit" element={<TodosPage />} />
