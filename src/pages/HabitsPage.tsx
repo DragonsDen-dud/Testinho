@@ -128,6 +128,7 @@ export function HabitsPage() {
       {viewingHabit && (
         <HabitDetailSheet
           habit={viewingHabit}
+          allHabits={habits}
           onClose={() => navigate('/habits')}
           onEdit={() => navigate(`/habits/${viewingHabit.id}/edit`)}
         />

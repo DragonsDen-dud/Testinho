@@ -182,7 +182,11 @@
     "latestNoteLabel": "Latest note",
     "hasStakeChip": "Stake set",
     "hasCalendarBackupChip": "Calendar backup",
-    "viewDetails": "View habit"
+    "viewDetails": "View habit",
+    "patternWeekLabel": "This week",
+    "patternMonthLabel": "This month",
+    "patternShowMonth": "Show month",
+    "patternShowWeek": "Show week"
   },
   "todos": {
     "title": "Tasks",
