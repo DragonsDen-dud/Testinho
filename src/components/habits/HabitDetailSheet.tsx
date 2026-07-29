@@ -9,17 +9,33 @@ import { useTimeBlocks } from '../../state/useTimeBlocks'
 import { useHabitLogs } from '../../state/useHabits'
 import { computeHabitStrength, computeBuildStreak, computeAvoidStreak } from '../../lib/habitStrength'
 import { formatHabitCadence } from '../../lib/habitCadence'
+import { HabitPatternGrid } from './HabitPatternGrid'
 import type { Habit } from '../../db/types'
 
 /**
- * Read-only summary reached by tapping a habit's card in the list — the
- * full HabitForm (with every input field) is now reached only via the
- * explicit "Edit" button below, never by the card tap itself. Quick
- * actions (Done/Not done/Skip, mood, note) stay on HabitCard directly,
- * untouched by this addition — this is purely an alternate "look, don't
- * touch" path alongside them, not a replacement.
+ * Summary reached by tapping a habit's card in the list — the full
+ * HabitForm (with every input field) is reached only via the explicit
+ * "Edit" button below, never by the card tap itself. Quick actions for
+ * *today* (Done/Not done/Skip, mood, note) stay on HabitCard directly,
+ * untouched by this addition.
+ *
+ * The HabitPatternGrid below is no longer purely "look, don't touch" —
+ * Denys asked for the ability to tap any recent day's circle and log/edit
+ * it right here, so this sheet now has two write paths of its own (any
+ * day via the grid) alongside HabitCard's (today only), both funneling
+ * into the exact same logHabit/logMeasurableEntry functions.
  */
-export function HabitDetailSheet({ habit, onClose, onEdit }: { habit: Habit; onClose: () => void; onEdit: () => void }) {
+export function HabitDetailSheet({
+  habit,
+  allHabits,
+  onClose,
+  onEdit,
+}: {
+  habit: Habit
+  allHabits: Habit[]
+  onClose: () => void
+  onEdit: () => void
+}) {
   const { t, i18n } = useTranslation()
   const domains = useDomains(habit.spaceId)
   const timeBlocks = useTimeBlocks(habit.spaceId)
@@ -57,6 +73,8 @@ export function HabitDetailSheet({ habit, onClose, onEdit }: { habit: Habit; onC
             <ProgressBar percent={strength} />
           </div>
         </div>
+
+        <HabitPatternGrid habit={habit} allHabits={allHabits} />
 
         <div className="flex flex-wrap gap-2">
           {domain && (

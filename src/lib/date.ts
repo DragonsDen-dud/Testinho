@@ -63,6 +63,14 @@ export function weekdayName(dow: number, locale: string): string {
   return new Date(2024, 0, 7 + dow).toLocaleDateString(locale, { weekday: 'long' })
 }
 
+/** Short weekday label ("Mon") for a real date, locale-aware — used by the
+ * habit pattern grid's week strip, distinct from weekdayName's full-name
+ * form (which takes an abstract 0-6 index, not an actual date). */
+export function formatWeekdayShort(dateKey: string, locale: string): string {
+  const [y, m, d] = dateKey.split('-').map(Number)
+  return new Date(y, m - 1, d).toLocaleDateString(locale, { weekday: 'short' })
+}
+
 export function formatHumanDate(dateKey: string, locale: string): string {
   const [y, m, d] = dateKey.split('-').map(Number)
   return new Date(y, m - 1, d).toLocaleDateString(locale, {

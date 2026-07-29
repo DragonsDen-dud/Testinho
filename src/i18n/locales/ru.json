@@ -198,7 +198,11 @@
     "latestNoteLabel": "Последняя заметка",
     "hasStakeChip": "Есть ставка",
     "hasCalendarBackupChip": "Резерв в Календаре",
-    "viewDetails": "Просмотр привычки"
+    "viewDetails": "Просмотр привычки",
+    "patternWeekLabel": "Эта неделя",
+    "patternMonthLabel": "Этот месяц",
+    "patternShowMonth": "Показать месяц",
+    "patternShowWeek": "Показать неделю"
   },
   "todos": {
     "title": "Задачи",

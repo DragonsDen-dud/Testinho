@@ -1,5 +1,12 @@
 [
   {
+    "version": "1.6.0",
+    "bullets": [
+      "Tapping any habit now shows this week's completion pattern as icon circles, with an option to expand to the full month.",
+      "Tap any day's circle to log or correct it — including entering a number for habits you track by value, on any past day, not just today."
+    ]
+  },
+  {
     "version": "1.5.1",
     "bullets": [
       "Fixed a bug where an older habit could cause the whole app to fail to open, showing a blank screen.",
