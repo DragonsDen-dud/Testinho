@@ -495,6 +495,24 @@
     "exportPng": "Экспорт как PNG",
     "unviewedReportBadge": "Доступен новый отчёт"
   },
+  "sleep": {
+    "sectionTitle": "Сон",
+    "logButton": "Записать сон",
+    "newTitle": "Записать сон",
+    "editTitle": "Изменить запись о сне",
+    "date": "Дата",
+    "dateHint": "Можно записать или изменить любой прошедший день, не только сегодня.",
+    "bedTime": "Отбой",
+    "wakeTime": "Подъём",
+    "colDate": "Дата",
+    "colBedTime": "Отбой",
+    "colWakeTime": "Подъём",
+    "colHours": "Часов",
+    "hoursValue": "{{hours}} ч",
+    "timeSeriesTitle": "Отбой и подъём",
+    "durationTitle": "Часов сна",
+    "empty": "Пока нет записей о сне. Добавьте первую ночь."
+  },
   "search": {
     "title": "Поиск",
     "placeholder": "Поиск по привычкам, задачам, дневнику, отчётам…",

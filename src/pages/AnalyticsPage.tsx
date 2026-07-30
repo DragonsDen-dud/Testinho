@@ -10,6 +10,7 @@ import { useCurrentScheduledReport } from '../state/useDiagnostics'
 import { markDiagnosticViewed } from '../data/diagnostics'
 import { ChartCard } from '../components/analytics/ChartCard'
 import { ScheduledReportCard } from '../components/analytics/ScheduledReportCard'
+import { SleepSection } from '../components/analytics/SleepSection'
 import { EmptyState } from '../components/ui/EmptyState'
 import {
   computeCompletionRates,
@@ -99,6 +100,8 @@ export function AnalyticsPage() {
 
       {weeklyReport && <ScheduledReportCard title={t('dashboard.scheduledReportTitleWeek')} report={weeklyReport} />}
       {monthlyReport && <ScheduledReportCard title={t('dashboard.scheduledReportTitleMonth')} report={monthlyReport} />}
+
+      {settings?.activeSpaceId && <SleepSection spaceId={settings.activeSpaceId} />}
 
       {!hasAnyHabits && !hasAnyTodos ? (
         <EmptyState text={t('analytics.empty')} />

@@ -15,6 +15,7 @@ import type {
   DiagnosticEntry,
   ReminderState,
   CategoryStyle,
+  SleepLog,
 } from './types'
 import { CURRENT_VERSION } from '../lib/changelog'
 
@@ -34,6 +35,7 @@ export class StoaDatabase extends Dexie {
   diagnosticEntries!: Table<DiagnosticEntry, string>
   reminderStates!: Table<ReminderState, string>
   categoryStyles!: Table<CategoryStyle, string>
+  sleepLogs!: Table<SleepLog, string>
 
   constructor() {
     super('stoa')
@@ -102,6 +104,12 @@ export class StoaDatabase extends Dexie {
     // why a lazy per-read fallback is used instead of a one-time seed).
     this.version(6).stores({
       categoryStyles: 'id, entityType, entityId, [entityType+entityId]',
+    })
+    // v7: Sleep tracking round — one row per Space+date, [spaceId+date]
+    // indexed for the same upsert-by-composite-key lookup logHabit already
+    // uses for HabitLog's [habitId+date].
+    this.version(7).stores({
+      sleepLogs: 'id, spaceId, date, [spaceId+date]',
     })
   }
 }
