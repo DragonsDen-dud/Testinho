@@ -265,6 +265,34 @@ export interface JournalEntry {
   photo?: Blob
 }
 
+/**
+ * Sleep tracking round — its own small entity, not folded into the
+ * measurable-habit model: checked against that model first (it already
+ * supports backdating and multiple values/day), but a habit's `entries`
+ * are same-day timestamp+value pairs, with no concept of "this value is
+ * the end of a range that started on the previous calendar day" — exactly
+ * the midnight-spanning case a bedtime/wake-time pair needs, and forcing
+ * two correlated fields (bed + wake) into one measurable habit's single
+ * `value` would either need two separate habits (losing the pairing this
+ * feature exists to show) or fabricated units. A real fit didn't exist.
+ *
+ * `date` is the wake-up day (the day this entry is "for" — matches how a
+ * user would naturally say "last night's sleep" the next morning).
+ * bedTime/wakeTime are full ISO timestamps, not HH:mm strings, so a bedtime
+ * after midnight and one before both compute a correct duration without
+ * any special-cased "spans midnight" branch at read time — the timestamps
+ * already encode which calendar day each moment actually fell on.
+ * One row per spaceId+date; logging again for an already-logged date
+ * updates that row rather than creating a duplicate (see data/sleep.ts).
+ */
+export interface SleepLog {
+  id: string
+  spaceId: string
+  date: string
+  bedTime: string
+  wakeTime: string
+}
+
 /** Articles 12/16/26/35 — autoStats is populated locally (no AI) so the
  * Scheduled AI Report and freeform queries can reference these as given
  * facts instead of re-deriving them. One row per Space+period+scope. */

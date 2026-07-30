@@ -464,6 +464,24 @@
     "exportPng": "Export as PNG",
     "unviewedReportBadge": "New report available"
   },
+  "sleep": {
+    "sectionTitle": "Sleep",
+    "logButton": "Log sleep",
+    "newTitle": "Log sleep",
+    "editTitle": "Edit sleep entry",
+    "date": "Date",
+    "dateHint": "You can log or edit any past date, not just today.",
+    "bedTime": "Bedtime",
+    "wakeTime": "Wake time",
+    "colDate": "Date",
+    "colBedTime": "Bed",
+    "colWakeTime": "Wake",
+    "colHours": "Hours",
+    "hoursValue": "{{hours}}h",
+    "timeSeriesTitle": "Bedtime & wake time",
+    "durationTitle": "Hours slept",
+    "empty": "No sleep logged yet. Add your first night."
+  },
   "search": {
     "title": "Search",
     "placeholder": "Search habits, tasks, journal, reports…",

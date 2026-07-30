@@ -1,5 +1,12 @@
 [
   {
+    "version": "1.7.0",
+    "bullets": [
+      "New Sleep section in Analytics — log your bedtime and wake time for any day, including past ones, and see hours slept calculated automatically.",
+      "See your sleep as a table and two charts: bedtime vs. wake time night to night, and hours slept per day."
+    ]
+  },
+  {
     "version": "1.6.0",
     "bullets": [
       "Tapping any habit now shows this week's completion pattern as icon circles, with an option to expand to the full month.",
