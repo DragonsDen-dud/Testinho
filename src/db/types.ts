@@ -175,7 +175,11 @@ export interface Habit {
   dependsOnHabitIds?: string[]
   pausedFrom?: string
   pausedUntil?: string
-  note?: string
+  // REMOVED in STOA-5: `note?: string`. It was written by the habit form
+  // and stored, but never read for display anywhere — the "Latest note" on
+  // the detail view reads HabitLog.note (the per-check-in note), which is a
+  // different field and is untouched. Dexie v8 strips the stale property
+  // from existing rows so it doesn't linger in backups forever.
   createdAt: string
   archivedAt?: string
   deletedAt?: string

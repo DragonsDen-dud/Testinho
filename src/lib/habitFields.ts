@@ -31,6 +31,11 @@ export const HABIT_FIELD_KEYS = [
   'stake',
   'dependsOn',
   'pause',
+  // STOA-5: this key no longer maps to a form field — the dead top-level
+  // Habit.note was removed. It now controls only whether the habit detail
+  // view shows the latest check-in note (HabitLog.note). Deliberately kept
+  // under the same key rather than renamed, so an existing stored
+  // habitFieldConfig continues to work with no migration.
   'note',
 ] as const
 

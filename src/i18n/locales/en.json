@@ -190,7 +190,20 @@
     "patternWeekLabel": "This week",
     "patternMonthLabel": "This month",
     "patternShowMonth": "Show month",
-    "patternShowWeek": "Show week"
+    "patternShowWeek": "Show week",
+    "heatmapTitle": "History",
+    "heatmapRangeWeeks_one": "last {{count}} week",
+    "heatmapRangeWeeks_other": "last {{count}} weeks",
+    "heatmapLegendLess": "Less",
+    "heatmapLegendMore": "More",
+    "heatmapStateDone": "Done",
+    "heatmapStateClean": "No slip",
+    "heatmapStateNotDone": "Not done",
+    "heatmapStateSkip": "Skipped",
+    "heatmapStatePending": "Not logged yet",
+    "heatmapStateMissed": "Missed",
+    "moodAddPrompt": "Add how it felt",
+    "moodPromptAfterDone": "How did “{{name}}” feel?"
   },
   "todos": {
     "title": "Tasks",
@@ -549,6 +562,6 @@
     "stake": "Stake",
     "dependsOn": "Depends on",
     "pause": "Pause",
-    "note": "Note"
+    "note": "Latest check-in note"
   }
 }

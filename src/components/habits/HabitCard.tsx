@@ -22,17 +22,13 @@ import { MicButton } from '../ui/MicButton'
 import { MinimalListRow } from '../ui/MinimalListRow'
 import { PhotoAttachmentInput } from '../ui/PhotoAttachmentInput'
 import { appendTranscript } from '../../lib/speechRecognition'
+import { MOOD_SCALE, shouldPromptMood } from '../../lib/moodScale'
 
-// Article 35 support — 5-point scale mapped to -2..+2, matching the sign
-// mood correlation expects (positive = better mood). Purely additive: tapping
-// a mood never blocks or re-triggers the check-in save that already happened.
-const MOOD_OPTIONS: { value: number; emoji: string }[] = [
-  { value: -2, emoji: '😞' },
-  { value: -1, emoji: '😕' },
-  { value: 0, emoji: '😐' },
-  { value: 1, emoji: '🙂' },
-  { value: 2, emoji: '😊' },
-]
+// STOA-5 Part B — the scale itself (values -2..+2) is unchanged and still
+// feeds Article 35's mood correlation; it moved to lib/moodScale.ts so the
+// per-point colors and the "stop nagging" policy live next to each other
+// and can be unit-tested. Still purely additive: tapping a mood never
+// blocks or re-triggers the check-in save that already happened.
 
 export function HabitCard({
   habit,
@@ -220,23 +216,17 @@ export function HabitCard({
             </div>
 
             {todayLog && settings?.moodCaptureEnabled !== false && (
-              <div className="flex gap-1.5 items-center -mt-1">
-                {MOOD_OPTIONS.map((m) => (
-                  <button
-                    key={m.value}
-                    type="button"
-                    aria-label={t('habits.moodOptionLabel', { value: m.value })}
-                    onClick={() => setHabitLogMood(habit.id, date, todayLog.mood === m.value ? undefined : m.value)}
-                    className={`text-base w-7 h-7 rounded-full border transition-transform ${
-                      todayLog.mood === m.value
-                        ? 'border-[var(--stoa-accent)] scale-110'
-                        : 'border-transparent opacity-60'
-                    }`}
-                  >
-                    {m.emoji}
-                  </button>
-                ))}
-              </div>
+              <MoodRow
+                habitId={habit.id}
+                date={date}
+                mood={todayLog.mood}
+                // Reduce, don't nag (Part B): once several recent check-ins
+                // in a row have gone unrated, the row collapses to a single
+                // small affordance instead of presenting five taps again.
+                // It never disappears — rating a day stays one tap away —
+                // and it returns in full the moment a mood is logged.
+                collapsed={!shouldPromptMood(allLogs, date) && todayLog.mood == null}
+              />
             )}
 
             {todayLog && (
@@ -251,6 +241,70 @@ export function HabitCard({
           </>
         )}
       </div>
+    </div>
+  )
+}
+
+/**
+ * STOA-5 Part B — the single face-valid 5-point EMA item, one tap, nothing
+ * else required. Sits *below* the already-saved check-in: the Done button
+ * has written the log before this ever renders, so nothing here can delay
+ * or gate completion. Each point carries its own hue from the upgraded
+ * palette (lib/moodScale.ts) instead of the row reading as five gray
+ * emoji — the low-risk place the brief asked to show the color system off.
+ *
+ * Article 6: no point on this scale is framed as better than another, no
+ * total is kept, and rating a day earns nothing.
+ */
+function MoodRow({
+  habitId,
+  date,
+  mood,
+  collapsed,
+}: {
+  habitId: string
+  date: string
+  mood?: number
+  collapsed: boolean
+}) {
+  const { t } = useTranslation()
+  const [expanded, setExpanded] = useState(false)
+
+  if (collapsed && !expanded) {
+    return (
+      <button
+        type="button"
+        onClick={() => setExpanded(true)}
+        className="self-start text-xs text-[var(--stoa-text-muted)] underline underline-offset-2 -mt-1"
+      >
+        {t('habits.moodAddPrompt')}
+      </button>
+    )
+  }
+
+  return (
+    <div className="flex gap-1.5 items-center -mt-1">
+      {MOOD_SCALE.map((m) => {
+        const selected = mood === m.value
+        return (
+          <button
+            key={m.value}
+            type="button"
+            aria-label={t('habits.moodOptionLabel', { value: m.value })}
+            aria-pressed={selected}
+            onClick={() => setHabitLogMood(habitId, date, selected ? undefined : m.value)}
+            className={`text-base w-7 h-7 rounded-full border-2 transition-transform duration-150 active:scale-90 ${
+              selected ? 'scale-110' : 'opacity-60'
+            }`}
+            style={{
+              borderColor: selected ? m.color : 'transparent',
+              background: selected ? `${m.color}26` : 'transparent',
+            }}
+          >
+            {m.emoji}
+          </button>
+        )
+      })}
     </div>
   )
 }

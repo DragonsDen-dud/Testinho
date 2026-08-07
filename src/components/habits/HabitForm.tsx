@@ -1,7 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Sheet } from '../ui/Sheet'
-import { Field, Input, Select, TextArea } from '../ui/Input'
+import { Field, Input, Select } from '../ui/Input'
 import { Button } from '../ui/Button'
 import { Chip } from '../ui/Chip'
 import { ColorIconBadge } from '../ui/ColorIconBadge'
@@ -87,7 +87,6 @@ export function HabitForm({
   const [stakePenaltyText, setStakePenaltyText] = useState(initial?.stake?.penaltyText ?? '')
   const [dependsOnHabitIds, setDependsOnHabitIds] = useState<string[]>(initial?.dependsOnHabitIds ?? [])
   const [dependencyError, setDependencyError] = useState<string | null>(null)
-  const [note, setNote] = useState(initial?.note ?? '')
   const [pauseUntilDraft, setPauseUntilDraft] = useState('')
 
   // domains/styleMap deliberately left out of the dependency array — this
@@ -149,7 +148,6 @@ export function HabitForm({
         ? { triggerType: stakeTriggerType, triggerValue: stakeTriggerValue, penaltyText: stakePenaltyText.trim() }
         : undefined,
       dependsOnHabitIds: dependsOnHabitIds.length ? dependsOnHabitIds : undefined,
-      note: note.trim() || undefined,
     }
     onSave(data)
   }
@@ -388,16 +386,12 @@ export function HabitForm({
           )}
         </Field>
       ) : null,
-    note: (
-      <Field label={t('habits.note')}>
-        <TextArea
-          placeholder={t('habits.notePlaceholder')}
-          value={note}
-          onChange={(e) => setNote(e.target.value)}
-          rows={2}
-        />
-      </Field>
-    ),
+    // STOA-5 — the top-level Habit.note field was removed (dead: written
+    // here, never read anywhere). The catalog key survives because it still
+    // controls something real: whether the detail view shows the latest
+    // *check-in* note (HabitLog.note). Keeping the key rather than renaming
+    // it means an existing habitFieldConfig keeps working untouched.
+    note: null,
   }
 
   const fieldOrder = visibleHabitFieldOrder(settings?.habitFieldConfig)

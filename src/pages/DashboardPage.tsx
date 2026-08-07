@@ -10,6 +10,7 @@ import { useOpenTodosToday, useDoneTodosToday } from '../state/useTodos'
 import { useConnectivity } from '../state/useConnectivity'
 import { HabitCard } from '../components/habits/HabitCard'
 import { CompletedHabitBubble } from '../components/habits/CompletedHabitBubble'
+import { JustCompletedMoodPrompt } from '../components/habits/JustCompletedMoodPrompt'
 import { ConnectedTaskCard } from '../components/todos/redesign/ConnectedTaskCard'
 import { CompletedTaskBubble } from '../components/dashboard/CompletedTaskBubble'
 import { ConnectivityPanel } from '../components/dashboard/ConnectivityPanel'
@@ -62,9 +63,16 @@ export function DashboardPage() {
   const [justCompletedTaskIds, setJustCompletedTaskIds] = useState<Set<string>>(new Set())
   const notDoneHabits = todaysHabits.filter((h) => logsToday.get(h.id)?.status !== 'done')
   const doneHabits = todaysHabits.filter((h) => logsToday.get(h.id)?.status === 'done')
+  // STOA-5 Part B — the habit completed by the most recent explicit tap,
+  // so the post-completion mood prompt knows what it's asking about. Kept
+  // separate from the Set above, which exists for the one-shot tray
+  // entrance animation and deliberately never forgets.
+  const [moodPromptHabitId, setMoodPromptHabitId] = useState<string | null>(null)
   function handleHabitLogged(habitId: string) {
     setJustCompletedHabitIds((prev) => (prev.has(habitId) ? prev : new Set(prev).add(habitId)))
+    setMoodPromptHabitId(habitId)
   }
+  const moodPromptHabit = moodPromptHabitId ? allHabits.find((h) => h.id === moodPromptHabitId) : undefined
   function handleTaskChecked(todoId: string) {
     setJustCompletedTaskIds((prev) => (prev.has(todoId) ? prev : new Set(prev).add(todoId)))
   }
@@ -267,6 +275,16 @@ export function DashboardPage() {
           <h2 className="text-xs font-semibold text-[var(--stoa-text-muted)] uppercase tracking-wide px-1">
             {t('dashboard.doneTodaySection')}
           </h2>
+          {/* Appears only after an explicit completion in this session, and
+              only for a habit still worth asking about — never on load. */}
+          {moodPromptHabit && (
+            <JustCompletedMoodPrompt
+              key={moodPromptHabit.id}
+              habit={moodPromptHabit}
+              date={date}
+              onDismiss={() => setMoodPromptHabitId(null)}
+            />
+          )}
           <div className="flex flex-wrap gap-x-3 gap-y-4 px-1 pt-1">
             {doneHabits.map((h) => (
               <CompletedHabitBubble key={h.id} habit={h} justCompleted={justCompletedHabitIds.has(h.id)} />

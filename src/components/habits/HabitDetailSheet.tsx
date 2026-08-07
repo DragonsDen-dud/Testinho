@@ -11,6 +11,7 @@ import { useHabitLogs } from '../../state/useHabits'
 import { computeHabitStrength, computeBuildStreak, computeAvoidStreak } from '../../lib/habitStrength'
 import { formatHabitCadence } from '../../lib/habitCadence'
 import { HabitPatternGrid } from './HabitPatternGrid'
+import { HabitHeatmap } from './HabitHeatmap'
 import { useAppSettings } from '../../state/useAppSettings'
 import { visibleHabitFieldOrder, isHabitFieldVisible, type HabitFieldKey } from '../../lib/habitFields'
 import type { Habit } from '../../db/types'
@@ -100,6 +101,13 @@ export function HabitDetailSheet({
             <ProgressBar percent={strength} />
           </div>
         </div>
+
+        {/* STOA-5 Part C — the contribution heatmap is the centerpiece:
+            directly under the hero, above the week/month grid and every
+            chip, so months of history are the first thing this sheet
+            shows. The week grid stays below it as the tap-to-correct
+            surface for the current week/month specifically. */}
+        <HabitHeatmap habit={habit} allHabits={allHabits} />
 
         <HabitPatternGrid habit={habit} allHabits={allHabits} />
 

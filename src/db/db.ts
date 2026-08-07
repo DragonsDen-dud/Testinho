@@ -111,6 +111,22 @@ export class StoaDatabase extends Dexie {
     this.version(7).stores({
       sleepLogs: 'id, spaceId, date, [spaceId+date]',
     })
+    // v8: STOA-5 — drop the dead top-level `Habit.note`. It was written by
+    // the habit form but never read anywhere (audited in STOA-4), so no
+    // display or calculation changes. No `.stores()` change is needed since
+    // `note` was never indexed; this exists purely so the stale property is
+    // actually gone from stored rows rather than silently riding along in
+    // every future JSON backup. `HabitLog.note` — the real, displayed
+    // per-check-in note — is a different field on a different table and is
+    // deliberately untouched here.
+    this.version(8).upgrade(async (tx) => {
+      await tx
+        .table('habits')
+        .toCollection()
+        .modify((habit) => {
+          delete habit.note
+        })
+    })
   }
 }
 
