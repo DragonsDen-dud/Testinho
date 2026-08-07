@@ -7,6 +7,7 @@ import { useTodos } from '../state/useTodos'
 import { useJournalEntries } from '../state/useJournal'
 import { useDiagnosticEntries } from '../state/useDiagnostics'
 import { searchAll } from '../lib/search'
+import { isTasksPlanningEnabled } from '../lib/featureFlags'
 import { Input } from '../components/ui/Input'
 import { EmptyState } from '../components/ui/EmptyState'
 import { formatHumanDate, todayKey } from '../lib/date'
@@ -21,7 +22,13 @@ export function SearchPage() {
   // every other screen uses, so soft-deleted records are excluded by
   // construction rather than by a search-specific filter that could drift.
   const habits = useHabits(spaceId)
-  const todos = useTodos(spaceId)
+  // Habits Refocus round — tasks drop out of search results while the flag
+  // is off, since their detail route redirects to Today: a result that
+  // can't be opened is worse than no result. The Todo rows themselves are
+  // untouched in the database and searchable again the moment the flag
+  // flips back.
+  const rawTodos = useTodos(spaceId)
+  const todos = isTasksPlanningEnabled(settings) ? rawTodos : []
   const journalEntries = useJournalEntries(spaceId)
   const diagnosticEntries = useDiagnosticEntries(spaceId)
 

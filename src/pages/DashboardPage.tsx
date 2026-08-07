@@ -1,14 +1,16 @@
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
+import { TrendingDown } from 'lucide-react'
 import { useAppSettings, updateAppSettings } from '../state/useAppSettings'
 import { useSpaces } from '../state/useSpaces'
-import { useHabits, useLogsForDate } from '../state/useHabits'
+import { useHabits, useLogsForDate, useHabitLogsForHabits } from '../state/useHabits'
 import { useTimeBlocks } from '../state/useTimeBlocks'
 import { useOpenTodosToday, useDoneTodosToday } from '../state/useTodos'
 import { useConnectivity } from '../state/useConnectivity'
 import { HabitCard } from '../components/habits/HabitCard'
 import { CompletedHabitBubble } from '../components/habits/CompletedHabitBubble'
+import { JustCompletedMoodPrompt } from '../components/habits/JustCompletedMoodPrompt'
 import { ConnectedTaskCard } from '../components/todos/redesign/ConnectedTaskCard'
 import { CompletedTaskBubble } from '../components/dashboard/CompletedTaskBubble'
 import { ConnectivityPanel } from '../components/dashboard/ConnectivityPanel'
@@ -19,6 +21,8 @@ import { shouldShowOverdueBanner } from '../lib/overdueBanner'
 import { usePullToRefresh } from '../lib/usePullToRefresh'
 import { isBackupReminderDue } from '../lib/backupReminder'
 import { timeBlockStartMinutes } from '../lib/timeBlockRange'
+import { isTasksPlanningEnabled } from '../lib/featureFlags'
+import { computeAtRiskHabit } from '../lib/habitAtRisk'
 import { todayKey, formatHumanDate } from '../lib/date'
 import type { Habit, TimeBlock, Todo } from '../db/types'
 
@@ -59,14 +63,39 @@ export function DashboardPage() {
   const [justCompletedTaskIds, setJustCompletedTaskIds] = useState<Set<string>>(new Set())
   const notDoneHabits = todaysHabits.filter((h) => logsToday.get(h.id)?.status !== 'done')
   const doneHabits = todaysHabits.filter((h) => logsToday.get(h.id)?.status === 'done')
+  // STOA-5 Part B — the habit completed by the most recent explicit tap,
+  // so the post-completion mood prompt knows what it's asking about. Kept
+  // separate from the Set above, which exists for the one-shot tray
+  // entrance animation and deliberately never forgets.
+  const [moodPromptHabitId, setMoodPromptHabitId] = useState<string | null>(null)
   function handleHabitLogged(habitId: string) {
     setJustCompletedHabitIds((prev) => (prev.has(habitId) ? prev : new Set(prev).add(habitId)))
+    setMoodPromptHabitId(habitId)
   }
+  const moodPromptHabit = moodPromptHabitId ? allHabits.find((h) => h.id === moodPromptHabitId) : undefined
   function handleTaskChecked(todoId: string) {
     setJustCompletedTaskIds((prev) => (prev.has(todoId) ? prev : new Set(prev).add(todoId)))
   }
-  const { today: todosToday, overdue, loaded: todosLoaded } = useOpenTodosToday(settings?.activeSpaceId)
-  const doneTasksToday = useDoneTodosToday(settings?.activeSpaceId)
+  // Habits Refocus round — with the flag off, Today is a habits-only
+  // screen. The task hooks still run (they're the same live queries every
+  // other screen uses and the data is untouched), but nothing they return
+  // is merged into Up next, counted in the signal line, rendered in the
+  // Done-today tray, or used for the overdue banner. That degrades to
+  // "habits only" rather than to empty task rows, and a stale
+  // habit→task/plan reference simply never gets read while the flag is off.
+  const tasksEnabled = isTasksPlanningEnabled(settings)
+  const { today: rawTodosToday, overdue: rawOverdue, loaded: todosLoaded } = useOpenTodosToday(settings?.activeSpaceId)
+  const rawDoneTasksToday = useDoneTodosToday(settings?.activeSpaceId)
+  const todosToday = tasksEnabled ? rawTodosToday : []
+  const overdue = tasksEnabled ? rawOverdue : []
+  const doneTasksToday = tasksEnabled ? rawDoneTasksToday : []
+
+  // Part 3c — one habit, chosen from those still unlogged today, that the
+  // trailing two weeks say is actually slipping. Fogg: this is a prompt
+  // improvement (point at the right thing), not a motivation mechanic —
+  // see lib/habitAtRisk.ts for the Article 6 boundary this stays inside.
+  const notDoneLogsByHabit = useHabitLogsForHabits(notDoneHabits.map((h) => h.id))
+  const atRisk = computeAtRiskHabit(notDoneHabits, notDoneLogsByHabit, date)
   const { statuses: connectivityStatuses, recheck: recheckConnectivity } = useConnectivity()
   const { pullDistance, refreshing, threshold } = usePullToRefresh(recheckConnectivity)
   const backupReminderDue = settings ? isBackupReminderDue(settings, date) : false
@@ -95,7 +124,7 @@ export function DashboardPage() {
     return block ? timeBlockStartMinutes(block) : Number.MAX_SAFE_INTEGER
   }
 
-  const upNextItems: UpNextItem[] = [
+  const sortedUpNextItems: UpNextItem[] = [
     ...notDoneHabits.map((h): UpNextItem => ({ kind: 'habit', habit: h, sortMinutes: habitSortMinutes(h) })),
     ...todosToday.map(
       (td): UpNextItem => ({
@@ -105,6 +134,18 @@ export function DashboardPage() {
       }),
     ),
   ].sort((a, b) => a.sortMinutes - b.sortMinutes)
+
+  // The at-risk habit is lifted to the top of the same list rather than
+  // given its own section: it stays one tap from done (Fogg's ability
+  // constraint — the brief's sub-5-second rule), and the list keeps its
+  // single ordering rather than splitting into two competing ones.
+  const atRiskIndex = atRisk
+    ? sortedUpNextItems.findIndex((item) => item.kind === 'habit' && item.habit.id === atRisk.habitId)
+    : -1
+  const upNextItems =
+    atRiskIndex > 0
+      ? [sortedUpNextItems[atRiskIndex], ...sortedUpNextItems.filter((_, i) => i !== atRiskIndex)]
+      : sortedUpNextItems
 
   const hour = new Date().getHours()
   const greeting = hour < 12 ? t('dashboard.greetingMorning') : hour < 18 ? t('dashboard.greetingAfternoon') : t('dashboard.greetingEvening')
@@ -171,19 +212,48 @@ export function DashboardPage() {
           {t('dashboard.upNextSection')}
         </h2>
         {upNextItems.length === 0 ? (
-          <EmptyState text={t('dashboard.upNextEmpty')} />
+          /* Part 2 polish — a considered "everything's logged" state rather
+             than the generic one-liner. Deliberately restrained per Article
+             19 and Article 6: it states the fact and the count, with no
+             congratulation, streak reward, score, or celebration. */
+          doneHabits.length > 0 ? (
+            <div className="rounded-card bg-canvas px-4 py-5 flex flex-col items-center text-center gap-1">
+              <div className="text-sm font-medium text-[var(--stoa-text)]">{t('dashboard.allLoggedTitle')}</div>
+              <div className="text-xs text-[var(--stoa-text-muted)]">
+                {t('dashboard.allLoggedSubtitle', { count: doneHabits.length })}
+              </div>
+            </div>
+          ) : (
+            <EmptyState text={t('dashboard.upNextEmpty')} />
+          )
         ) : (
           <div className="flex flex-col gap-3">
             {upNextItems.map((item) =>
               item.kind === 'habit' ? (
-                <HabitCard
-                  key={`habit-${item.habit.id}`}
-                  habit={item.habit}
-                  todayLog={logsToday.get(item.habit.id)}
-                  allHabits={allHabits}
-                  logsToday={logsToday}
-                  onLogged={() => handleHabitLogged(item.habit.id)}
-                />
+                <div key={`habit-${item.habit.id}`} className="flex flex-col gap-1.5">
+                  {atRisk?.habitId === item.habit.id && (
+                    /* Article 6/19 — a plain statement of what the last two
+                       weeks actually contain. No score, no rank, no reward
+                       to recover; the same category of output as the
+                       existing weak-day pattern line on the card below. */
+                    <div className="flex items-center gap-1.5 text-xs text-[var(--stoa-danger)] px-1">
+                      <TrendingDown size={13} strokeWidth={1.75} aria-hidden />
+                      <span>
+                        {t('dashboard.atRiskLabel', {
+                          missed: atRisk.missedDays,
+                          observed: atRisk.observedDays,
+                        })}
+                      </span>
+                    </div>
+                  )}
+                  <HabitCard
+                    habit={item.habit}
+                    todayLog={logsToday.get(item.habit.id)}
+                    allHabits={allHabits}
+                    logsToday={logsToday}
+                    onLogged={() => handleHabitLogged(item.habit.id)}
+                  />
+                </div>
               ) : (
                 <ConnectedTaskCard
                   key={`todo-${item.todo.id}`}
@@ -205,6 +275,16 @@ export function DashboardPage() {
           <h2 className="text-xs font-semibold text-[var(--stoa-text-muted)] uppercase tracking-wide px-1">
             {t('dashboard.doneTodaySection')}
           </h2>
+          {/* Appears only after an explicit completion in this session, and
+              only for a habit still worth asking about — never on load. */}
+          {moodPromptHabit && (
+            <JustCompletedMoodPrompt
+              key={moodPromptHabit.id}
+              habit={moodPromptHabit}
+              date={date}
+              onDismiss={() => setMoodPromptHabitId(null)}
+            />
+          )}
           <div className="flex flex-wrap gap-x-3 gap-y-4 px-1 pt-1">
             {doneHabits.map((h) => (
               <CompletedHabitBubble key={h.id} habit={h} justCompleted={justCompletedHabitIds.has(h.id)} />

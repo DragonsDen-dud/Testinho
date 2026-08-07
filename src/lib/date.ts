@@ -71,6 +71,15 @@ export function formatWeekdayShort(dateKey: string, locale: string): string {
   return new Date(y, m - 1, d).toLocaleDateString(locale, { weekday: 'short' })
 }
 
+/** Short month caption ("Jul") for the contribution heatmap's column
+ * headers — same locale-aware, parse-parts-not-Date.parse shape as the two
+ * helpers above, so a YYYY-MM-DD key never gets read as UTC and shifted a
+ * day backwards in a negative-offset timezone. */
+export function formatMonthShort(dateKey: string, locale: string): string {
+  const [y, m, d] = dateKey.split('-').map(Number)
+  return new Date(y, m - 1, d).toLocaleDateString(locale, { month: 'short' })
+}
+
 export function formatHumanDate(dateKey: string, locale: string): string {
   const [y, m, d] = dateKey.split('-').map(Number)
   return new Date(y, m - 1, d).toLocaleDateString(locale, {

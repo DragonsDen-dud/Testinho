@@ -179,8 +179,19 @@ body {
     transform: scale(1) translateY(0);
   }
 }
+/* STOA-5 Part A — same 280ms budget, but on a gentle overshoot curve
+   instead of plain ease-out. This is the "tactile, springy" quality Things
+   3 and Arc are known for: the bubble settles into place with a barely
+   perceptible bounce (the curve's 1.32 overshoot peaks around 3% past
+   final scale) rather than arriving flatly. Deliberately under-damped only
+   slightly — a pronounced bounce on an action performed many times a day
+   becomes irritating long before it becomes delightful.
+
+   Explicitly not a reward: the trigger is completing *any* habit, every
+   time, with no escalation at streak milestones and nothing unlocked. It's
+   the same one-shot entrance that already existed, given a better curve. */
 .habit-collapse-in {
-  animation: habit-collapse-in 280ms ease-out both;
+  animation: habit-collapse-in 280ms cubic-bezier(0.34, 1.32, 0.64, 1) both;
 }
 
 /* Milestone variant — the one moment Article 19's restraint deliberately
@@ -282,6 +293,23 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  /* STOA-5 — these four were missing from this block entirely: the tab
+     fade, both habit-completion entrances and the streak glow all kept
+     animating for a user who has asked the OS for reduced motion. The
+     entrances become an instant, fully-opaque appearance (`both` fill mode
+     means simply disabling the animation would otherwise leave the element
+     stuck at its `from` keyframe — opacity 0 — i.e. invisible), so the
+     content is still there, just without the movement. */
+  .tab-fade-in,
+  .habit-collapse-in,
+  .habit-collapse-in-milestone {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+  .streak-glow-pulse {
+    animation: none;
+  }
   .stoa-btn-primary-vibrant {
     transition: none;
   }

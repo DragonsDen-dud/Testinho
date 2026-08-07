@@ -42,7 +42,11 @@ beforeEach(async () => {
   await db.journalPrompts.clear()
   await ensureAppSettings()
   const space = await createSpace({ name: 'Test Space', color: '#000', icon: '🏠' })
-  await updateAppSettings({ activeSpaceId: space.id })
+  // Habits Refocus round — the FAB's "Task" option is gated behind the
+  // Tasks/Planning flag, which now defaults to off. Article 49's contract
+  // for Task is still real and still tested, so this suite opts the flag
+  // on; the flag-off case has its own test below.
+  await updateAppSettings({ activeSpaceId: space.id, tasksPlanningEnabled: true })
 })
 
 afterEach(() => cleanup())
@@ -74,7 +78,12 @@ describe('QuickAddFab — Habit and Task open the compact quick-create modal in 
   it('"Task" opens the quick-create modal without navigating away', async () => {
     renderAt('/')
     fireEvent.click(screen.getByLabelText('Quick add'))
-    fireEvent.click(screen.getByText('Task'))
+    // Awaited, not synchronous: the Tasks/Planning flag is read from a
+    // Dexie live query, which resolves on a later tick. The menu therefore
+    // renders without "Task" for one frame and gains it once settings
+    // land — deliberately that way round, so a flag-off install never
+    // flashes an option it isn't supposed to have.
+    fireEvent.click(await screen.findByText('Task'))
     expect(await screen.findByRole('heading', { name: 'New task' })).toBeTruthy()
     expect(screen.getByText('dashboard-marker')).toBeTruthy()
   })
@@ -86,5 +95,17 @@ describe('QuickAddFab — Journal entry still routes to its own real screen', ()
     fireEvent.click(screen.getByLabelText('Quick add'))
     fireEvent.click(screen.getByText('Journal entry'))
     expect(screen.getByText('journal-marker')).toBeTruthy()
+  })
+})
+
+describe('Habits Refocus flag — the FAB menu while Tasks/Planning is hidden', () => {
+  it('omits "Task" from the menu while the flag is off, keeping Habit and Journal entry', async () => {
+    await updateAppSettings({ tasksPlanningEnabled: false })
+    renderAt('/')
+    fireEvent.click(await screen.findByLabelText('Quick add'))
+
+    expect(await screen.findByText('Habit')).toBeTruthy()
+    expect(screen.getByText('Journal entry')).toBeTruthy()
+    expect(screen.queryByText('Task')).toBeNull()
   })
 })

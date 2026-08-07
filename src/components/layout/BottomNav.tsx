@@ -3,17 +3,22 @@ import { NavLink } from 'react-router-dom'
 import { Home, Repeat, ListChecks, NotebookPen, CalendarDays, BarChart3, Search, Settings } from 'lucide-react'
 import { useAppSettings } from '../../state/useAppSettings'
 import { useHasUnviewedScheduledReport } from '../../state/useDiagnostics'
+import { isTasksPlanningEnabled } from '../../lib/featureFlags'
 
-// Article-A.3 consistency audit: all 8 tabs resolve to the same icon
-// package (lucide-react), the same size/stroke-width (set once below, no
-// per-icon override), and inherit color via currentColor from the same
+// Article-A.3 consistency audit: all tabs resolve to the same icon package
+// (lucide-react), the same size/stroke-width (set once below, no per-icon
+// override), and inherit color via currentColor from the same
 // active/inactive class logic — never a hardcoded per-icon color.
+//
+// `tasksPlanning: true` marks a tab the Habits Refocus flag gates. Filtered
+// out below rather than deleted, so flipping the flag back on restores the
+// tab in its original position with no other change.
 const items = [
   { to: '/', key: 'dashboard', Icon: Home },
   { to: '/habits', key: 'habits', Icon: Repeat },
-  { to: '/todos', key: 'todos', Icon: ListChecks },
+  { to: '/todos', key: 'todos', Icon: ListChecks, tasksPlanning: true },
   { to: '/journal', key: 'journal', Icon: NotebookPen },
-  { to: '/planning', key: 'planning', Icon: CalendarDays },
+  { to: '/planning', key: 'planning', Icon: CalendarDays, tasksPlanning: true },
   { to: '/analytics', key: 'analytics', Icon: BarChart3 },
   { to: '/search', key: 'search', Icon: Search },
   { to: '/settings', key: 'settings', Icon: Settings },
@@ -30,6 +35,8 @@ export function BottomNav() {
   // popup on every app open, cleared by actually visiting Analytics (see
   // AnalyticsPage's mark-viewed effect).
   const hasUnviewedReport = useHasUnviewedScheduledReport(settings?.activeSpaceId)
+  const tasksEnabled = isTasksPlanningEnabled(settings)
+  const visibleItems = items.filter((item) => tasksEnabled || !('tasksPlanning' in item))
 
   return (
     // Flat, not glass — no backdrop-blur, a plain hairline top border and
@@ -37,7 +44,7 @@ export function BottomNav() {
     // already made for the Tasks tab redesign.
     <nav className="sticky bottom-0 border-t border-[var(--stoa-border)] bg-[var(--stoa-bg)] pb-[env(safe-area-inset-bottom)]">
       <div className="max-w-md mx-auto flex">
-        {items.map((item) => (
+        {visibleItems.map((item) => (
           <NavLink
             key={item.to}
             to={item.to}

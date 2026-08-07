@@ -8,6 +8,7 @@ import { showUndoToast } from '../state/toast'
 import { HabitForm } from '../components/habits/HabitForm'
 import { HabitCard } from '../components/habits/HabitCard'
 import { CompletedHabitBubble } from '../components/habits/CompletedHabitBubble'
+import { JustCompletedMoodPrompt } from '../components/habits/JustCompletedMoodPrompt'
 import { HabitDetailSheet } from '../components/habits/HabitDetailSheet'
 import { EmptyState } from '../components/ui/EmptyState'
 import { todayKey } from '../lib/date'
@@ -70,9 +71,15 @@ export function HabitsPage() {
   const catchUpDays = computeCatchUpDays(habits, catchUpLogsByHabit)
   const catchUpPendingCount = countCatchUpPending(catchUpDays)
 
+  // STOA-5 Part B — same post-completion mood prompt as Today (see
+  // DashboardPage): marking a habit done unmounts its card into the tray,
+  // so this is the only place the completion path can be rated at all.
+  const [moodPromptHabitId, setMoodPromptHabitId] = useState<string | null>(null)
   function handleLogged(habitId: string) {
     setJustCompletedIds((prev) => (prev.has(habitId) ? prev : new Set(prev).add(habitId)))
+    setMoodPromptHabitId(habitId)
   }
+  const moodPromptHabit = moodPromptHabitId ? habits.find((h) => h.id === moodPromptHabitId) : undefined
 
   function closeForm() {
     setCreating(false)
@@ -117,6 +124,14 @@ export function HabitsPage() {
           <h2 className="text-xs font-semibold text-[var(--stoa-text-muted)] uppercase tracking-wide px-1">
             {t('habits.doneTodaySection')}
           </h2>
+          {moodPromptHabit && (
+            <JustCompletedMoodPrompt
+              key={moodPromptHabit.id}
+              habit={moodPromptHabit}
+              date={todayKey()}
+              onDismiss={() => setMoodPromptHabitId(null)}
+            />
+          )}
           <div className="flex flex-wrap gap-x-3 gap-y-4 px-1 pt-1">
             {doneHabits.map((habit) => (
               <CompletedHabitBubble key={habit.id} habit={habit} justCompleted={justCompletedIds.has(habit.id)} />

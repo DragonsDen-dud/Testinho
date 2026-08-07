@@ -3,17 +3,14 @@ import { useTranslation } from 'react-i18next'
 import * as LucideIcons from 'lucide-react'
 import { Folder, type LucideIcon } from 'lucide-react'
 import type { Habit } from '../../db/types'
-import { useHabitLogs, useLogsForDate } from '../../state/useHabits'
+import { useHabitLogs } from '../../state/useHabits'
 import { useDomains } from '../../state/useDomains'
 import { useCategoryStyleMap } from '../../state/useCategoryStyles'
 import { resolveHabitDomainStyle } from './HabitCategoryBadge'
-import { computeHabitDayInfo, type HabitDayState } from '../../lib/habitDayState'
-import { unmetDependencyNames } from '../../lib/habitDependencies'
-import { logHabit, logMeasurableEntry } from '../../data/habits'
-import { todayKey, addDays, weekdayOf, weekBoundsOf, monthBoundsOf, formatWeekdayShort, formatHumanDate } from '../../lib/date'
+import { HabitDayEditor } from './HabitDayEditor'
+import { computeHabitDayInfo, isSuccessfulDay, type HabitDayState } from '../../lib/habitDayState'
+import { todayKey, addDays, weekdayOf, weekBoundsOf, monthBoundsOf, formatWeekdayShort } from '../../lib/date'
 import { accessibleTextColor } from '../../styles/tokens'
-import { Button } from '../ui/Button'
-import { Input } from '../ui/Input'
 
 function datesInWeek(today: string): string[] {
   const { start } = weekBoundsOf(today)
@@ -81,10 +78,6 @@ export function HabitPatternGrid({ habit, allHabits }: { habit: Habit; allHabits
   const [expanded, setExpanded] = useState(false)
   const [editingDate, setEditingDate] = useState<string | null>(null)
 
-  const dependsOn = habit.dependsOnHabitIds ?? []
-  const logsOnEditingDate = useLogsForDate(dependsOn, editingDate ?? today)
-  const blockedBy = editingDate ? unmetDependencyNames(habit, allHabits, logsOnEditingDate) : []
-
   const dates = expanded ? datesInMonth(today) : datesInWeek(today)
   const editingLog = editingDate ? logsByDate.get(editingDate) : undefined
 
@@ -142,88 +135,19 @@ export function HabitPatternGrid({ habit, allHabits }: { habit: Habit; allHabits
         })}
       </div>
 
+      {/* STOA-5 — the inline day editor moved to HabitDayEditor so this
+          grid and the new contribution heatmap share one implementation
+          rather than two that drift. Behavior is unchanged. */}
       {editingDate && (
-        <div className="rounded-card p-3 flex flex-col gap-2" style={{ background: 'var(--color-chip)' }}>
-          <div className="text-xs text-[var(--stoa-text-muted)]">{formatHumanDate(editingDate, i18n.language)}</div>
-          {blockedBy.length > 0 ? (
-            <div className="text-xs text-[var(--stoa-text-muted)]">
-              {t('habits.blockedByLabel', { names: blockedBy.join(', ') })}
-            </div>
-          ) : habit.measurable ? (
-            <DayValueEditor
-              key={editingDate}
-              habitId={habit.id}
-              date={editingDate}
-              defaultValue={habit.measurable.targetValue}
-              unit={habit.measurable.unit}
-              onSaved={() => setEditingDate(null)}
-            />
-          ) : (
-            <div className="flex gap-2">
-              <Button
-                variant={editingLog?.status === 'done' ? 'primary' : 'secondary'}
-                className="flex-1"
-                onClick={async () => {
-                  await logHabit(habit.id, editingDate, 'done')
-                  setEditingDate(null)
-                }}
-              >
-                {t('habits.markDone')}
-              </Button>
-              <Button
-                variant={editingLog?.status === 'not_done' ? 'danger' : 'secondary'}
-                className="flex-1"
-                onClick={async () => {
-                  await logHabit(habit.id, editingDate, 'not_done')
-                  setEditingDate(null)
-                }}
-              >
-                {t('habits.markNotDone')}
-              </Button>
-              <Button
-                variant={editingLog?.status === 'skip' ? 'secondary' : 'ghost'}
-                onClick={async () => {
-                  await logHabit(habit.id, editingDate, 'skip')
-                  setEditingDate(null)
-                }}
-              >
-                {t('habits.markSkip')}
-              </Button>
-            </div>
-          )}
-        </div>
+        <HabitDayEditor
+          key={editingDate}
+          habit={habit}
+          allHabits={allHabits}
+          date={editingDate}
+          log={editingLog}
+          onDone={() => setEditingDate(null)}
+        />
       )}
-    </div>
-  )
-}
-
-function DayValueEditor({
-  habitId,
-  date,
-  defaultValue,
-  unit,
-  onSaved,
-}: {
-  habitId: string
-  date: string
-  defaultValue: number
-  unit: string
-  onSaved: () => void
-}) {
-  const { t } = useTranslation()
-  const [value, setValue] = useState(defaultValue)
-  return (
-    <div className="flex gap-2 items-center">
-      <Input type="number" value={value} onChange={(e) => setValue(Number(e.target.value))} className="flex-1" autoFocus />
-      <span className="text-xs text-[var(--stoa-text-muted)]">{unit}</span>
-      <Button
-        onClick={async () => {
-          await logMeasurableEntry(habitId, date, value)
-          onSaved()
-        }}
-      >
-        {t('common.save')}
-      </Button>
     </div>
   )
 }
@@ -250,7 +174,11 @@ function DayCircle({
   onClick: () => void
 }) {
   const Icon: LucideIcon = (LucideIcons as unknown as Record<string, LucideIcon>)[iconName] ?? Folder
-  const filled = state === 'done'
+  // Article 14/27 — 'clean' (an avoid habit's day with no slip recorded)
+  // fills exactly like 'done', which is what computeAvoidStreak already
+  // counts. Before STOA-5 those days rendered as plain missed circles,
+  // contradicting the "N days clean" number shown right above this grid.
+  const filled = isSuccessfulDay(state)
 
   const circleStyle: CSSProperties = { width: size, height: size }
   if (filled) {

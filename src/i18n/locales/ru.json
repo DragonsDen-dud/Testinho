@@ -100,7 +100,13 @@
     "releaseToRefresh": "Отпустите для обновления",
     "refreshing": "Обновление…",
     "backupReminder": "Прошло много времени с последней резервной копии.",
-    "backupRemindLater": "Напомнить позже"
+    "backupRemindLater": "Напомнить позже",
+    "atRiskLabel": "Пропущено {{missed}} из последних {{observed}} запланированных дней",
+    "allLoggedTitle": "На сегодня всё отмечено.",
+    "allLoggedSubtitle_one": "Выполнена {{count}} привычка.",
+    "allLoggedSubtitle_few": "Выполнено {{count}} привычки.",
+    "allLoggedSubtitle_many": "Выполнено {{count}} привычек.",
+    "allLoggedSubtitle_other": "Выполнено {{count}} привычек."
   },
   "habits": {
     "title": "Привычки",
@@ -202,7 +208,22 @@
     "patternWeekLabel": "Эта неделя",
     "patternMonthLabel": "Этот месяц",
     "patternShowMonth": "Показать месяц",
-    "patternShowWeek": "Показать неделю"
+    "patternShowWeek": "Показать неделю",
+    "heatmapTitle": "История",
+    "heatmapRangeWeeks_one": "последняя {{count}} неделя",
+    "heatmapRangeWeeks_few": "последние {{count}} недели",
+    "heatmapRangeWeeks_many": "последние {{count}} недель",
+    "heatmapRangeWeeks_other": "последние {{count}} недель",
+    "heatmapLegendLess": "Меньше",
+    "heatmapLegendMore": "Больше",
+    "heatmapStateDone": "Выполнено",
+    "heatmapStateClean": "Без срыва",
+    "heatmapStateNotDone": "Не выполнено",
+    "heatmapStateSkip": "Пропущено",
+    "heatmapStatePending": "Ещё не отмечено",
+    "heatmapStateMissed": "Упущено",
+    "moodAddPrompt": "Добавить самочувствие",
+    "moodPromptAfterDone": "Как прошло: «{{name}}»?"
   },
   "todos": {
     "title": "Задачи",
@@ -352,7 +373,13 @@
     "backupPhotoSizeWarning_one": "{{count}} фото, около {{size}} — экспорт и отправка могут занять некоторое время",
     "backupPhotoSizeWarning_few": "{{count}} фото, около {{size}} — экспорт и отправка могут занять некоторое время",
     "backupPhotoSizeWarning_many": "{{count}} фото, около {{size}} — экспорт и отправка могут занять некоторое время",
-    "backupPhotoSizeWarning_other": "{{count}} фото, около {{size}} — экспорт и отправка могут занять некоторое время"
+    "backupPhotoSizeWarning_other": "{{count}} фото, около {{size}} — экспорт и отправка могут занять некоторое время",
+    "tasksPlanningEnabled": "Показывать Задачи и Планирование",
+    "tasksPlanningHint": "Выключено — приложение сосредоточено на привычках. Ничего не удаляется: задачи, проекты и планы сохранены и вернутся сюда, когда вы включите это обратно.",
+    "habitFieldsTitle": "Поля привычки",
+    "habitFieldsHint": "Выберите, какие поля показывать в форме и в карточке привычки и в каком порядке. Скрытие поля никогда не стирает уже сохранённое значение.",
+    "habitFieldsReorder": "Переместить поле",
+    "habitFieldsShow": "Показывать: {{field}}"
   },
   "timeBlocks": {
     "title": "Время дня",
@@ -426,7 +453,8 @@
     "quietHoursHint": "Напоминания, которые должны сработать в это время, доставляются сразу после его окончания.",
     "morningDigest": "Утренняя сводка",
     "morningDigestTimeLabel": "Время",
-    "morningDigestHint": "Одна ежедневная сводка, отдельно от отдельных напоминаний — отключение не влияет на них."
+    "morningDigestHint": "Одна ежедневная сводка, отдельно от отдельных напоминаний — отключение не влияет на них.",
+    "digestTitleHabitsOnly": "Сегодня: {{habits}}"
   },
   "calendar": {
     "addToCalendar": "Добавить в календарь",
@@ -557,5 +585,18 @@
     "entityTypeProject": "Проект",
     "entityTypeLifeDomainPlural": "Сферы жизни",
     "entityTypeProjectPlural": "Проекты"
+  },
+  "habitFields": {
+    "domain": "Сфера жизни",
+    "timeBlock": "Временной блок",
+    "icon": "Иконка",
+    "schedule": "Расписание",
+    "measurable": "Измеримое значение",
+    "reminderTimes": "Время напоминаний",
+    "criticalReminder": "Критическое напоминание",
+    "stake": "Ставка",
+    "dependsOn": "Зависит от",
+    "pause": "Пауза",
+    "note": "Последняя заметка к отметке"
   }
 }

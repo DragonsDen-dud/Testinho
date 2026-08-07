@@ -43,6 +43,12 @@ beforeEach(async () => {
   await db.todos.clear()
   await db.reminderStates.clear()
   await ensureAppSettings()
+  // Habits Refocus round — task reminders are gated behind the
+  // Tasks/Planning flag, which now defaults to off. This suite's whole
+  // purpose is Article 40/41/42 behavior for *both* entity types, so it
+  // opts the flag on rather than dropping the todo coverage. The
+  // flag-off path gets its own dedicated tests at the bottom of this file.
+  await db.appSettings.update('singleton', { tasksPlanningEnabled: true })
 })
 
 describe('tickReminders — initial firing (Articles 40/41)', () => {
@@ -428,5 +434,76 @@ describe('tickReminders — morning digest (Article 42)', () => {
     await tickReminders(SPACE_ID, new Date(2026, 6, 16, 8, 0), notify)
 
     expect(notify).toHaveBeenCalledTimes(1) // the digest itself
+  })
+})
+
+describe('Habits Refocus flag — task reminders while Tasks/Planning is hidden', () => {
+  it('does not fire a todo reminder while the flag is off, and never records a ReminderState for it', async () => {
+    await db.appSettings.update('singleton', { tasksPlanningEnabled: false })
+    await createTodo(todoInput('Pay rent', '2026-07-16', '09:00'))
+    const notify = vi.fn()
+
+    await tickReminders(SPACE_ID, new Date(2026, 6, 16, 9, 5), notify)
+
+    expect(notify).not.toHaveBeenCalled()
+    expect(await db.reminderStates.count()).toBe(0)
+  })
+
+  it('still fires habit reminders normally while the flag is off', async () => {
+    await db.appSettings.update('singleton', { tasksPlanningEnabled: false })
+    await createHabit(habitInput('Read', ['09:00']))
+    const notify = vi.fn()
+
+    await tickReminders(SPACE_ID, new Date(2026, 6, 16, 9, 5), notify)
+
+    expect(notify).toHaveBeenCalledWith('Read', expect.any(String))
+  })
+
+  it('skips the task reminder without deleting the Todo or its reminder settings', async () => {
+    await db.appSettings.update('singleton', { tasksPlanningEnabled: false })
+    const todo = await createTodo(todoInput('Pay rent', '2026-07-16', '09:00'))
+    const notify = vi.fn()
+
+    await tickReminders(SPACE_ID, new Date(2026, 6, 16, 9, 5), notify)
+
+    const stored = await db.todos.get(todo.id)
+    expect(stored?.reminderEnabled).toBe(true)
+    expect(stored?.scheduledTime).toBe('09:00')
+    expect(stored?.dueDate).toBe('2026-07-16')
+  })
+
+  it('fires the same todo reminder as soon as the flag is turned back on — nothing was lost', async () => {
+    await db.appSettings.update('singleton', { tasksPlanningEnabled: false })
+    const todo = await createTodo(todoInput('Pay rent', '2026-07-16', '09:00'))
+    const notify = vi.fn()
+    await tickReminders(SPACE_ID, new Date(2026, 6, 16, 9, 5), notify)
+    expect(notify).not.toHaveBeenCalled()
+
+    await db.appSettings.update('singleton', { tasksPlanningEnabled: true })
+    await tickReminders(SPACE_ID, new Date(2026, 6, 16, 9, 10), notify)
+
+    expect(notify).toHaveBeenCalledWith('Pay rent', expect.any(String))
+    const state = await db.reminderStates
+      .where('[entityType+entityId+date]')
+      .equals(['todo', todo.id, '2026-07-16'])
+      .first()
+    expect(state?.state).toBe('sent')
+  })
+
+  it('sends a habits-only morning digest while the flag is off, never a "0 tasks" one', async () => {
+    await db.appSettings.update('singleton', {
+      tasksPlanningEnabled: false,
+      morningDigest: { enabled: true, time: '08:00' },
+    })
+    await createHabit(habitInput('Read', []))
+    await createTodo(todoInput('Pay rent', '2026-07-16', '09:00'))
+    const notify = vi.fn()
+
+    await tickReminders(SPACE_ID, new Date(2026, 6, 16, 8, 0), notify)
+
+    expect(notify).toHaveBeenCalledTimes(1)
+    const [title] = notify.mock.calls[0]
+    expect(title).toContain('1 habit')
+    expect(title).not.toContain('task')
   })
 })

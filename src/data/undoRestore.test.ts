@@ -34,7 +34,11 @@ describe('undo toast restore parity — Habit', () => {
       schedule: { type: 'specific_weekdays', params: { weekdays: [1, 3, 5] } },
       reminderTimes: ['08:00'],
       criticalReminder: true,
-      note: 'ten minutes, no phone',
+      // STOA-5: the top-level `note` field this input used to carry was
+      // removed (dead — written here and by the form, never read by any
+      // screen). Restoring a habit is unaffected; the per-check-in
+      // HabitLog.note, which the detail view actually displays, is a
+      // different field on a different table and is untouched.
     }
     const created = await createHabit(input)
     await deleteHabit(created.id)
