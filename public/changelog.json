@@ -1,5 +1,13 @@
 [
   {
+    "version": "1.8.0",
+    "bullets": [
+      "Habits-focused mode: the app now centres on Habits, Today, Journal and Analytics. Tasks and Planning are hidden — nothing is deleted, and one switch in Settings brings them back exactly as they were.",
+      "Today now leads with the one habit that's actually slipping, showing plainly how many of its recent scheduled days were missed.",
+      "New Habit fields setting: choose which fields appear on the habit form and detail view, and drag them into the order you want."
+    ]
+  },
+  {
     "version": "1.7.0",
     "bullets": [
       "New Sleep section in Analytics — log your bedtime and wake time for any day, including past ones, and see hours slept calculated automatically.",

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useAppSettings, updateAppSettings } from '../../state/useAppSettings'
 import { moveItem } from '../../lib/reorder'
+import { isTasksPlanningEnabled } from '../../lib/featureFlags'
 
 const DEFAULT_ORDER = ['habits', 'todos']
 
@@ -34,6 +35,14 @@ export function HomeScreenOrderSection() {
     if (draggingIndexRef.current !== null) return
     setOrder(settings?.homeScreenModuleOrder ?? DEFAULT_ORDER)
   }, [settings?.homeScreenModuleOrder])
+
+  // Habits Refocus round — the 'todos' module drops out of this list while
+  // the flag is off. Filtered at render only: the stored
+  // homeScreenModuleOrder array keeps 'todos' in whatever position it had,
+  // so flipping the flag back restores the exact prior order rather than
+  // appending it to the end.
+  const tasksEnabled = isTasksPlanningEnabled(settings)
+  const visibleOrder = order.filter((key) => key !== 'todos' || tasksEnabled)
 
   useEffect(() => {
     function onMove(e: PointerEvent) {
@@ -68,7 +77,12 @@ export function HomeScreenOrderSection() {
     <div className="flex flex-col gap-2">
       <label className="text-xs font-medium text-[var(--stoa-text-muted)]">{t('settings.homeScreenOrder')}</label>
       <ul className="flex flex-col gap-1.5">
-        {order.map((key, index) => (
+        {/* data-order-index is the key's index in the *stored* order, not
+            in the filtered list — so the drag math keeps operating on the
+            real array even while a module is filtered out of view. */}
+        {visibleOrder.map((key) => {
+          const index = order.indexOf(key)
+          return (
           <li
             key={key}
             data-order-index={index}
@@ -85,7 +99,8 @@ export function HomeScreenOrderSection() {
             </span>
             {t(`dashboard.${key}Section`)}
           </li>
-        ))}
+          )
+        })}
       </ul>
     </div>
   )

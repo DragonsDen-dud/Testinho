@@ -4,9 +4,13 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { useAppSettings } from '../../state/useAppSettings'
 import { QuickCreateHabitModal } from '../quickcreate/QuickCreateHabitModal'
 import { QuickCreateTodoModal } from '../quickcreate/QuickCreateTodoModal'
+import { isTasksPlanningEnabled } from '../../lib/featureFlags'
 
 // Article 49 — only on the screens the article names: Dashboard, Habits,
-// Todos, Journal. Not on Planning/Settings/Projects/Trash/etc.
+// Todos, Journal. Not on Planning/Settings/Projects/Trash/etc. `/todos` is
+// unreachable while the Habits Refocus flag is off (the route redirects),
+// so leaving it here costs nothing and keeps the list one-to-one with the
+// article.
 const FAB_ROUTES = ['/', '/habits', '/todos', '/journal']
 
 const MENU_ITEMS = ['habit', 'todo', 'journal'] as const
@@ -30,6 +34,11 @@ export function QuickAddFab() {
   const [quickCreating, setQuickCreating] = useState<'habit' | 'todo' | null>(null)
 
   if (!FAB_ROUTES.includes(location.pathname)) return null
+
+  // Habits Refocus round — "Task" drops out of the menu while the flag is
+  // off, so the FAB can't open a creation flow for a surface that has no
+  // way to view what it creates.
+  const menuItems = MENU_ITEMS.filter((key) => key !== 'todo' || isTasksPlanningEnabled(settings))
 
   function choose(key: (typeof MENU_ITEMS)[number]) {
     setOpen(false)
@@ -64,7 +73,7 @@ export function QuickAddFab() {
       )}
       {open && (
         <div className="rounded-xl border border-[var(--stoa-border)] bg-[var(--stoa-surface)] shadow-lg py-1.5 flex flex-col min-w-[10rem]">
-          {MENU_ITEMS.map((key) => (
+          {menuItems.map((key) => (
             <button
               key={key}
               type="button"

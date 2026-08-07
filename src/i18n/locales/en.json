@@ -94,7 +94,11 @@
     "releaseToRefresh": "Release to refresh",
     "refreshing": "Refreshing…",
     "backupReminder": "It's been a while since your last backup.",
-    "backupRemindLater": "Remind me later"
+    "backupRemindLater": "Remind me later",
+    "atRiskLabel": "Missed {{missed}} of the last {{observed}} scheduled days",
+    "allLoggedTitle": "Everything is logged for today.",
+    "allLoggedSubtitle_one": "{{count}} habit done.",
+    "allLoggedSubtitle_other": "{{count}} habits done."
   },
   "habits": {
     "title": "Habits",
@@ -327,7 +331,13 @@
     "backupPhotoSizeNote_one": "{{count}} photo, about {{size}}",
     "backupPhotoSizeNote_other": "{{count}} photos, about {{size}}",
     "backupPhotoSizeWarning_one": "{{count}} photo, about {{size}} — this may take a moment to export and share",
-    "backupPhotoSizeWarning_other": "{{count}} photos, about {{size}} — this may take a moment to export and share"
+    "backupPhotoSizeWarning_other": "{{count}} photos, about {{size}} — this may take a moment to export and share",
+    "tasksPlanningEnabled": "Show Tasks and Planning",
+    "tasksPlanningHint": "Off keeps the app focused on habits. Nothing is deleted — your tasks, projects and plans stay saved and reappear here when you turn this back on.",
+    "habitFieldsTitle": "Habit fields",
+    "habitFieldsHint": "Choose which fields appear on the habit form and detail view, and in what order. Hiding a field never clears what a habit has already saved in it.",
+    "habitFieldsReorder": "Reorder field",
+    "habitFieldsShow": "Show {{field}}"
   },
   "timeBlocks": {
     "title": "Time Blocks",
@@ -397,7 +407,8 @@
     "quietHoursHint": "Reminders that would fire in this window are delivered right after it ends instead.",
     "morningDigest": "Morning digest",
     "morningDigestTimeLabel": "Time",
-    "morningDigestHint": "One daily summary, separate from individual reminders — turning this off doesn't silence them."
+    "morningDigestHint": "One daily summary, separate from individual reminders — turning this off doesn't silence them.",
+    "digestTitleHabitsOnly": "Today: {{habits}}"
   },
   "calendar": {
     "addToCalendar": "Add to Calendar",
@@ -526,5 +537,18 @@
     "entityTypeProject": "Project",
     "entityTypeLifeDomainPlural": "Life domains",
     "entityTypeProjectPlural": "Projects"
+  },
+  "habitFields": {
+    "domain": "Life domain",
+    "timeBlock": "Time block",
+    "icon": "Icon",
+    "schedule": "Schedule",
+    "measurable": "Measurable value",
+    "reminderTimes": "Reminder times",
+    "criticalReminder": "Critical reminder",
+    "stake": "Stake",
+    "dependsOn": "Depends on",
+    "pause": "Pause",
+    "note": "Note"
   }
 }

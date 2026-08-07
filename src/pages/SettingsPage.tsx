@@ -6,7 +6,9 @@ import { Select } from '../components/ui/Input'
 import { AiSettingsSection } from '../components/settings/AiSettingsSection'
 import { RemindersSettingsSection } from '../components/settings/RemindersSettingsSection'
 import { HomeScreenOrderSection } from '../components/settings/HomeScreenOrderSection'
+import { HabitFieldsSection } from '../components/settings/HabitFieldsSection'
 import { BackupSection } from '../components/settings/BackupSection'
+import { isTasksPlanningEnabled } from '../lib/featureFlags'
 import type { Language, ThemePreset } from '../db/types'
 
 export function SettingsPage() {
@@ -71,6 +73,21 @@ export function SettingsPage() {
         />
         {t('settings.moodCaptureEnabled')}
       </label>
+
+      {/* Habits Refocus round — the one control that flips the whole
+          Tasks/Planning surface back on. Nothing is deleted while it's off,
+          so this is a pure show/hide with no migration either way. */}
+      <label className="flex items-center gap-2 text-sm">
+        <input
+          type="checkbox"
+          checked={isTasksPlanningEnabled(settings)}
+          onChange={(e) => updateAppSettings({ tasksPlanningEnabled: e.target.checked })}
+        />
+        {t('settings.tasksPlanningEnabled')}
+      </label>
+      <p className="text-xs text-[var(--stoa-text-muted)] -mt-3">{t('settings.tasksPlanningHint')}</p>
+
+      <HabitFieldsSection />
 
       <HomeScreenOrderSection />
 

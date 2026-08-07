@@ -12,6 +12,7 @@ import { ChartCard } from '../components/analytics/ChartCard'
 import { ScheduledReportCard } from '../components/analytics/ScheduledReportCard'
 import { SleepSection } from '../components/analytics/SleepSection'
 import { EmptyState } from '../components/ui/EmptyState'
+import { isTasksPlanningEnabled } from '../lib/featureFlags'
 import {
   computeCompletionRates,
   computeDomainHabitStrength,
@@ -50,8 +51,13 @@ export function AnalyticsPage() {
     if (monthlyReport) void markDiagnosticViewed(monthlyReport.id)
   }, [monthlyReport])
 
+  // Habits Refocus round — with the flag off, Analytics is habits-only
+  // data: the task-status pie disappears (as does its contribution to the
+  // "nothing to show yet" empty state), leaving completion rate, Habit
+  // Strength by domain, sleep and mood correlation. computeTaskRatio and
+  // the chart itself are untouched and return the moment the flag flips.
   const hasAnyHabits = habits.length > 0
-  const hasAnyTodos = todos.length > 0
+  const hasAnyTodos = isTasksPlanningEnabled(settings) && todos.length > 0
 
   const completionStats = computeCompletionRates(habits, logsByHabitId)
   const completionData = completionStats.map((s) => ({

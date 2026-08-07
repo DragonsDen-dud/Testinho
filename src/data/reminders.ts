@@ -6,6 +6,7 @@ import { resolveQuietHoursDelivery } from '../lib/quietHours'
 import { nextEscalationTiming } from '../lib/escalation'
 import { deliverNotification, type NotifyFn } from '../lib/notify'
 import { computeTodoReminderTrigger, todoReminderTriggerDateKey } from '../lib/reminderTiming'
+import { isTasksPlanningEnabled } from '../lib/featureFlags'
 import { listActiveHabits } from './habits'
 import { listActiveTodos } from './todos'
 import { getReminderState } from './reminderActions'
@@ -122,13 +123,24 @@ async function maybeSendMorningDigest(
 
   const habits = await listActiveHabits(spaceId)
   const todaysHabits = habits.filter((h) => isScheduledOnDate(h, today))
-  const todos = await listActiveTodos(spaceId)
-  const todaysTodos = todos.filter((t) => t.status === 'open' && t.dueDate === today)
 
-  const title = i18n.t('reminders.digestTitle', {
-    habits: i18n.t('reminders.digestHabitCount', { count: todaysHabits.length }),
-    tasks: i18n.t('reminders.digestTodoCount', { count: todaysTodos.length }),
-  })
+  // Habits Refocus round — with the flag off the digest is a habits-only
+  // sentence rather than one reporting "0 tasks" for a surface that isn't
+  // there. Article 42's independence is unchanged: this is still one
+  // digest, still toggled entirely separately from individual reminders.
+  let title: string
+  if (isTasksPlanningEnabled(settings)) {
+    const todos = await listActiveTodos(spaceId)
+    const todaysTodos = todos.filter((t) => t.status === 'open' && t.dueDate === today)
+    title = i18n.t('reminders.digestTitle', {
+      habits: i18n.t('reminders.digestHabitCount', { count: todaysHabits.length }),
+      tasks: i18n.t('reminders.digestTodoCount', { count: todaysTodos.length }),
+    })
+  } else {
+    title = i18n.t('reminders.digestTitleHabitsOnly', {
+      habits: i18n.t('reminders.digestHabitCount', { count: todaysHabits.length }),
+    })
+  }
   notify(title, '')
   await db.appSettings.update('singleton', { morningDigestLastDeliveredDate: today })
 }
@@ -152,6 +164,7 @@ export async function tickReminders(
   const yesterday = addDays(date, -1)
   const nowTime = timeOf(now)
   const escalationWindowMinutes = DEFAULT_ESCALATION_WINDOW_MINUTES
+  const tasksEnabled = isTasksPlanningEnabled(settings)
 
   // Article 41 — a reminder queued during quiet hours can spill its actual
   // delivery into the next calendar day (a wrapping window like 22:00-07:00),
@@ -189,7 +202,12 @@ export async function tickReminders(
   // walked day-by-day like the Habit loop above — an offset (e.g. "1 day
   // before") can push it earlier than dueDate itself, so ReminderState is
   // keyed to the trigger's own calendar day, not the task's dueDate.
-  const todos = await listActiveTodos(spaceId)
+  // Habits Refocus round — a task reminder while the Tasks surface is
+  // hidden would be a notification pointing at a screen that redirects to
+  // Today, which is precisely the "wrong prompt is worse than none" case.
+  // Skipped, not disabled: reminderEnabled/reminderOffsetMinutes stay on
+  // every Todo exactly as saved, and the loop resumes on flag flip.
+  const todos = tasksEnabled ? await listActiveTodos(spaceId) : []
   for (const todo of todos) {
     if (todo.status !== 'open' || !todo.reminderEnabled || !todo.dueDate || !todo.scheduledTime) continue
     const offset = todo.reminderOffsetMinutes ?? 0

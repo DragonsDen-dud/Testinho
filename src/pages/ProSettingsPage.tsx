@@ -12,6 +12,7 @@ import { EmptyState } from '../components/ui/EmptyState'
 import { ColorIconBadge } from '../components/ui/ColorIconBadge'
 import { MinimalListRow } from '../components/ui/MinimalListRow'
 import { CategoryStyleEditSheet } from '../components/settings/CategoryStyleEditSheet'
+import { isTasksPlanningEnabled } from '../lib/featureFlags'
 import type { CategoryStyleEntityType } from '../db/types'
 
 interface CategoryRow {
@@ -30,9 +31,19 @@ export function ProSettingsPage() {
   const styleMap = useCategoryStyleMap()
   const [editing, setEditing] = useState<CategoryRow | undefined>(undefined)
 
+  // Habits Refocus round — Project-based categories drop out of this list
+  // while the Tasks/Planning flag is off; LifeDomain categories (what
+  // Habits are actually categorized by) are untouched. This extends what
+  // the screen *shows*, nothing about categoryStyles' resolution: any
+  // CategoryStyle row a project already has stays in the database
+  // untouched, and reappears here — with its exact saved color/icon — the
+  // moment the flag flips back.
+  const tasksEnabled = isTasksPlanningEnabled(settings)
   const rows: CategoryRow[] = [
     ...domains.map((d) => ({ entityType: 'lifeDomain' as const, entityId: d.id, name: d.name, nativeColor: d.color })),
-    ...projects.map((p) => ({ entityType: 'project' as const, entityId: p.id, name: p.name, nativeColor: p.color })),
+    ...(tasksEnabled
+      ? projects.map((p) => ({ entityType: 'project' as const, entityId: p.id, name: p.name, nativeColor: p.color }))
+      : []),
   ]
 
   async function handleReset(row: CategoryRow) {

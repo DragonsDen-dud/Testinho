@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useRef } from 'react'
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAppSettings } from './state/useAppSettings'
 import { ensureAppSettings } from './db/db'
@@ -29,6 +29,24 @@ import { IntegrityCheckPage } from './pages/IntegrityCheckPage'
 import { ProSettingsPage } from './pages/ProSettingsPage'
 import { ProSettingsSummaryPage } from './pages/ProSettingsSummaryPage'
 import { TasksRedesignPreviewPage } from './pages/dev/TasksRedesignPreviewPage'
+import { isTasksPlanningEnabled } from './lib/featureFlags'
+
+/**
+ * Habits Refocus round — route-level half of the Tasks/Planning flag.
+ * Redirects to Today rather than rendering a "temporarily disabled" screen:
+ * the flag's whole purpose is to remove this surface from Denys's attention,
+ * and a placeholder page is still a page about Tasks. A deep link (an old
+ * bookmark, the iOS app-switcher restoring /planning) lands somewhere useful
+ * instead of a dead end. Nothing is deleted — flipping the flag back on in
+ * Settings restores every route below with the same data behind it.
+ */
+function TasksPlanningGate() {
+  const settings = useAppSettings()
+  // Don't redirect while settings are still loading — that would bounce a
+  // legitimate deep link to Today before the flag is even known.
+  if (settings === undefined) return null
+  return isTasksPlanningEnabled(settings) ? <Outlet /> : <Navigate to="/" replace />
+}
 
 // Lazy — recharts is the single largest dependency in this app and
 // analytics is the only screen that needs it. Splitting it out keeps the
@@ -100,14 +118,16 @@ function App() {
           <Route path="/habits/:id" element={<HabitsPage />} />
           <Route path="/habits/:id/edit" element={<HabitsPage />} />
           <Route path="/habits/catch-up" element={<CatchUpPage />} />
-          <Route path="/todos" element={<TodosPage />} />
-          <Route path="/todos/:id" element={<TodosPage />} />
-          <Route path="/todos/:id/edit" element={<TodosPage />} />
-          <Route path="/todos/overdue" element={<OverdueTriagePage />} />
-          <Route path="/projects" element={<ProjectsPage />} />
-          <Route path="/projects/:id" element={<ProjectDetailPage />} />
+          <Route element={<TasksPlanningGate />}>
+            <Route path="/todos" element={<TodosPage />} />
+            <Route path="/todos/:id" element={<TodosPage />} />
+            <Route path="/todos/:id/edit" element={<TodosPage />} />
+            <Route path="/todos/overdue" element={<OverdueTriagePage />} />
+            <Route path="/projects" element={<ProjectsPage />} />
+            <Route path="/projects/:id" element={<ProjectDetailPage />} />
+            <Route path="/planning" element={<PlanningPage />} />
+          </Route>
           <Route path="/journal" element={<JournalPage />} />
-          <Route path="/planning" element={<PlanningPage />} />
           <Route
             path="/analytics"
             element={

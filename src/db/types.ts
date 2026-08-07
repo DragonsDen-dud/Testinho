@@ -58,6 +58,32 @@ export interface AppSettings {
   // brand-new install, so a first-time user never gets a changelog nag
   // about changes that predate their very first session.
   lastSeenChangelogVersion?: string
+  // Habits Refocus round — the single flag gating the whole Tasks/Planning
+  // surface (see lib/featureFlags.ts). Deliberately an AppSettings field
+  // rather than a code constant, following the precedent already set by
+  // moodCaptureEnabled/crossSpaceOverviewEnabled: it makes the flag
+  // flippable from inside the app with no rebuild and no migration, which
+  // is exactly what "trivially reversible later" asks for.
+  //
+  // undefined === false === Habits-focused mode. This is the one field in
+  // this file whose undefined default is *not* the pre-existing behavior:
+  // that's intentional, since the whole point of the round is that an
+  // existing install lands in Habits-focused mode without needing a
+  // migration to write the flag. No Todo/Project/PlanEntry data is touched
+  // either way — only what is rendered and routable.
+  tasksPlanningEnabled?: boolean
+  // Part 3b — per-install habit field visibility + order (see
+  // lib/habitFields.ts). Undefined means "every field visible, default
+  // order", so an install that never opens the setting behaves exactly as
+  // it did before this field existed.
+  habitFieldConfig?: HabitFieldConfig
+}
+
+/** Part 3b — stored per install, not per habit (see lib/habitFields.ts for
+ * the key catalog and the resolver that tolerates unknown/missing keys). */
+export interface HabitFieldConfig {
+  hidden?: string[]
+  order?: string[]
 }
 
 export interface ScheduledAiReportSettings {
