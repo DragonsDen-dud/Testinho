@@ -16,6 +16,7 @@ import type {
   ReminderState,
   CategoryStyle,
   SleepLog,
+  EveningReview,
 } from './types'
 import { CURRENT_VERSION } from '../lib/changelog'
 
@@ -36,6 +37,7 @@ export class StoaDatabase extends Dexie {
   reminderStates!: Table<ReminderState, string>
   categoryStyles!: Table<CategoryStyle, string>
   sleepLogs!: Table<SleepLog, string>
+  eveningReviews!: Table<EveningReview, string>
 
   constructor() {
     super('stoa')
@@ -126,6 +128,12 @@ export class StoaDatabase extends Dexie {
         .modify((habit) => {
           delete habit.note
         })
+    })
+    // v9: STOA-6 — the Evening Review. Additive only, no existing table's
+    // shape changes; [spaceId+date] is indexed for the same
+    // upsert-by-composite-key lookup sleepLogs and habitLogs already use.
+    this.version(9).stores({
+      eveningReviews: 'id, spaceId, date, [spaceId+date]',
     })
   }
 }
