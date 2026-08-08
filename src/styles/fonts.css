@@ -1,0 +1,102 @@
+/* STOA-7 Part A — self-hosted display typography.
+ *
+ * NOT a Google Fonts @import. Article 4 makes this app local-first with no
+ * backend, and it is expected to work fully offline; a live font fetch
+ * would be the only external runtime dependency in the entire client.
+ * These @font-face rules point at woff2 files that ship inside the bundle
+ * (installed via @fontsource/*, resolved and fingerprinted by Vite at build
+ * time), so the fonts are precached by the service worker along with
+ * everything else and render identically in airplane mode.
+ *
+ * WHY HAND-WRITTEN RATHER THAN `import '@fontsource/unbounded/900.css'`:
+ * that entry point pulls in five subsets per weight (latin, latin-ext,
+ * cyrillic, cyrillic-ext, vietnamese). STOA ships exactly two locales,
+ * en and ru (Article 11), so latin-ext and vietnamese would be dead weight
+ * — and because this is a precaching PWA, dead weight here is not merely
+ * unfetched, it is downloaded and stored on device. Unbounded's latin-ext
+ * subset alone is 51 KB, larger than every subset we actually need
+ * combined. Declaring only latin + cyrillic keeps the real cost to ~54 KB.
+ *
+ * The unicode-range values are copied verbatim from @fontsource's own
+ * per-weight CSS, so the browser's subset selection is byte-identical to
+ * what the upstream package would have produced — this is a narrower
+ * import, not a re-derived one. `font-display: swap` matches upstream too:
+ * with same-origin, precached files the swap window is imperceptible, and
+ * swap guarantees text is never invisible if a file somehow fails.
+ */
+
+/* ── Unbounded 900 — display face. Hero titles and hero numbers only. ── */
+@font-face {
+  font-family: 'Unbounded';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 900;
+  src: url('@fontsource/unbounded/files/unbounded-latin-900-normal.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
+    U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Unbounded';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 900;
+  src: url('@fontsource/unbounded/files/unbounded-cyrillic-900-normal.woff2') format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+
+/* ── Manrope 800 — section headers, stat labels, nav.
+ *
+ * Substituted for the Space Grotesk named in the original sketch: Space
+ * Grotesk publishes no Cyrillic subset at all, so every Russian section
+ * header would have silently fallen back to the system font, leaving the
+ * type system half-applied in one of the app's two locales. Manrope keeps
+ * the same geometric, slightly condensed character and does ship Cyrillic.
+ * ── */
+@font-face {
+  font-family: 'Manrope';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 800;
+  src: url('@fontsource/manrope/files/manrope-latin-800-normal.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
+    U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Manrope';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 800;
+  src: url('@fontsource/manrope/files/manrope-cyrillic-800-normal.woff2') format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+
+/*
+ * The two type roles, as tokens.
+ *
+ * Both fall back to the existing system stack, which stays the body face
+ * everywhere: list rows, habit names, form fields, notes — anything
+ * legibility-critical or read at length never takes a display face. That
+ * boundary is the whole rule, and it's why these are two narrow tokens
+ * rather than a change to `body { font-family }`.
+ */
+:root {
+  --stoa-font-system: -apple-system, BlinkMacSystemFont, 'SF Pro Text', Inter, system-ui, sans-serif;
+  --stoa-font-display: 'Unbounded', var(--stoa-font-system);
+  --stoa-font-heading: 'Manrope', var(--stoa-font-system);
+}
+
+/* Hero moments: page-level titles and the one big number. Tight tracking
+ * because Unbounded 900 at display size is airy by default. */
+.font-display {
+  font-family: var(--stoa-font-display);
+  font-weight: 900;
+  letter-spacing: -0.03em;
+}
+
+/* Section headers, stat labels, nav. Positive tracking because these are
+ * small and usually uppercased, where Manrope 800 sets too tight. */
+.font-heading {
+  font-family: var(--stoa-font-heading);
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}

@@ -89,7 +89,15 @@ export function HabitsPage() {
 
   return (
     <div className="p-4 max-w-md mx-auto w-full flex flex-col gap-3">
-      <h1 className="text-lg font-semibold">{t('habits.title')}</h1>
+      {/* STOA-7 Part B — same hero mesh treatment as Today, ending before
+          the habit list starts. The count is a fact already on this screen,
+          not a new metric. */}
+      <div className="stoa-mesh-hero -mx-4 -mt-4 px-4 pt-6 pb-7">
+        <h1 className="font-display text-3xl uppercase text-[var(--stoa-text)]">{t('habits.title')}</h1>
+        <div className="font-heading text-xs uppercase text-[var(--stoa-text-muted)] mt-1.5">
+          {t('habits.heroCount', { done: doneHabits.length, total: habits.length })}
+        </div>
+      </div>
 
       {catchUpPendingCount > 0 && (
         <div className="rounded-xl bg-[var(--stoa-accent-soft)] px-3.5 py-2.5 text-sm flex items-center justify-between gap-2">
@@ -121,7 +129,7 @@ export function HabitsPage() {
 
       {doneHabits.length > 0 && (
         <div className="flex flex-col gap-2 bg-canvas rounded-card p-3">
-          <h2 className="text-xs font-semibold text-[var(--stoa-text-muted)] uppercase tracking-wide px-1">
+          <h2 className="font-heading text-xs text-[var(--stoa-text-muted)] uppercase px-1">
             {t('habits.doneTodaySection')}
           </h2>
           {moodPromptHabit && (

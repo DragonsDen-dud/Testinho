@@ -88,7 +88,7 @@ export function HabitPatternGrid({ habit, allHabits }: { habit: Habit; allHabits
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-center justify-between">
-        <span className="text-xs font-semibold text-[var(--stoa-text-muted)] uppercase tracking-wide">
+        <span className="font-heading text-xs text-[var(--stoa-text-muted)] uppercase">
           {expanded ? t('habits.patternMonthLabel') : t('habits.patternWeekLabel')}
         </span>
         <button
