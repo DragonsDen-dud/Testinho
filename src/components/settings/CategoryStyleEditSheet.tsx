@@ -72,7 +72,7 @@ export function CategoryStyleEditSheet({
 
         <div className="flex flex-col gap-2">
           <span className="text-xs font-medium text-[var(--stoa-text-muted)]">{t('proSettings.icon')}</span>
-          <IconPicker value={icon} onChange={setIcon} />
+          <IconPicker value={icon} color={color} onChange={setIcon} />
         </div>
       </div>
     </Sheet>

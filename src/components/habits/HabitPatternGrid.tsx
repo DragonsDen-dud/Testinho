@@ -1,7 +1,6 @@
 import { useState, type CSSProperties } from 'react'
 import { useTranslation } from 'react-i18next'
-import * as LucideIcons from 'lucide-react'
-import { Folder, type LucideIcon } from 'lucide-react'
+import { StoaIcon } from '../ui/icons/stoaIcons'
 import type { Habit } from '../../db/types'
 import { useHabitLogs } from '../../state/useHabits'
 import { useDomains } from '../../state/useDomains'
@@ -173,7 +172,6 @@ function DayCircle({
   active: boolean
   onClick: () => void
 }) {
-  const Icon: LucideIcon = (LucideIcons as unknown as Record<string, LucideIcon>)[iconName] ?? Folder
   // Article 14/27 — 'clean' (an avoid habit's day with no slip recorded)
   // fills exactly like 'done', which is what computeAvoidStreak already
   // counts. Before STOA-5 those days rendered as plain missed circles,
@@ -217,7 +215,7 @@ function DayCircle({
             {value}
           </span>
         ) : filled ? (
-          <Icon size={Math.round(size * 0.52)} color={accessibleTextColor(color)} strokeWidth={2} aria-hidden />
+          <StoaIcon name={iconName} size={Math.round(size * 0.6)} color={accessibleTextColor(color)} />
         ) : (
           <span className="text-[10px]" style={{ color: 'var(--stoa-text-muted)' }}>
             {dayNumber}

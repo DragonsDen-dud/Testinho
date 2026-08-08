@@ -600,5 +600,14 @@
     "lineThree": "Start with the first one. The rest can wait.",
     "lineFour": "Small and done beats large and planned.",
     "lineFive": "This is the whole list. Keep it that short."
+  },
+  "iconGroups": {
+    "everyday": "Everyday",
+    "movement": "Movement",
+    "nourishment": "Nourishment",
+    "rest": "Rest & sleep",
+    "mind": "Mind & wellbeing",
+    "creative": "Creative",
+    "focus": "Focus & goals"
   }
 }

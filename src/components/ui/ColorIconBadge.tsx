@@ -1,5 +1,5 @@
-import * as LucideIcons from 'lucide-react'
-import { Folder, type LucideIcon } from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
+import { StoaIcon } from './icons/stoaIcons'
 import { accessibleTextColor, gradientFromColor } from '../../styles/tokens'
 
 // 'tray' (Habits 2.0 Part B) — the "done today" tray's completed-habit
@@ -53,7 +53,6 @@ export function ColorIconBadge({
   indicator?: ColorIconBadgeIndicator
 }) {
   const px = SIZE_PX[size]
-  const Icon: LucideIcon = (LucideIcons as unknown as Record<string, LucideIcon>)[icon] ?? Folder
   const iconColor = accessibleTextColor(color)
   const indicatorPx = Math.round(px * 0.44)
   const iconPx = Math.round(px * 0.52)
@@ -77,18 +76,11 @@ export function ColorIconBadge({
         backgroundColor: color,
       }}
     >
-      {/* Duotone: a soft, larger backing glyph at low opacity behind the
-          solid one. Same icon, offset and scaled up slightly, which reads
-          as depth rather than as a second symbol — and costs nothing,
-          since it's the same component already imported. */}
-      <Icon
-        size={Math.round(iconPx * 1.5)}
-        color={iconColor}
-        strokeWidth={1.5}
-        aria-hidden
-        style={{ position: 'absolute', opacity: 0.18, transform: 'translate(14%, 14%)' }}
-      />
-      <Icon size={iconPx} color={iconColor} strokeWidth={2} aria-hidden style={{ position: 'relative' }} />
+      {/* STOA-8 — the icons now carry their own duotone (a solid mass plus
+          a secondary mass at reduced opacity, see icons/stoaIcons.tsx), so
+          the previous trick of stacking two copies of a Lucide outline to
+          fake depth is gone. One glyph, drawn with the depth built in. */}
+      <StoaIcon name={icon} size={Math.round(iconPx * 1.18)} color={iconColor} />
       {indicator && (
         <span
           aria-label={indicator.label}

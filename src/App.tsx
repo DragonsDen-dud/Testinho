@@ -29,6 +29,7 @@ import { IntegrityCheckPage } from './pages/IntegrityCheckPage'
 import { ProSettingsPage } from './pages/ProSettingsPage'
 import { ProSettingsSummaryPage } from './pages/ProSettingsSummaryPage'
 import { TasksRedesignPreviewPage } from './pages/dev/TasksRedesignPreviewPage'
+import { IconSheetPage } from './pages/dev/IconSheetPage'
 import { isTasksPlanningEnabled } from './lib/featureFlags'
 
 /**
@@ -101,6 +102,9 @@ function App() {
   // for screenshot review on a fresh profile with no Space set up yet.
   if (window.location.pathname === '/dev/tasks-redesign-preview') {
     return <TasksRedesignPreviewPage />
+  }
+  if (window.location.pathname === '/dev/icon-sheet') {
+    return <IconSheetPage />
   }
 
   if (!settings.onboardingComplete) {
