@@ -18,6 +18,7 @@ import { isEveningPromptTime } from '../lib/eveningPrompt'
 import { ConnectedTaskCard } from '../components/todos/redesign/ConnectedTaskCard'
 import { CompletedTaskBubble } from '../components/dashboard/CompletedTaskBubble'
 import { ConnectivityPanel } from '../components/dashboard/ConnectivityPanel'
+import { SectionHeader } from '../components/ui/SectionHeader'
 import { BackupReminderBanner } from '../components/dashboard/BackupReminderBanner'
 import { isScheduledOnDate, computeBuildStreak, computeAvoidStreak } from '../lib/habitStrength'
 import { shouldShowOverdueBanner } from '../lib/overdueBanner'
@@ -35,9 +36,46 @@ import { todayKey, addDays } from '../lib/date'
  */
 function HeroStat({ value, label }: { value: string; label: string }) {
   return (
-    <div className="flex-1 min-w-0 rounded-2xl border border-[var(--stoa-border)]/60 bg-[var(--stoa-surface)]/35 px-3 py-2.5 backdrop-blur-[2px]">
+    <div className="flex-1 min-w-0 rounded-2xl border border-[var(--stoa-border)]/60 bg-[var(--stoa-surface)]/35 px-2.5 py-2.5 backdrop-blur-[2px]">
       <div className="font-display text-xl leading-none text-[var(--stoa-text)] tabular-nums truncate">{value}</div>
       <div className="font-heading text-[10px] uppercase text-[var(--stoa-text-muted)] mt-1 truncate">{label}</div>
+    </div>
+  )
+}
+
+/**
+ * The day's completion as one slim bar under the hero stats.
+ *
+ * Article 6 check, because a progress bar is exactly the kind of thing that
+ * round could go wrong: this is a state display of a fact already on the
+ * screen — the same done/total the HABITS tile prints — rendered as a
+ * length instead of a number. There is no target to beat, nothing is
+ * awarded at 100%, it doesn't persist, and it says nothing about yesterday.
+ * That puts it in the same category as the tile's own "2/9" and the 7-day
+ * strip on every habit tile, not in the category of points or rewards.
+ *
+ * It earns its place by making the hero legible at a glance rather than
+ * read: the number tells you where you are, the bar tells you how far that
+ * is, and the pairing is what makes a header feel designed rather than
+ * assembled.
+ */
+function DayProgress({ done, total }: { done: number; total: number }) {
+  // Nothing to show a proportion of. A full-width empty track under "0/0"
+  // would read as a broken component.
+  if (total === 0) return null
+  const pct = Math.round((done / total) * 100)
+  return (
+    <div
+      className="mt-3 h-[5px] rounded-full overflow-hidden bg-[var(--stoa-surface)]/60 border border-[var(--stoa-border)]/40"
+      role="progressbar"
+      aria-valuenow={done}
+      aria-valuemin={0}
+      aria-valuemax={total}
+    >
+      <div
+        className="h-full rounded-full bg-[var(--stoa-accent)] transition-[width] duration-500 ease-out"
+        style={{ width: `${pct}%` }}
+      />
     </div>
   )
 }
@@ -72,7 +110,11 @@ function PlanChip({
     <button
       type="button"
       onClick={onClick}
-      className="flex-1 min-w-0 rounded-2xl border border-[var(--stoa-border)]/60 bg-[var(--stoa-surface)]/35 px-3 py-2.5 backdrop-blur-[2px] flex items-center gap-2 active:scale-[0.97] transition-transform"
+      // px-2.5/gap-1.5 rather than px-3/gap-2: at 320px the labels were
+      // truncating by 4–5px ("Today's p…"), and this buys 8px back without
+      // being perceptible at 390px. Measured, not guessed — see the round's
+      // width sweep.
+      className="flex-1 min-w-0 rounded-2xl border border-[var(--stoa-border)]/60 bg-[var(--stoa-surface)]/35 px-2.5 py-2.5 backdrop-blur-[2px] flex items-center gap-1.5 active:scale-[0.97] transition-transform"
     >
       <Icon size={15} strokeWidth={2} aria-hidden className="shrink-0 text-[var(--stoa-text-muted)]" />
       <span className="flex-1 min-w-0 text-left text-xs font-medium text-[var(--stoa-text)] truncate">{label}</span>
@@ -171,13 +213,20 @@ export function DashboardPage() {
 
   const hour = new Date().getHours()
   const greeting = hour < 12 ? t('dashboard.greetingMorning') : hour < 18 ? t('dashboard.greetingAfternoon') : t('dashboard.greetingEvening')
+  // The habits-remaining count deliberately does NOT appear here anymore.
+  // It was being stated three times in the same 200px of hero — as "7
+  // habits left", as the "0/7 HABITS" tile, and (now) as the progress bar
+  // — which is the sort of repetition that makes a screen feel unedited.
+  // The tile and the bar keep it; this line goes back to being identity
+  // plus anything the tile and bar don't already cover.
   const signalParts: string[] = []
-  if (notDoneHabits.length > 0) signalParts.push(t('dashboard.habitsLeftCount', { count: notDoneHabits.length }))
   if (todosToday.length > 0) signalParts.push(t('dashboard.tasksDueCount', { count: todosToday.length }))
-  const signalLine = signalParts.length > 0 ? signalParts.join(' · ') : t('dashboard.allClearSignal')
-  const dateLine = activeSpace
-    ? `${activeSpace.icon} ${activeSpace.name} · ${signalLine}`
-    : signalLine
+  if (signalParts.length === 0 && notDoneHabits.length === 0 && todaysHabits.length > 0) {
+    signalParts.push(t('dashboard.allClearSignal'))
+  }
+  const dateLine = [activeSpace ? `${activeSpace.icon} ${activeSpace.name}` : '', ...signalParts]
+    .filter(Boolean)
+    .join(' · ')
 
   // STOA-7 — the sketch's big two-line date ("FRIDAY / AUG 7"). Built from
   // Intl rather than hand-formatted so it stays correct in ru as well as
@@ -253,8 +302,10 @@ export function DashboardPage() {
           )}
         </div>
 
+        <DayProgress done={doneHabits.length} total={todaysHabits.length} />
+
         {/* Both days' plans, always reachable — see PlanChip for why. */}
-        <div className="flex gap-2 mt-2">
+        <div className="flex gap-2 mt-3">
           <PlanChip
             icon={Sun}
             label={t('dashboard.planToday')}
@@ -326,9 +377,7 @@ export function DashboardPage() {
           surface that still exists behind a toggle. */}
       {tasksEnabled && (todosToday.length > 0 || doneTasksToday.length > 0) && (
         <section className="flex flex-col gap-3">
-          <h2 className="font-heading text-xs text-[var(--stoa-text-muted)] uppercase px-1">
-            {t('dashboard.tasksSection')}
-          </h2>
+          <SectionHeader title={t('dashboard.tasksSection')} />
           {todosToday.map((td) => (
             <ConnectedTaskCard
               key={td.id}

@@ -38,13 +38,18 @@ export function BackupReminderBanner({ intervalDays }: { intervalDays: number })
   }
 
   return (
-    <div className="rounded-xl bg-[var(--stoa-accent-soft)] px-3.5 py-2.5 text-sm flex items-center justify-between gap-2">
-      <span className="flex-1">{t('dashboard.backupReminder')}</span>
-      <div className="flex items-center gap-3 shrink-0">
+    // Stacked, not side-by-side. The message and two actions were competing
+    // for one 362px row, which squeezed the sentence into a three-line
+    // column beside them — the single worst-looking block on Today. On its
+    // own line it wraps at most twice, and the actions sit where every
+    // other dismissible row in the app puts them.
+    <div className="rounded-xl bg-[var(--stoa-accent-soft)] px-3.5 py-3 flex flex-col gap-2">
+      <span className="text-sm">{t('dashboard.backupReminder')}</span>
+      <div className="flex items-center gap-4">
         <button
           type="button"
           disabled={exporting}
-          className="text-xs font-medium underline underline-offset-2"
+          className="text-xs font-medium underline underline-offset-2 disabled:opacity-50"
           onClick={exportNow}
         >
           {t('settings.backupExport')}
