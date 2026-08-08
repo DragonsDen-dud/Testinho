@@ -1,5 +1,13 @@
 [
   {
+    "version": "1.12.0",
+    "bullets": [
+      "Habit icons are now STOA's own hand-drawn set — bold, filled shapes with real depth, replacing the generic outline symbols.",
+      "Twice as many to choose from: 40 icons grouped by Movement, Nourishment, Rest, Mind, Creative and more, including symbols that suit habits you're trying to avoid.",
+      "The icon picker now previews each choice in your habit's actual colour, so what you pick is what you get."
+    ]
+  },
+  {
     "version": "1.11.0",
     "bullets": [
       "A new look for Today and Habits: a bold display typeface for headlines, and a soft colour wash behind the top of each screen.",

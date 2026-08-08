@@ -189,6 +189,7 @@ export function HabitForm({
           </div>
           <IconPicker
             value={icon}
+            color={previewColor}
             onChange={(next) => {
               setIcon(next)
               setIconTouched(true)
