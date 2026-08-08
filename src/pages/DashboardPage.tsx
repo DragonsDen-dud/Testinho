@@ -1,15 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
-import { TrendingDown } from 'lucide-react'
 import { useAppSettings, updateAppSettings } from '../state/useAppSettings'
 import { useSpaces } from '../state/useSpaces'
 import { useHabits, useLogsForDate, useHabitLogsForHabits } from '../state/useHabits'
-import { useTimeBlocks } from '../state/useTimeBlocks'
 import { useOpenTodosToday, useDoneTodosToday } from '../state/useTodos'
 import { useConnectivity } from '../state/useConnectivity'
-import { HabitCard } from '../components/habits/HabitCard'
-import { CompletedHabitBubble } from '../components/habits/CompletedHabitBubble'
+import { HabitGrid } from '../components/habits/HabitGrid'
 import { JustCompletedMoodPrompt } from '../components/habits/JustCompletedMoodPrompt'
 import { MorningBriefCard } from '../components/dailybrief/MorningBriefCard'
 import { EveningReviewCard } from '../components/dailybrief/EveningReviewCard'
@@ -21,32 +18,14 @@ import { ConnectedTaskCard } from '../components/todos/redesign/ConnectedTaskCar
 import { CompletedTaskBubble } from '../components/dashboard/CompletedTaskBubble'
 import { ConnectivityPanel } from '../components/dashboard/ConnectivityPanel'
 import { BackupReminderBanner } from '../components/dashboard/BackupReminderBanner'
-import { EmptyState } from '../components/ui/EmptyState'
 import { isScheduledOnDate, computeBuildStreak, computeAvoidStreak } from '../lib/habitStrength'
 import { shouldShowOverdueBanner } from '../lib/overdueBanner'
 import { usePullToRefresh } from '../lib/usePullToRefresh'
 import { isBackupReminderDue } from '../lib/backupReminder'
-import { timeBlockStartMinutes } from '../lib/timeBlockRange'
 import { isTasksPlanningEnabled } from '../lib/featureFlags'
 import { computeAtRiskHabit } from '../lib/habitAtRisk'
 import { todayKey, addDays } from '../lib/date'
-import type { Habit, TimeBlock, Todo } from '../db/types'
 
-function scheduledTimeMinutes(hhmm: string): number {
-  const [h, m] = hhmm.split(':').map(Number)
-  return h * 60 + m
-}
-
-/** Today redesign round — a deliberately simple, Dashboard-local ordering
- * for the single "Up next" list: a habit sorts by its TimeBlock's
- * structured start time (if any), a task by its own scheduledTime (if
- * any); anything without one sinks to the end. This is NOT Option 3's
- * pending dayTimeline.ts merge (that requires every TimeBlock in the
- * Space to have a time before merging at all, with a two-group fallback
- * otherwise) — this always produces one flat list, approximate rather
- * than exact, exactly the "simple co-located list, no new merge logic"
- * the brief asked for. */
-type UpNextItem = { kind: 'habit'; habit: Habit; sortMinutes: number } | { kind: 'todo'; todo: Todo; sortMinutes: number }
 
 /**
  * STOA-7 — one hero stat tile. A translucent card that lets the mesh show
@@ -69,7 +48,6 @@ export function DashboardPage() {
   const spaces = useSpaces()
   const activeSpace = spaces.find((s) => s.id === settings?.activeSpaceId)
   const allHabits = useHabits(settings?.activeSpaceId)
-  const timeBlocks = useTimeBlocks(settings?.activeSpaceId)
   const date = todayKey()
   const todaysHabits = allHabits.filter((h) => isScheduledOnDate(h, date))
   // Fetched for all habits, not just today's — a dependency can point at a
@@ -79,7 +57,6 @@ export function DashboardPage() {
     allHabits.map((h) => h.id),
     date,
   )
-  const [justCompletedHabitIds, setJustCompletedHabitIds] = useState<Set<string>>(new Set())
   const [justCompletedTaskIds, setJustCompletedTaskIds] = useState<Set<string>>(new Set())
   const notDoneHabits = todaysHabits.filter((h) => logsToday.get(h.id)?.status !== 'done')
   const doneHabits = todaysHabits.filter((h) => logsToday.get(h.id)?.status === 'done')
@@ -89,7 +66,6 @@ export function DashboardPage() {
   // entrance animation and deliberately never forgets.
   const [moodPromptHabitId, setMoodPromptHabitId] = useState<string | null>(null)
   function handleHabitLogged(habitId: string) {
-    setJustCompletedHabitIds((prev) => (prev.has(habitId) ? prev : new Set(prev).add(habitId)))
     setMoodPromptHabitId(habitId)
   }
   const moodPromptHabit = moodPromptHabitId ? allHabits.find((h) => h.id === moodPromptHabitId) : undefined
@@ -149,33 +125,6 @@ export function DashboardPage() {
     }
   }, [settings, todosLoaded, overdue.length, date])
 
-  function habitSortMinutes(habit: Habit): number {
-    const block = timeBlocks.find((tb: TimeBlock) => tb.id === habit.timeBlockId)
-    return block ? timeBlockStartMinutes(block) : Number.MAX_SAFE_INTEGER
-  }
-
-  const sortedUpNextItems: UpNextItem[] = [
-    ...notDoneHabits.map((h): UpNextItem => ({ kind: 'habit', habit: h, sortMinutes: habitSortMinutes(h) })),
-    ...todosToday.map(
-      (td): UpNextItem => ({
-        kind: 'todo',
-        todo: td,
-        sortMinutes: td.scheduledTime ? scheduledTimeMinutes(td.scheduledTime) : Number.MAX_SAFE_INTEGER,
-      }),
-    ),
-  ].sort((a, b) => a.sortMinutes - b.sortMinutes)
-
-  // The at-risk habit is lifted to the top of the same list rather than
-  // given its own section: it stays one tap from done (Fogg's ability
-  // constraint — the brief's sub-5-second rule), and the list keeps its
-  // single ordering rather than splitting into two competing ones.
-  const atRiskIndex = atRisk
-    ? sortedUpNextItems.findIndex((item) => item.kind === 'habit' && item.habit.id === atRisk.habitId)
-    : -1
-  const upNextItems =
-    atRiskIndex > 0
-      ? [sortedUpNextItems[atRiskIndex], ...sortedUpNextItems.filter((_, i) => i !== atRiskIndex)]
-      : sortedUpNextItems
 
   const hour = new Date().getHours()
   const greeting = hour < 12 ? t('dashboard.greetingMorning') : hour < 18 ? t('dashboard.greetingAfternoon') : t('dashboard.greetingEvening')
@@ -207,7 +156,7 @@ export function DashboardPage() {
   }, 0)
 
   return (
-    <div className="p-4 max-w-md mx-auto w-full flex flex-col gap-5">
+    <div className="p-4 max-w-md mx-auto w-full flex flex-col gap-4">
       {(pullDistance > 0 || refreshing) && (
         <div
           className="flex items-center justify-center text-xs text-[var(--stoa-text-muted)] overflow-hidden transition-[height]"
@@ -231,9 +180,9 @@ export function DashboardPage() {
           the bezel like the sketch, while the text inside keeps the page's
           normal gutter. The mesh ends with this block; everything below is
           the flat canvas, which is what keeps list rows legible. */}
-      <div className="stoa-mesh-hero -mx-4 -mt-4 px-4 pt-6 pb-8">
+      <div className="stoa-mesh-hero -mx-4 -mt-4 px-4 pt-5 pb-6">
         <div className="text-sm text-[var(--stoa-text-muted)]">{greeting}</div>
-        <h1 className="font-display text-[2rem] leading-[1.05] text-[var(--stoa-text)] uppercase mt-0.5 whitespace-pre-line">
+        <h1 className="font-display text-[1.6rem] leading-[1.05] text-[var(--stoa-text)] uppercase mt-0.5 whitespace-pre-line">
           {heroDateLine}
         </h1>
         <div className="text-xs text-[var(--stoa-text-muted)] mt-1.5">{dateLine}</div>
@@ -242,7 +191,7 @@ export function DashboardPage() {
             Each is a real value already computed on this screen, not a new
             metric: habits done today, the longest live streak, and the
             wake time from last night's review when there is one. */}
-        <div className="flex gap-2 mt-4">
+        <div className="flex gap-2 mt-3.5">
           <HeroStat value={`${doneHabits.length}/${todaysHabits.length}`} label={t('dashboard.statHabits')} />
           <HeroStat value={String(longestStreak)} label={t('dashboard.statStreak')} />
           {todaysReview?.wakeTime && (
@@ -250,8 +199,6 @@ export function DashboardPage() {
           )}
         </div>
       </div>
-
-      <ConnectivityPanel statuses={connectivityStatuses} />
 
       {showOverdueBanner && (
         <div className="rounded-xl bg-[var(--stoa-danger)]/10 border border-[var(--stoa-danger)]/30 px-3.5 py-2.5 text-sm text-[var(--stoa-danger)] flex items-center justify-between gap-2">
@@ -279,99 +226,58 @@ export function DashboardPage() {
       )}
 
 
-      {/* Module 1 — "Up next": today's not-yet-done habits and today's due
-          tasks in one list, each row using its home tab's own real
-          component (HabitCard / ConnectedTaskCard) unmodified in
-          appearance — just co-located and time-sorted, not merged at the
-          data level. */}
-      <section className="flex flex-col gap-3">
-        <h2 className="font-heading text-xs text-[var(--stoa-text-muted)] uppercase px-1">
-          {t('dashboard.upNextSection')}
-        </h2>
-        {upNextItems.length === 0 ? (
-          /* Part 2 polish — a considered "everything's logged" state rather
-             than the generic one-liner. Deliberately restrained per Article
-             19 and Article 6: it states the fact and the count, with no
-             congratulation, streak reward, score, or celebration. */
-          doneHabits.length > 0 ? (
-            <div className="rounded-card bg-canvas px-4 py-5 flex flex-col items-center text-center gap-1">
-              <div className="text-sm font-medium text-[var(--stoa-text)]">{t('dashboard.allLoggedTitle')}</div>
-              <div className="text-xs text-[var(--stoa-text-muted)]">
-                {t('dashboard.allLoggedSubtitle', { count: doneHabits.length })}
-              </div>
-            </div>
-          ) : (
-            <EmptyState text={t('dashboard.upNextEmpty')} />
-          )
-        ) : (
-          <div className="flex flex-col gap-3">
-            {upNextItems.map((item) =>
-              item.kind === 'habit' ? (
-                <div key={`habit-${item.habit.id}`} className="flex flex-col gap-1.5">
-                  {atRisk?.habitId === item.habit.id && (
-                    /* Article 6/19 — a plain statement of what the last two
-                       weeks actually contain. No score, no rank, no reward
-                       to recover; the same category of output as the
-                       existing weak-day pattern line on the card below. */
-                    <div className="flex items-center gap-1.5 text-xs text-[var(--stoa-danger)] px-1">
-                      <TrendingDown size={13} strokeWidth={1.75} aria-hidden />
-                      <span>
-                        {t('dashboard.atRiskLabel', {
-                          missed: atRisk.missedDays,
-                          observed: atRisk.observedDays,
-                        })}
-                      </span>
-                    </div>
-                  )}
-                  <HabitCard
-                    habit={item.habit}
-                    todayLog={logsToday.get(item.habit.id)}
-                    allHabits={allHabits}
-                    logsToday={logsToday}
-                    onLogged={() => handleHabitLogged(item.habit.id)}
-                  />
-                </div>
-              ) : (
-                <ConnectedTaskCard
-                  key={`todo-${item.todo.id}`}
-                  todo={item.todo}
-                  onOpen={() => navigate(`/todos/${item.todo.id}`)}
-                  onChecked={() => handleTaskChecked(item.todo.id)}
-                />
-              ),
-            )}
-          </div>
-        )}
-      </section>
+      {/* Tile-grid redesign — the day as a two-column grid of large tiles
+          with To do / Done tabs, replacing the old Up-next list plus
+          Done-today tray. See HabitGrid/HabitTile for the reasoning. */}
+      <HabitGrid
+        habits={todaysHabits}
+        logsToday={logsToday}
+        logsByHabit={allLogsByHabit}
+        atRiskHabitId={atRisk?.habitId}
+        atRiskLabel={
+          atRisk ? t('dashboard.atRiskLabelShort', { missed: atRisk.missedDays, observed: atRisk.observedDays }) : undefined
+        }
+        onOpenHistory={(habit) => navigate(`/habits/${habit.id}`)}
+        onLogged={handleHabitLogged}
+      />
 
-      {/* Module 2 — "Done today": the existing habit-bubble tray (Habits
-          2.0 Part B), now also holding completed tasks as bubbles in the
-          same visual language. */}
-      {(doneHabits.length > 0 || doneTasksToday.length > 0) && (
-        <div className="flex flex-col gap-2 bg-canvas rounded-card p-3">
-          <h2 className="font-heading text-xs text-[var(--stoa-text-muted)] uppercase px-1">
-            {t('dashboard.doneTodaySection')}
-          </h2>
-          {/* Appears only after an explicit completion in this session, and
-              only for a habit still worth asking about — never on load. */}
-          {moodPromptHabit && (
-            <JustCompletedMoodPrompt
-              key={moodPromptHabit.id}
-              habit={moodPromptHabit}
-              date={date}
-              onDismiss={() => setMoodPromptHabitId(null)}
-            />
-          )}
-          <div className="flex flex-wrap gap-x-3 gap-y-4 px-1 pt-1">
-            {doneHabits.map((h) => (
-              <CompletedHabitBubble key={h.id} habit={h} justCompleted={justCompletedHabitIds.has(h.id)} />
-            ))}
-            {doneTasksToday.map((td) => (
-              <CompletedTaskBubble key={td.id} todo={td} justCompleted={justCompletedTaskIds.has(td.id)} />
-            ))}
-          </div>
-        </div>
+      {moodPromptHabit && (
+        <JustCompletedMoodPrompt
+          key={moodPromptHabit.id}
+          habit={moodPromptHabit}
+          date={date}
+          onDismiss={() => setMoodPromptHabitId(null)}
+        />
       )}
+
+      {/* Tasks are not part of the habit grid, so with the Tasks/Planning
+          flag ON they get their own section rather than disappearing —
+          the redesign is a habits-screen change, not a quiet removal of a
+          surface that still exists behind a toggle. */}
+      {tasksEnabled && (todosToday.length > 0 || doneTasksToday.length > 0) && (
+        <section className="flex flex-col gap-3">
+          <h2 className="font-heading text-xs text-[var(--stoa-text-muted)] uppercase px-1">
+            {t('dashboard.tasksSection')}
+          </h2>
+          {todosToday.map((td) => (
+            <ConnectedTaskCard
+              key={td.id}
+              todo={td}
+              onOpen={() => navigate(`/todos/${td.id}`)}
+              onChecked={() => handleTaskChecked(td.id)}
+            />
+          ))}
+          {doneTasksToday.length > 0 && (
+            <div className="flex flex-wrap gap-x-3 gap-y-4 px-1 pt-1">
+              {doneTasksToday.map((td) => (
+                <CompletedTaskBubble key={td.id} todo={td} justCompleted={justCompletedTaskIds.has(td.id)} />
+              ))}
+            </div>
+          )}
+        </section>
+      )}
+
+      <ConnectivityPanel statuses={connectivityStatuses} />
 
       {/* STOA-6 — the evening prompt sits below the day's work, not above
           it: from 17:00 planning tomorrow is the natural next thing, but it

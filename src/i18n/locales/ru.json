@@ -109,7 +109,9 @@
     "allLoggedSubtitle_other": "Выполнено {{count}} привычек.",
     "statHabits": "Привычки",
     "statStreak": "Серия",
-    "statWake": "Подъём"
+    "statWake": "Подъём",
+    "tasksSection": "Задачи",
+    "atRiskLabelShort": "Пропущено {{missed}} из {{observed}} дней"
   },
   "habits": {
     "title": "Привычки",
@@ -227,7 +229,18 @@
     "heatmapStateMissed": "Упущено",
     "moodAddPrompt": "Добавить самочувствие",
     "moodPromptAfterDone": "Как прошло: «{{name}}»?",
-    "heroCount": "{{done}} из {{total}} за сегодня"
+    "heroCount": "{{done}} из {{total}} за сегодня",
+    "tabTodo": "Осталось",
+    "tabDone": "Готово",
+    "gridAllDone": "На сегодня всё отмечено.",
+    "gridNoneDone": "Сегодня пока ничего не отмечено.",
+    "openHistory": "История: {{name}}",
+    "clearToday": "Очистить сегодня",
+    "alreadyLoggedToday": "Уже отмечено сегодня: {{value}} {{unit}}",
+    "targetLabel": "Цель: {{value}} {{unit}}",
+    "decrease": "Уменьшить",
+    "increase": "Увеличить",
+    "value": "Значение"
   },
   "todos": {
     "title": "Задачи",
