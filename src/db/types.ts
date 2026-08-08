@@ -323,6 +323,39 @@ export interface SleepLog {
   wakeTime: string
 }
 
+/**
+ * STOA-6 — the Evening Review: what Denys plans the night before, and the
+ * only input the Morning Brief reads.
+ *
+ * Deliberately a lightweight daily note rather than a new entity family
+ * (the brief's own instruction). No status, no completion tracking, no
+ * links to Habits — if a must-win deserves tracking it becomes a real
+ * Habit through the existing flow, not a second half-planning system.
+ *
+ * `date` is the day this review is **for** — i.e. tomorrow at the moment
+ * it's written — never the day it was entered. That's what lets the
+ * Morning Brief simply ask "is there a review for today?" with no date
+ * arithmetic at read time, and what makes one row per Space per day the
+ * natural key. Writing a review twice for the same target day updates that
+ * row rather than creating a duplicate (see data/eveningReviews.ts).
+ */
+export interface EveningReview {
+  id: string
+  spaceId: string
+  date: string // YYYY-MM-DD — the day this plans FOR
+  wakeTime?: string // HH:mm
+  trainingPlan?: string
+  warmUp?: string
+  /** Up to 3, already trimmed and stripped of blanks on save. */
+  mustWins: string[]
+  /** Optional "worth turning into a habit later?" jot — free text only.
+   * Deliberately NOT wired to habit creation: it's a note to himself, and
+   * auto-creating habits from it would be exactly the overbuilding the
+   * brief warns against. */
+  habitIdea?: string
+  createdAt: string
+}
+
 /** Articles 12/16/26/35 — autoStats is populated locally (no AI) so the
  * Scheduled AI Report and freeform queries can reference these as given
  * facts instead of re-deriving them. One row per Space+period+scope. */

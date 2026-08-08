@@ -563,5 +563,38 @@
     "dependsOn": "Depends on",
     "pause": "Pause",
     "note": "Latest check-in note"
+  },
+  "eveningReview": {
+    "title": "Plan tomorrow",
+    "forDate": "For {{date}}",
+    "promptTitle": "Plan tomorrow",
+    "promptSubtitle": "Wake time, training, and your three must-wins.",
+    "plannedCount_one": "Tomorrow is planned — {{count}} must-win.",
+    "plannedCount_other": "Tomorrow is planned — {{count}} must-wins.",
+    "wakeTime": "Wake time",
+    "trainingPlan": "Training",
+    "trainingPlanPlaceholder": "What you plan to do",
+    "warmUp": "Warm-up",
+    "warmUpPlaceholder": "How you plan to start",
+    "mustWins": "Must-wins",
+    "mustWinPlaceholder": "One thing that has to happen",
+    "mustWinsHint": "At least one. Three at most — that is the point.",
+    "habitIdea": "Worth tracking as a habit?",
+    "habitIdeaPlaceholder": "A note to yourself, for later"
+  },
+  "morningBrief": {
+    "section": "Today’s brief",
+    "greeting": "Good morning",
+    "save": "Save image",
+    "saved_shared": "Shared.",
+    "saved_downloaded": "Saved.",
+    "saveError": "Couldn't save the image.",
+    "renderError": "Couldn't draw the brief.",
+    "imageAlt": "Today's brief",
+    "lineOne": "Three things. Nothing else has to go right.",
+    "lineTwo": "You already decided this last night. Just follow it.",
+    "lineThree": "Start with the first one. The rest can wait.",
+    "lineFour": "Small and done beats large and planned.",
+    "lineFive": "This is the whole list. Keep it that short."
   }
 }

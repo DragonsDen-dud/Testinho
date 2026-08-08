@@ -11,6 +11,12 @@ import { useConnectivity } from '../state/useConnectivity'
 import { HabitCard } from '../components/habits/HabitCard'
 import { CompletedHabitBubble } from '../components/habits/CompletedHabitBubble'
 import { JustCompletedMoodPrompt } from '../components/habits/JustCompletedMoodPrompt'
+import { MorningBriefCard } from '../components/dailybrief/MorningBriefCard'
+import { EveningReviewCard } from '../components/dailybrief/EveningReviewCard'
+import { EveningReviewSheet } from '../components/dailybrief/EveningReviewSheet'
+import { useEveningReview } from '../state/useEveningReview'
+import { isEveningReviewEmpty } from '../data/eveningReviews'
+import { isEveningPromptTime } from '../lib/eveningPrompt'
 import { ConnectedTaskCard } from '../components/todos/redesign/ConnectedTaskCard'
 import { CompletedTaskBubble } from '../components/dashboard/CompletedTaskBubble'
 import { ConnectivityPanel } from '../components/dashboard/ConnectivityPanel'
@@ -23,7 +29,7 @@ import { isBackupReminderDue } from '../lib/backupReminder'
 import { timeBlockStartMinutes } from '../lib/timeBlockRange'
 import { isTasksPlanningEnabled } from '../lib/featureFlags'
 import { computeAtRiskHabit } from '../lib/habitAtRisk'
-import { todayKey, formatHumanDate } from '../lib/date'
+import { todayKey, addDays, formatHumanDate } from '../lib/date'
 import type { Habit, TimeBlock, Todo } from '../db/types'
 
 function scheduledTimeMinutes(hhmm: string): number {
@@ -73,6 +79,16 @@ export function DashboardPage() {
     setMoodPromptHabitId(habitId)
   }
   const moodPromptHabit = moodPromptHabitId ? allHabits.find((h) => h.id === moodPromptHabitId) : undefined
+
+  // STOA-6 — two reviews are in play at once on an evening: the one filed
+  // *for today* (which the Morning Brief renders) and the one being written
+  // *for tomorrow*. Keyed by the day they plan for, so neither needs date
+  // arithmetic beyond this one line.
+  const tomorrow = addDays(date, 1)
+  const todaysReview = useEveningReview(settings?.activeSpaceId, date)
+  const tomorrowsReview = useEveningReview(settings?.activeSpaceId, tomorrow)
+  const [eveningSheetOpen, setEveningSheetOpen] = useState(false)
+  const showEveningPrompt = isEveningPromptTime()
   function handleTaskChecked(todoId: string) {
     setJustCompletedTaskIds((prev) => (prev.has(todoId) ? prev : new Set(prev).add(todoId)))
   }
@@ -202,6 +218,15 @@ export function DashboardPage() {
 
       {backupReminderDue && <BackupReminderBanner intervalDays={settings?.backupReminderIntervalDays ?? 30} />}
 
+      {/* STOA-6 — the Daily Brief, above Up next: on a morning where last
+          night's review exists, it's the first thing on the screen. Absent
+          entirely on a day with no review (see the round report for why
+          that's a silent skip rather than a lighter default card). */}
+      {todaysReview && !isEveningReviewEmpty(todaysReview) && (
+        <MorningBriefCard review={todaysReview} spaceName={activeSpace?.name ?? ''} />
+      )}
+
+
       {/* Module 1 — "Up next": today's not-yet-done habits and today's due
           tasks in one list, each row using its home tab's own real
           component (HabitCard / ConnectedTaskCard) unmodified in
@@ -294,6 +319,20 @@ export function DashboardPage() {
             ))}
           </div>
         </div>
+      )}
+
+      {/* STOA-6 — the evening prompt sits below the day's work, not above
+          it: from 17:00 planning tomorrow is the natural next thing, but it
+          must never outrank today's remaining habits. */}
+      {showEveningPrompt && <EveningReviewCard review={tomorrowsReview} onOpen={() => setEveningSheetOpen(true)} />}
+
+      {eveningSheetOpen && settings?.activeSpaceId && (
+        <EveningReviewSheet
+          spaceId={settings.activeSpaceId}
+          targetDate={tomorrow}
+          initial={tomorrowsReview}
+          onClose={() => setEveningSheetOpen(false)}
+        />
       )}
     </div>
   )
