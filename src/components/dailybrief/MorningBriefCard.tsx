@@ -79,7 +79,7 @@ export function MorningBriefCard({ review, spaceName }: { review: EveningReview;
 
   return (
     <section className="flex flex-col gap-2">
-      <h2 className="text-xs font-semibold text-[var(--stoa-text-muted)] uppercase tracking-wide px-1">
+      <h2 className="font-heading text-xs text-[var(--stoa-text-muted)] uppercase px-1">
         {t('morningBrief.section')}
       </h2>
       <canvas

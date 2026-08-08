@@ -63,7 +63,7 @@ export function HabitHeatmap({ habit, allHabits }: { habit: Habit; allHabits: Ha
   return (
     <div className="flex flex-col gap-2">
       <div className="flex items-center justify-between">
-        <span className="text-xs font-semibold text-[var(--stoa-text-muted)] uppercase tracking-wide">
+        <span className="font-heading text-xs text-[var(--stoa-text-muted)] uppercase">
           {t('habits.heatmapTitle')}
         </span>
         <span className="text-[10px] text-[var(--stoa-text-muted)]">

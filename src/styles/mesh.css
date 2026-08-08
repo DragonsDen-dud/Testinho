@@ -1,0 +1,115 @@
+/* STOA-7 Part B — the gradient mesh, brought from the Daily Brief image
+ * onto real screens.
+ *
+ * SCOPE, deliberately narrow: hero/header zones on Today and Habits only.
+ * Never behind list content. A habit row has to stay readable at a glance
+ * on a phone in bad light, and a coloured, blurred field behind small text
+ * is exactly how "designed" turns into "hard to use". The mesh ends where
+ * the content begins, which is also what the Part B sketch specifies
+ * ("mesh stops here — flat dark below").
+ *
+ * PURE CSS, no image assets and no blur filter. Three `radial-gradient`
+ * layers composited in one `background-image` — this is a paint-only
+ * operation the compositor handles cheaply, unlike `filter: blur()` on a
+ * real element, which forces an expensive offscreen pass on every scroll
+ * frame and is a known battery/jank problem on iOS Safari. The softness
+ * comes from the gradients' own colour stops instead.
+ *
+ * COLOURS: exactly PRESET_COLORS[1] violet #8b5cf6, [6] pink #ec4899 and
+ * [9] orange #f97316 — the same three the Daily Brief mesh uses, and all
+ * already in the shipped palette. No new hue enters the system.
+ */
+
+:root {
+  --stoa-mesh-violet: 139, 92, 246; /* PRESET_COLORS[1] #8b5cf6 */
+  --stoa-mesh-pink: 236, 72, 153; /* PRESET_COLORS[6] #ec4899 */
+  --stoa-mesh-orange: 249, 115, 22; /* PRESET_COLORS[9] #f97316 */
+
+  /* LIGHT MODE gets its own alphas, not a dimmed copy of dark's.
+   *
+   * On the near-white #fafaf9 canvas the failure mode is the opposite of
+   * dark's: these hues at dark-mode strength read as a solid poster and
+   * crush the contrast of the dark text sitting on top. So light stays a
+   * pale wash — enough to tint the hero, never enough to fight the text.
+   * The heading above it is #1c1917 on what remains an essentially light
+   * field, so contrast is unaffected. */
+  --stoa-mesh-a1: 0.2;
+  --stoa-mesh-a2: 0.16;
+  --stoa-mesh-a3: 0.14;
+  --stoa-mesh-fade: rgba(250, 250, 249, 0);
+}
+
+:root[data-theme='dark'] {
+  /* DARK MODE can and should carry far more saturation: the same alpha
+   * that would overwhelm a white canvas barely registers against #16151a,
+   * and this is where the look actually earns its keep. */
+  --stoa-mesh-a1: 0.55;
+  --stoa-mesh-a2: 0.42;
+  --stoa-mesh-a3: 0.34;
+  --stoa-mesh-fade: rgba(22, 21, 26, 0);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']):not([data-theme='contrast']) {
+    --stoa-mesh-a1: 0.55;
+    --stoa-mesh-a2: 0.42;
+    --stoa-mesh-a3: 0.34;
+    --stoa-mesh-fade: rgba(22, 21, 26, 0);
+  }
+}
+
+/* High-contrast theme opts out entirely. Article 54 puts accessibility
+ * work out of scope, but this theme exists and its whole purpose is
+ * maximum legibility — quietly painting a colour field across its header
+ * would work directly against the one thing it is for. */
+:root[data-theme='contrast'] {
+  --stoa-mesh-a1: 0;
+  --stoa-mesh-a2: 0;
+  --stoa-mesh-a3: 0;
+  --stoa-mesh-fade: rgba(0, 0, 0, 0);
+}
+
+/**
+ * The hero surface. Applied to a header block, never to a scroll
+ * container: the gradient is sized to the element, so putting it on a long
+ * scrolling parent would stretch the pools into bands.
+ */
+.stoa-mesh-hero {
+  position: relative;
+  isolation: isolate;
+  background-image:
+    radial-gradient(
+      ellipse 90% 70% at 12% 8%,
+      rgba(var(--stoa-mesh-violet), var(--stoa-mesh-a1)) 0%,
+      var(--stoa-mesh-fade) 60%
+    ),
+    radial-gradient(
+      ellipse 80% 60% at 88% 22%,
+      rgba(var(--stoa-mesh-pink), var(--stoa-mesh-a2)) 0%,
+      var(--stoa-mesh-fade) 62%
+    ),
+    radial-gradient(
+      ellipse 100% 75% at 45% 96%,
+      rgba(var(--stoa-mesh-orange), var(--stoa-mesh-a3)) 0%,
+      var(--stoa-mesh-fade) 66%
+    );
+  background-repeat: no-repeat;
+}
+
+/**
+ * The fade-out at the bottom edge — this is what makes the mesh "stop
+ * here" rather than end on a hard line against the flat canvas below.
+ * A pseudo-element rather than a fourth gradient stop so it can sit at
+ * full canvas colour regardless of what the three pools are doing.
+ */
+.stoa-mesh-hero::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 56px;
+  pointer-events: none;
+  z-index: -1;
+  background: linear-gradient(to bottom, transparent, var(--stoa-bg));
+}

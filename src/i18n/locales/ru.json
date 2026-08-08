@@ -106,7 +106,10 @@
     "allLoggedSubtitle_one": "Выполнена {{count}} привычка.",
     "allLoggedSubtitle_few": "Выполнено {{count}} привычки.",
     "allLoggedSubtitle_many": "Выполнено {{count}} привычек.",
-    "allLoggedSubtitle_other": "Выполнено {{count}} привычек."
+    "allLoggedSubtitle_other": "Выполнено {{count}} привычек.",
+    "statHabits": "Привычки",
+    "statStreak": "Серия",
+    "statWake": "Подъём"
   },
   "habits": {
     "title": "Привычки",
@@ -223,7 +226,8 @@
     "heatmapStatePending": "Ещё не отмечено",
     "heatmapStateMissed": "Упущено",
     "moodAddPrompt": "Добавить самочувствие",
-    "moodPromptAfterDone": "Как прошло: «{{name}}»?"
+    "moodPromptAfterDone": "Как прошло: «{{name}}»?",
+    "heroCount": "{{done}} из {{total}} за сегодня"
   },
   "todos": {
     "title": "Задачи",

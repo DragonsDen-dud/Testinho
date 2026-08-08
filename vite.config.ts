@@ -31,7 +31,14 @@ export default defineConfig({
         ],
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,svg,png,ico}'],
+        // STOA-7 — `woff2` added. The display fonts are bundled rather than
+        // fetched from a CDN specifically so the app keeps working offline
+        // (Article 4), but bundling alone doesn't achieve that: without the
+        // extension listed here the font files ship in dist/ and are still
+        // requested over the network at runtime, so an offline launch falls
+        // back to the system face and the type system silently half-applies.
+        // Caught by the airplane-mode check this round, not by the build.
+        globPatterns: ['**/*.{js,css,html,svg,png,ico,woff2}'],
       },
     }),
   ],

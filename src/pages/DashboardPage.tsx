@@ -22,14 +22,14 @@ import { CompletedTaskBubble } from '../components/dashboard/CompletedTaskBubble
 import { ConnectivityPanel } from '../components/dashboard/ConnectivityPanel'
 import { BackupReminderBanner } from '../components/dashboard/BackupReminderBanner'
 import { EmptyState } from '../components/ui/EmptyState'
-import { isScheduledOnDate } from '../lib/habitStrength'
+import { isScheduledOnDate, computeBuildStreak, computeAvoidStreak } from '../lib/habitStrength'
 import { shouldShowOverdueBanner } from '../lib/overdueBanner'
 import { usePullToRefresh } from '../lib/usePullToRefresh'
 import { isBackupReminderDue } from '../lib/backupReminder'
 import { timeBlockStartMinutes } from '../lib/timeBlockRange'
 import { isTasksPlanningEnabled } from '../lib/featureFlags'
 import { computeAtRiskHabit } from '../lib/habitAtRisk'
-import { todayKey, addDays, formatHumanDate } from '../lib/date'
+import { todayKey, addDays } from '../lib/date'
 import type { Habit, TimeBlock, Todo } from '../db/types'
 
 function scheduledTimeMinutes(hhmm: string): number {
@@ -47,6 +47,20 @@ function scheduledTimeMinutes(hhmm: string): number {
  * than exact, exactly the "simple co-located list, no new merge logic"
  * the brief asked for. */
 type UpNextItem = { kind: 'habit'; habit: Habit; sortMinutes: number } | { kind: 'todo'; todo: Todo; sortMinutes: number }
+
+/**
+ * STOA-7 — one hero stat tile. A translucent card that lets the mesh show
+ * through rather than a solid surface, which is what keeps the header
+ * reading as one field of colour instead of three panels sitting on it.
+ */
+function HeroStat({ value, label }: { value: string; label: string }) {
+  return (
+    <div className="flex-1 min-w-0 rounded-2xl border border-[var(--stoa-border)]/60 bg-[var(--stoa-surface)]/35 px-3 py-2.5 backdrop-blur-[2px]">
+      <div className="font-display text-xl leading-none text-[var(--stoa-text)] tabular-nums truncate">{value}</div>
+      <div className="font-heading text-[10px] uppercase text-[var(--stoa-text-muted)] mt-1 truncate">{label}</div>
+    </div>
+  )
+}
 
 export function DashboardPage() {
   const { t, i18n } = useTranslation()
@@ -170,8 +184,27 @@ export function DashboardPage() {
   if (todosToday.length > 0) signalParts.push(t('dashboard.tasksDueCount', { count: todosToday.length }))
   const signalLine = signalParts.length > 0 ? signalParts.join(' · ') : t('dashboard.allClearSignal')
   const dateLine = activeSpace
-    ? `${activeSpace.icon} ${activeSpace.name} · ${formatHumanDate(date, i18n.language)}`
-    : formatHumanDate(date, i18n.language)
+    ? `${activeSpace.icon} ${activeSpace.name} · ${signalLine}`
+    : signalLine
+
+  // STOA-7 — the sketch's big two-line date ("FRIDAY / AUG 7"). Built from
+  // Intl rather than hand-formatted so it stays correct in ru as well as
+  // en; the weekday and the day/month sit on their own lines because
+  // Unbounded 900 at this size only reads well short.
+  const heroDate = new Date(`${date}T00:00:00`)
+  const heroDateLine = `${heroDate.toLocaleDateString(i18n.language, { weekday: 'long' })}\n${heroDate.toLocaleDateString(
+    i18n.language,
+    { month: 'short', day: 'numeric' },
+  )}`
+
+  // Longest currently-live streak across today's habits — a fact already
+  // derivable from data on this screen, surfaced rather than computed anew.
+  const allLogsByHabit = useHabitLogsForHabits(todaysHabits.map((h) => h.id))
+  const longestStreak = todaysHabits.reduce((max, h) => {
+    const logs = allLogsByHabit.get(h.id) ?? []
+    const streak = h.habitType === 'build' ? computeBuildStreak(h, logs, date) : computeAvoidStreak(h, logs, date)
+    return Math.max(max, streak)
+  }, 0)
 
   return (
     <div className="p-4 max-w-md mx-auto w-full flex flex-col gap-5">
@@ -193,10 +226,29 @@ export function DashboardPage() {
           canvas. Deliberately the one new text style in this round (no
           existing token was this large) — everything else below reuses
           tokens/components that already existed elsewhere. */}
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight text-[var(--stoa-text)]">{greeting}</h1>
-        <div className="text-sm text-[var(--stoa-text-muted)] mt-1">{dateLine}</div>
-        <div className="text-sm text-[var(--stoa-text-muted)]">{signalLine}</div>
+      {/* STOA-7 Part B — the hero is now a mesh zone. It is deliberately
+          negative-margined out to the screen edges so the gradient reaches
+          the bezel like the sketch, while the text inside keeps the page's
+          normal gutter. The mesh ends with this block; everything below is
+          the flat canvas, which is what keeps list rows legible. */}
+      <div className="stoa-mesh-hero -mx-4 -mt-4 px-4 pt-6 pb-8">
+        <div className="text-sm text-[var(--stoa-text-muted)]">{greeting}</div>
+        <h1 className="font-display text-[2rem] leading-[1.05] text-[var(--stoa-text)] uppercase mt-0.5 whitespace-pre-line">
+          {heroDateLine}
+        </h1>
+        <div className="text-xs text-[var(--stoa-text-muted)] mt-1.5">{dateLine}</div>
+
+        {/* Stat tiles — the three facts worth knowing before scrolling.
+            Each is a real value already computed on this screen, not a new
+            metric: habits done today, the longest live streak, and the
+            wake time from last night's review when there is one. */}
+        <div className="flex gap-2 mt-4">
+          <HeroStat value={`${doneHabits.length}/${todaysHabits.length}`} label={t('dashboard.statHabits')} />
+          <HeroStat value={String(longestStreak)} label={t('dashboard.statStreak')} />
+          {todaysReview?.wakeTime && (
+            <HeroStat value={todaysReview.wakeTime} label={t('dashboard.statWake')} />
+          )}
+        </div>
       </div>
 
       <ConnectivityPanel statuses={connectivityStatuses} />
@@ -233,7 +285,7 @@ export function DashboardPage() {
           appearance — just co-located and time-sorted, not merged at the
           data level. */}
       <section className="flex flex-col gap-3">
-        <h2 className="text-xs font-semibold text-[var(--stoa-text-muted)] uppercase tracking-wide px-1">
+        <h2 className="font-heading text-xs text-[var(--stoa-text-muted)] uppercase px-1">
           {t('dashboard.upNextSection')}
         </h2>
         {upNextItems.length === 0 ? (
@@ -297,7 +349,7 @@ export function DashboardPage() {
           same visual language. */}
       {(doneHabits.length > 0 || doneTasksToday.length > 0) && (
         <div className="flex flex-col gap-2 bg-canvas rounded-card p-3">
-          <h2 className="text-xs font-semibold text-[var(--stoa-text-muted)] uppercase tracking-wide px-1">
+          <h2 className="font-heading text-xs text-[var(--stoa-text-muted)] uppercase px-1">
             {t('dashboard.doneTodaySection')}
           </h2>
           {/* Appears only after an explicit completion in this session, and

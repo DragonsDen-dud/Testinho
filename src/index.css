@@ -1,5 +1,10 @@
 @import "tailwindcss";
 @import "./styles/tokens.css";
+/* STOA-7 — self-hosted display typography and the gradient-mesh layer.
+   Imported before the token blocks below so the --stoa-font-* / mesh
+   variables exist by the time anything references them. */
+@import "./styles/fonts.css";
+@import "./styles/mesh.css";
 
 :root {
   color-scheme: light dark;

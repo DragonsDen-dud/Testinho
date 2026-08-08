@@ -1,5 +1,13 @@
 [
   {
+    "version": "1.11.0",
+    "bullets": [
+      "A new look for Today and Habits: a bold display typeface for headlines, and a soft colour wash behind the top of each screen.",
+      "Habit icons now have depth — a gradient in the habit's own colour instead of a flat circle.",
+      "Today's header shows the day at a glance, with habits done, longest streak and your planned wake time."
+    ]
+  },
+  {
     "version": "1.10.0",
     "bullets": [
       "Plan tomorrow in the evening: wake time, training, warm-up and your three must-wins, in one short form on Today.",
