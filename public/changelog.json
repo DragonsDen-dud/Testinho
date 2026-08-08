@@ -1,5 +1,13 @@
 [
   {
+    "version": "1.14.0",
+    "bullets": [
+      "Today’s brief now folds away. Closed, it shows just your must-wins as plain text; open it and the full image and Save button come back — and it remembers how you left it.",
+      "The header is cleaner: your habits for the day now show as a progress bar under the numbers, instead of the same count being written out three times.",
+      "Nothing hides under the add button at the bottom of a screen anymore, and labels no longer get cut off on smaller phones."
+    ]
+  },
+  {
     "version": "1.13.0",
     "bullets": [
       "Today and Habits are now a two-column grid of big tiles instead of a list — tap anywhere on a tile to check the habit off, tap again to undo. Habits you track by number, like push-ups, open a quick counter pre-filled to your target.",

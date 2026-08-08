@@ -39,7 +39,13 @@ export function AppShell() {
        * with a negative margin and re-add it as their own padding, so the
        * gradient still bleeds to the very top edge while its text clears
        * the status bar — see DashboardPage/HabitsPage. */}
-      <div className="flex-1 overflow-y-auto pb-4 pt-[env(safe-area-inset-top)]">
+      {/* pb-20 clears the quick-add FAB, which is `fixed bottom-20` and so
+       * floats over the last ~64px of the scroll area. With the old pb-4
+       * the final row of any screen sat underneath it — most visibly the
+       * last habit tile on Today, and the Save button under the Daily
+       * Brief. Padding rather than a smaller FAB offset, so the button
+       * keeps its thumb position and content simply scrolls clear. */}
+      <div className="flex-1 overflow-y-auto pb-20 pt-[env(safe-area-inset-top)]">
         <div key={tabKey} className="tab-fade-in">
           <Outlet />
         </div>
