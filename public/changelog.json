@@ -1,5 +1,13 @@
 [
   {
+    "version": "1.13.0",
+    "bullets": [
+      "Today and Habits are now a two-column grid of big tiles instead of a list — tap anywhere on a tile to check the habit off, tap again to undo.",
+      "To do and Done are two tabs over the same grid, so the whole day fits on one screen, and every tile carries a seven-day strip plus a one-tap History button.",
+      "Habits you track by number, like push-ups, now open a quick counter with steppers pre-filled to your target."
+    ]
+  },
+  {
     "version": "1.12.0",
     "bullets": [
       "Habit icons are now STOA's own hand-drawn set — bold, filled shapes with real depth, replacing the generic outline symbols.",

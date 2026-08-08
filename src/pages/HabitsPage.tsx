@@ -6,8 +6,7 @@ import { useHabits, useLogsForDate, useHabitLogsForHabits } from '../state/useHa
 import { createHabit, updateHabit, archiveHabit, deleteHabit, restoreHabit, pauseHabit, resumeHabit } from '../data/habits'
 import { showUndoToast } from '../state/toast'
 import { HabitForm } from '../components/habits/HabitForm'
-import { HabitCard } from '../components/habits/HabitCard'
-import { CompletedHabitBubble } from '../components/habits/CompletedHabitBubble'
+import { HabitGrid } from '../components/habits/HabitGrid'
 import { JustCompletedMoodPrompt } from '../components/habits/JustCompletedMoodPrompt'
 import { HabitDetailSheet } from '../components/habits/HabitDetailSheet'
 import { EmptyState } from '../components/ui/EmptyState'
@@ -32,7 +31,6 @@ export function HabitsPage() {
   // one-shot collapse/milestone animation only ever plays for the action
   // that caused it — never replayed for a habit already done earlier today
   // on page load/reload (see HabitCard's onLogged contract).
-  const [justCompletedIds, setJustCompletedIds] = useState<Set<string>>(new Set())
 
   // A tap on a habit card lands on /habits/:id (read-only Detail View,
   // below) — /habits/:id/edit is reached only via that view's explicit
@@ -61,7 +59,6 @@ export function HabitsPage() {
   const editingHabit = params.id && isEditRoute ? habits.find((h) => h.id === params.id) : undefined
   const formOpen = creating || (!!params.id && isEditRoute && !!editingHabit)
 
-  const notDoneHabits = habits.filter((h) => logsToday.get(h.id)?.status !== 'done')
   const doneHabits = habits.filter((h) => logsToday.get(h.id)?.status === 'done')
 
   // Habit catch-up round — entry-point banner only ever renders when
@@ -76,7 +73,6 @@ export function HabitsPage() {
   // so this is the only place the completion path can be rated at all.
   const [moodPromptHabitId, setMoodPromptHabitId] = useState<string | null>(null)
   function handleLogged(habitId: string) {
-    setJustCompletedIds((prev) => (prev.has(habitId) ? prev : new Set(prev).add(habitId)))
     setMoodPromptHabitId(habitId)
   }
   const moodPromptHabit = moodPromptHabitId ? habits.find((h) => h.id === moodPromptHabitId) : undefined
@@ -114,38 +110,23 @@ export function HabitsPage() {
 
       {habits.length === 0 && <EmptyState text={t('habits.empty')} />}
 
-      <div className="flex flex-col gap-4">
-        {notDoneHabits.map((habit) => (
-          <HabitCard
-            key={habit.id}
-            habit={habit}
-            todayLog={logsToday.get(habit.id)}
-            allHabits={habits}
-            logsToday={logsToday}
-            onLogged={() => handleLogged(habit.id)}
-          />
-        ))}
-      </div>
+      {/* Same grid as Today — one component, so the two screens can't
+          drift into different treatments of the same content. */}
+      <HabitGrid
+        habits={habits}
+        logsToday={logsToday}
+        logsByHabit={catchUpLogsByHabit}
+        onOpenHistory={(habit) => navigate(`/habits/${habit.id}`)}
+        onLogged={handleLogged}
+      />
 
-      {doneHabits.length > 0 && (
-        <div className="flex flex-col gap-2 bg-canvas rounded-card p-3">
-          <h2 className="font-heading text-xs text-[var(--stoa-text-muted)] uppercase px-1">
-            {t('habits.doneTodaySection')}
-          </h2>
-          {moodPromptHabit && (
-            <JustCompletedMoodPrompt
-              key={moodPromptHabit.id}
-              habit={moodPromptHabit}
-              date={todayKey()}
-              onDismiss={() => setMoodPromptHabitId(null)}
-            />
-          )}
-          <div className="flex flex-wrap gap-x-3 gap-y-4 px-1 pt-1">
-            {doneHabits.map((habit) => (
-              <CompletedHabitBubble key={habit.id} habit={habit} justCompleted={justCompletedIds.has(habit.id)} />
-            ))}
-          </div>
-        </div>
+      {moodPromptHabit && (
+        <JustCompletedMoodPrompt
+          key={moodPromptHabit.id}
+          habit={moodPromptHabit}
+          date={todayKey()}
+          onDismiss={() => setMoodPromptHabitId(null)}
+        />
       )}
 
       {viewingHabit && (

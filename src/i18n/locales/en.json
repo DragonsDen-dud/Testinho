@@ -101,7 +101,9 @@
     "allLoggedSubtitle_other": "{{count}} habits done.",
     "statHabits": "Habits",
     "statStreak": "Streak",
-    "statWake": "Wake"
+    "statWake": "Wake",
+    "tasksSection": "Tasks",
+    "atRiskLabelShort": "Missed {{missed}} of {{observed}} days"
   },
   "habits": {
     "title": "Habits",
@@ -207,7 +209,18 @@
     "heatmapStateMissed": "Missed",
     "moodAddPrompt": "Add how it felt",
     "moodPromptAfterDone": "How did “{{name}}” feel?",
-    "heroCount": "{{done}} of {{total}} done today"
+    "heroCount": "{{done}} of {{total}} done today",
+    "tabTodo": "To do",
+    "tabDone": "Done",
+    "gridAllDone": "Everything is logged for today.",
+    "gridNoneDone": "Nothing logged yet today.",
+    "openHistory": "History for {{name}}",
+    "clearToday": "Clear today",
+    "alreadyLoggedToday": "Already logged today: {{value}} {{unit}}",
+    "targetLabel": "Target: {{value}} {{unit}}",
+    "decrease": "Decrease",
+    "increase": "Increase",
+    "value": "Value"
   },
   "todos": {
     "title": "Tasks",
