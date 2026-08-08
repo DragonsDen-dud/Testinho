@@ -43,7 +43,7 @@ export function BottomNav() {
     // a fully solid background, consistent with the no-glass decision
     // already made for the Tasks tab redesign.
     <nav className="sticky bottom-0 border-t border-[var(--stoa-border)] bg-[var(--stoa-bg)] pb-[env(safe-area-inset-bottom)]">
-      <div className="max-w-md mx-auto flex">
+      <div className="max-w-lg mx-auto flex">
         {visibleItems.map((item) => (
           <NavLink
             key={item.to}

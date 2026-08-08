@@ -24,7 +24,22 @@ export function AppShell() {
 
   return (
     <div className="min-h-full flex flex-col">
-      <div className="flex-1 overflow-y-auto pb-4">
+      {/* THE TOP SAFE AREA, owned here rather than per page.
+       *
+       * index.html sets `viewport-fit=cover`, so the web view genuinely
+       * extends under the status bar / Dynamic Island — but nothing had
+       * ever applied `env(safe-area-inset-top)` to match (BottomNav has
+       * always handled the bottom inset; the top had no counterpart). The
+       * result on a real iPhone was every screen's first line of text
+       * sitting under the clock, which is the single thing that makes a
+       * PWA read as a web page rather than an app.
+       *
+       * Doing it once on the scroll container fixes every screen at once.
+       * The two mesh-hero screens (Today, Habits) deliberately cancel it
+       * with a negative margin and re-add it as their own padding, so the
+       * gradient still bleeds to the very top edge while its text clears
+       * the status bar — see DashboardPage/HabitsPage. */}
+      <div className="flex-1 overflow-y-auto pb-4 pt-[env(safe-area-inset-top)]">
         <div key={tabKey} className="tab-fade-in">
           <Outlet />
         </div>

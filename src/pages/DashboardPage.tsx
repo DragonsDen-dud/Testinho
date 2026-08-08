@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
+import { Sun, MoonStar, Check } from 'lucide-react'
 import { useAppSettings, updateAppSettings } from '../state/useAppSettings'
 import { useSpaces } from '../state/useSpaces'
 import { useHabits, useLogsForDate, useHabitLogsForHabits } from '../state/useHabits'
@@ -41,6 +42,45 @@ function HeroStat({ value, label }: { value: string; label: string }) {
   )
 }
 
+/**
+ * A permanent way into the Evening Review sheet, for today and for tomorrow.
+ *
+ * WHY THIS EXISTS. STOA-6 shipped the review as a timed prompt only: the
+ * EveningReviewCard appears from 17:00 and plans tomorrow, and the Morning
+ * Brief renders only if a review for today already exists. So before 17:00
+ * there was no way to reach the feature at all, and no way to write a
+ * review *for today* under any circumstance — which meant the Brief was
+ * effectively untestable unless you happened to have planned the night
+ * before. These two chips make both days reachable at any hour.
+ *
+ * They read as facts, not nudges (Article 19): the label says which day,
+ * and a check appears once that day actually has a plan. No count, no
+ * streak, no prompting to fill the empty one.
+ */
+function PlanChip({
+  icon: Icon,
+  label,
+  planned,
+  onClick,
+}: {
+  icon: typeof Sun
+  label: string
+  planned: boolean
+  onClick: () => void
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex-1 min-w-0 rounded-2xl border border-[var(--stoa-border)]/60 bg-[var(--stoa-surface)]/35 px-3 py-2.5 backdrop-blur-[2px] flex items-center gap-2 active:scale-[0.97] transition-transform"
+    >
+      <Icon size={15} strokeWidth={2} aria-hidden className="shrink-0 text-[var(--stoa-text-muted)]" />
+      <span className="flex-1 min-w-0 text-left text-xs font-medium text-[var(--stoa-text)] truncate">{label}</span>
+      {planned && <Check size={14} strokeWidth={2.5} aria-hidden className="shrink-0 text-[var(--stoa-accent)]" />}
+    </button>
+  )
+}
+
 export function DashboardPage() {
   const { t, i18n } = useTranslation()
   const navigate = useNavigate()
@@ -77,7 +117,10 @@ export function DashboardPage() {
   const tomorrow = addDays(date, 1)
   const todaysReview = useEveningReview(settings?.activeSpaceId, date)
   const tomorrowsReview = useEveningReview(settings?.activeSpaceId, tomorrow)
-  const [eveningSheetOpen, setEveningSheetOpen] = useState(false)
+  // Which day the review sheet is currently editing, or null when closed.
+  // Was a bare open/closed boolean when tomorrow was the only reachable
+  // day; now that today is editable too, the date *is* the state.
+  const [planSheetDate, setPlanSheetDate] = useState<string | null>(null)
   const showEveningPrompt = isEveningPromptTime()
   function handleTaskChecked(todoId: string) {
     setJustCompletedTaskIds((prev) => (prev.has(todoId) ? prev : new Set(prev).add(todoId)))
@@ -156,20 +199,10 @@ export function DashboardPage() {
   }, 0)
 
   return (
-    <div className="p-4 max-w-md mx-auto w-full flex flex-col gap-4">
-      {(pullDistance > 0 || refreshing) && (
-        <div
-          className="flex items-center justify-center text-xs text-[var(--stoa-text-muted)] overflow-hidden transition-[height]"
-          style={{ height: refreshing ? 28 : Math.min(pullDistance, threshold * 1.5) }}
-        >
-          {refreshing
-            ? t('dashboard.refreshing')
-            : pullDistance >= threshold
-              ? t('dashboard.releaseToRefresh')
-              : t('dashboard.pullToRefresh')}
-        </div>
-      )}
-
+    // px-3.5 rather than p-4, and max-w-lg rather than max-w-md: the grid
+    // is the screen now, and two tiles inside a 16px gutter left the tile
+    // text noticeably cramped. The gutter still reads as a real margin.
+    <div className="px-3.5 py-4 max-w-lg mx-auto w-full flex flex-col gap-4">
       {/* Hero greeting — the "genuine hero moment" this round's brief
           asked for: no card, no background block, sits directly on the
           canvas. Deliberately the one new text style in this round (no
@@ -180,7 +213,28 @@ export function DashboardPage() {
           the bezel like the sketch, while the text inside keeps the page's
           normal gutter. The mesh ends with this block; everything below is
           the flat canvas, which is what keeps list rows legible. */}
-      <div className="stoa-mesh-hero -mx-4 -mt-4 px-4 pt-5 pb-6">
+      {/* The negative top margin cancels BOTH the page's own py-4 and the
+          shell's new safe-area inset, so the gradient still reaches the
+          very top edge of the display; the matching pt puts the greeting
+          back below the status bar with room to breathe. Without this the
+          mesh would start below the clock and leave a flat band above it. */}
+      <div className="stoa-mesh-hero -mx-3.5 -mt-[calc(1rem+env(safe-area-inset-top))] px-3.5 pb-6 pt-[calc(env(safe-area-inset-top)+1.25rem)]">
+        {/* Pull-to-refresh lives inside the hero so it, too, clears the
+            status bar — as a sibling above it, the hero's negative margin
+            would have slid up and covered it. */}
+        {(pullDistance > 0 || refreshing) && (
+          <div
+            className="flex items-center justify-center text-xs text-[var(--stoa-text-muted)] overflow-hidden transition-[height]"
+            style={{ height: refreshing ? 28 : Math.min(pullDistance, threshold * 1.5) }}
+          >
+            {refreshing
+              ? t('dashboard.refreshing')
+              : pullDistance >= threshold
+                ? t('dashboard.releaseToRefresh')
+                : t('dashboard.pullToRefresh')}
+          </div>
+        )}
+
         <div className="text-sm text-[var(--stoa-text-muted)]">{greeting}</div>
         <h1 className="font-display text-[1.6rem] leading-[1.05] text-[var(--stoa-text)] uppercase mt-0.5 whitespace-pre-line">
           {heroDateLine}
@@ -197,6 +251,22 @@ export function DashboardPage() {
           {todaysReview?.wakeTime && (
             <HeroStat value={todaysReview.wakeTime} label={t('dashboard.statWake')} />
           )}
+        </div>
+
+        {/* Both days' plans, always reachable — see PlanChip for why. */}
+        <div className="flex gap-2 mt-2">
+          <PlanChip
+            icon={Sun}
+            label={t('dashboard.planToday')}
+            planned={!!todaysReview && !isEveningReviewEmpty(todaysReview)}
+            onClick={() => setPlanSheetDate(date)}
+          />
+          <PlanChip
+            icon={MoonStar}
+            label={t('dashboard.planTomorrow')}
+            planned={!!tomorrowsReview && !isEveningReviewEmpty(tomorrowsReview)}
+            onClick={() => setPlanSheetDate(tomorrow)}
+          />
         </div>
       </div>
 
@@ -282,14 +352,18 @@ export function DashboardPage() {
       {/* STOA-6 — the evening prompt sits below the day's work, not above
           it: from 17:00 planning tomorrow is the natural next thing, but it
           must never outrank today's remaining habits. */}
-      {showEveningPrompt && <EveningReviewCard review={tomorrowsReview} onOpen={() => setEveningSheetOpen(true)} />}
+      {showEveningPrompt && <EveningReviewCard review={tomorrowsReview} onOpen={() => setPlanSheetDate(tomorrow)} />}
 
-      {eveningSheetOpen && settings?.activeSpaceId && (
+      {planSheetDate && settings?.activeSpaceId && (
         <EveningReviewSheet
+          // Remounts when the day changes, so the form's initial state is
+          // re-seeded from the right review rather than keeping the other
+          // day's values.
+          key={planSheetDate}
           spaceId={settings.activeSpaceId}
-          targetDate={tomorrow}
-          initial={tomorrowsReview}
-          onClose={() => setEveningSheetOpen(false)}
+          targetDate={planSheetDate}
+          initial={planSheetDate === date ? todaysReview : tomorrowsReview}
+          onClose={() => setPlanSheetDate(null)}
         />
       )}
     </div>

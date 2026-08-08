@@ -6,7 +6,7 @@ import { Button } from '../ui/Button'
 import { MicButton } from '../ui/MicButton'
 import { appendTranscript } from '../../lib/speechRecognition'
 import { MAX_MUST_WINS, saveEveningReview } from '../../data/eveningReviews'
-import { formatHumanDate } from '../../lib/date'
+import { formatHumanDate, todayKey } from '../../lib/date'
 import type { EveningReview } from '../../db/types'
 
 /**
@@ -67,7 +67,14 @@ export function EveningReviewSheet({
   )
 
   return (
-    <Sheet title={t('eveningReview.title')} onClose={onClose} footer={footer}>
+    // The sheet can now be opened for today as well as tomorrow (see
+    // DashboardPage's PlanChip), so the title is derived from the date it
+    // is actually editing rather than assuming tomorrow.
+    <Sheet
+      title={targetDate === todayKey() ? t('eveningReview.titleToday') : t('eveningReview.title')}
+      onClose={onClose}
+      footer={footer}
+    >
       <form
         id="evening-review-form"
         className="flex flex-col gap-4"

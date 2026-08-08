@@ -2,9 +2,9 @@
   {
     "version": "1.13.0",
     "bullets": [
-      "Today and Habits are now a two-column grid of big tiles instead of a list — tap anywhere on a tile to check the habit off, tap again to undo.",
+      "Today and Habits are now a two-column grid of big tiles instead of a list — tap anywhere on a tile to check the habit off, tap again to undo. Habits you track by number, like push-ups, open a quick counter pre-filled to your target.",
       "To do and Done are two tabs over the same grid, so the whole day fits on one screen, and every tile carries a seven-day strip plus a one-tap History button.",
-      "Habits you track by number, like push-ups, now open a quick counter with steppers pre-filled to your target."
+      "Today now has Today’s plan and Tomorrow’s plan buttons, so you can write or edit a daily brief at any hour — and every screen starts below the status bar instead of underneath it."
     ]
   },
   {

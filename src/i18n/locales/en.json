@@ -103,7 +103,9 @@
     "statStreak": "Streak",
     "statWake": "Wake",
     "tasksSection": "Tasks",
-    "atRiskLabelShort": "Missed {{missed}} of {{observed}} days"
+    "atRiskLabelShort": "Missed {{missed}} of {{observed}} days",
+    "planToday": "Today’s plan",
+    "planTomorrow": "Tomorrow’s plan"
   },
   "habits": {
     "title": "Habits",
@@ -583,6 +585,7 @@
   },
   "eveningReview": {
     "title": "Plan tomorrow",
+    "titleToday": "Plan today",
     "forDate": "For {{date}}",
     "promptTitle": "Plan tomorrow",
     "promptSubtitle": "Wake time, training, and your three must-wins.",

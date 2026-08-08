@@ -115,7 +115,10 @@ export function HabitTile({
         disabled={!!blocked}
         aria-pressed={done}
         aria-label={habit.name}
-        className="relative w-full text-left p-3.5 pb-3 flex flex-col gap-2.5 min-h-[172px] active:scale-[0.97] transition-transform duration-150 disabled:opacity-55 disabled:pointer-events-none"
+        // Slightly tighter horizontal padding than vertical: every pixel
+        // taken off the sides goes straight into the name's measure, which
+        // is the one thing on a two-up tile that actually runs out of room.
+        className="relative w-full text-left px-3 pt-3.5 pb-3 flex flex-col gap-2.5 min-h-[172px] active:scale-[0.97] transition-transform duration-150 disabled:opacity-55 disabled:pointer-events-none"
       >
         {/* The icon gets real room — it's the tile's anchor, not a
             decoration beside a label. The completion check rides its
@@ -151,7 +154,9 @@ export function HabitTile({
 
         <div className="flex-1 min-w-0">
           <div
-            className="font-heading text-[15px] leading-tight line-clamp-2"
+            // break-words so a long single-word habit name wraps instead
+            // of running out past the tile's rounded edge.
+            className="font-heading text-[15px] leading-tight line-clamp-2 break-words"
             style={{ color: done ? ink : 'var(--stoa-text)' }}
           >
             {habit.name}
