@@ -111,7 +111,9 @@
     "statStreak": "Серия",
     "statWake": "Подъём",
     "tasksSection": "Задачи",
-    "atRiskLabelShort": "Пропущено {{missed}} из {{observed}} дней"
+    "atRiskLabelShort": "Пропущено {{missed}} из {{observed}} дней",
+    "planToday": "План на сегодня",
+    "planTomorrow": "План на завтра"
   },
   "habits": {
     "title": "Привычки",
@@ -618,6 +620,7 @@
   },
   "eveningReview": {
     "title": "План на завтра",
+    "titleToday": "План на сегодня",
     "forDate": "На {{date}}",
     "promptTitle": "Запланировать завтра",
     "promptSubtitle": "Подъём, тренировка и три главных дела.",

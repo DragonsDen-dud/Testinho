@@ -84,11 +84,16 @@ export function HabitsPage() {
   }
 
   return (
-    <div className="p-4 max-w-md mx-auto w-full flex flex-col gap-3">
+    // Same widened gutter and max width as Today — the two screens share
+    // the grid, so they have to share its measure too.
+    <div className="px-3.5 py-4 max-w-lg mx-auto w-full flex flex-col gap-3">
       {/* STOA-7 Part B — same hero mesh treatment as Today, ending before
           the habit list starts. The count is a fact already on this screen,
-          not a new metric. */}
-      <div className="stoa-mesh-hero -mx-4 -mt-4 px-4 pt-6 pb-7">
+          not a new metric. The negative top margin cancels the page padding
+          *and* the shell's safe-area inset so the mesh reaches the top
+          edge, with the inset re-added as padding so the title clears the
+          status bar (see AppShell). */}
+      <div className="stoa-mesh-hero -mx-3.5 -mt-[calc(1rem+env(safe-area-inset-top))] px-3.5 pb-7 pt-[calc(env(safe-area-inset-top)+1.5rem)]">
         <h1 className="font-display text-3xl uppercase text-[var(--stoa-text)]">{t('habits.title')}</h1>
         <div className="font-heading text-xs uppercase text-[var(--stoa-text-muted)] mt-1.5">
           {t('habits.heroCount', { done: doneHabits.length, total: habits.length })}

@@ -106,7 +106,7 @@ export function HabitGrid({
       {shown.length === 0 ? (
         <EmptyState text={effectiveTab === 'todo' ? t('habits.gridAllDone') : t('habits.gridNoneDone')} />
       ) : (
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-2.5">
           {shown.map((habit) => (
             <HabitTile
               key={habit.id}
