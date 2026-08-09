@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next'
-import { Check, History, TrendingDown } from 'lucide-react'
+import { Check, History, SkipForward, StickyNote, TrendingDown } from 'lucide-react'
+import { useLongPress } from '../../lib/useLongPress'
 import type { Habit, HabitLog } from '../../db/types'
 import { StoaIcon } from '../ui/icons/stoaIcons'
 import { resolveHabitDomainStyle } from './HabitCategoryBadge'
@@ -48,6 +49,8 @@ export function HabitTile({
   logs,
   onToggle,
   onOpenHistory,
+  onLongPress,
+  date = todayKey(),
   blocked,
   atRiskNote,
 }: {
@@ -59,6 +62,12 @@ export function HabitTile({
    * habits can divert to a value entry instead of a plain toggle. */
   onToggle: () => void
   onOpenHistory: () => void
+  /** Press-and-hold — opens the quick-actions sheet. Optional so the tile
+   * still works anywhere that doesn't offer them. */
+  onLongPress?: () => void
+  /** The day this tile represents. Defaults to today; the grid passes the
+   * day strip's selection so the strip and the streak agree. */
+  date?: string
   /** Article 25 — an unmet dependency disables the check-in, with a reason. */
   blocked?: string
   /** STOA-4's at-risk statement, shown as a plain fact on the tile. Article
@@ -72,9 +81,11 @@ export function HabitTile({
   const color = style.color
   const icon = habit.icon ?? style.icon
 
-  const date = todayKey()
   const done = todayLog?.status === 'done'
+  const skipped = todayLog?.status === 'skip'
+  const hasNote = !!todayLog?.note?.trim()
   const ink = accessibleTextColor(color)
+  const press = useLongPress(() => onLongPress?.(), onToggle)
 
   const streak = habit.habitType === 'build' ? computeBuildStreak(habit, logs, date) : computeAvoidStreak(habit, logs, date)
 
@@ -111,10 +122,13 @@ export function HabitTile({
 
       <button
         type="button"
-        onClick={onToggle}
+        {...press}
         disabled={!!blocked}
         aria-pressed={done}
         aria-label={habit.name}
+        // Stops iOS raising its text-selection callout on a hold, which
+        // otherwise fights the long-press gesture on the tile's own label.
+        style={{ WebkitTouchCallout: 'none', WebkitUserSelect: 'none', userSelect: 'none' }}
         // Slightly tighter horizontal padding than vertical: every pixel
         // taken off the sides goes straight into the name's measure, which
         // is the one thing on a two-up tile that actually runs out of room.
@@ -139,15 +153,36 @@ export function HabitTile({
               backgroundImage: done ? undefined : gradientFromColor(color),
             }}
           >
-            <StoaIcon name={icon} size={28} color={done ? color : accessibleTextColor(color)} />
+            {/* The plate is `ink` on a done tile and the hue otherwise, so
+                the accent cut-out has to follow it — see StoaIcon. */}
+            <StoaIcon
+              name={icon}
+              size={28}
+              color={done ? color : accessibleTextColor(color)}
+              accentColor={done ? ink : color}
+            />
           </span>
-          {done && (
+          {/* One corner badge, three possible meanings. Skip gets its own
+              glyph rather than being drawn as "not done", because a skipped
+              day is deliberately not a miss (computeHabitDayInfo agrees) and
+              the tile must not imply otherwise. */}
+          {(done || skipped) && (
             <span
               aria-hidden
-              className="absolute inline-flex items-center justify-center rounded-full"
-              style={{ width: 22, height: 22, right: -6, bottom: -6, background: ink }}
+              className="absolute inline-flex items-center justify-center rounded-full stoa-pop-in"
+              style={{
+                width: 22,
+                height: 22,
+                right: -6,
+                bottom: -6,
+                background: done ? ink : 'var(--stoa-text-muted)',
+              }}
             >
-              <Check size={13} strokeWidth={3.5} color={color} />
+              {done ? (
+                <Check size={13} strokeWidth={3.5} color={color} />
+              ) : (
+                <SkipForward size={11} strokeWidth={3} color="var(--stoa-bg)" />
+              )}
             </span>
           )}
         </span>
@@ -162,16 +197,24 @@ export function HabitTile({
             {habit.name}
           </div>
           <div
-            className="text-[11px] mt-1 tabular-nums"
+            className="text-[11px] mt-1 tabular-nums flex items-center gap-1"
             style={{ color: done ? ink : 'var(--stoa-text-muted)', opacity: done ? 0.72 : 1 }}
           >
-            {blocked
-              ? t('habits.blockedByLabel', { names: blocked })
-              : target !== undefined
-                ? `${loggedValue} / ${target} ${habit.measurable?.unit ?? ''}`.trim()
-                : habit.habitType === 'avoid'
-                  ? t('habits.daysCleanLabel', { count: streak })
-                  : t('habits.streakLabel', { count: streak })}
+            <span className="min-w-0 truncate">
+              {blocked
+                ? t('habits.blockedByLabel', { names: blocked })
+                : skipped
+                  ? t('habits.skippedLabel')
+                  : target !== undefined
+                    ? `${loggedValue} / ${target} ${habit.measurable?.unit ?? ''}`.trim()
+                    : habit.habitType === 'avoid'
+                      ? t('habits.daysCleanLabel', { count: streak })
+                      : t('habits.streakLabel', { count: streak })}
+            </span>
+            {/* A note is invisible otherwise — it lives inside the log and
+                only the day editor ever showed it. A 10px glyph is enough
+                to answer "did I write something about this?". */}
+            {hasNote && <StickyNote size={10} strokeWidth={2} aria-hidden className="shrink-0 opacity-70" />}
           </div>
         </div>
 

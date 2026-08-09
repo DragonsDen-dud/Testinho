@@ -297,7 +297,82 @@ body {
   animation: stoa-checkmark-draw 250ms ease-out 80ms both;
 }
 
+/* ─────────────────────────────────────────────────────────────────────────
+ * Focus, as one rule instead of none.
+ *
+ * The app had exactly one focus-visible style in the whole stylesheet (on
+ * the vibrant primary button). Everything else — every tile, chip, tab, day
+ * in the strip — showed either the browser default or, where a reset had
+ * removed it, nothing at all. That makes the app unusable by keyboard and
+ * fails the most basic accessibility expectation of a real product.
+ *
+ * `:focus-visible` rather than `:focus`, so a mouse or touch press never
+ * paints a ring — the thing that made developers remove outlines in the
+ * first place. Applied via an opt-in class so it can be attached precisely
+ * to the custom controls that need it.
+ * ───────────────────────────────────────────────────────────────────────── */
+.stoa-focusable:focus-visible {
+  outline: 2px solid var(--stoa-accent);
+  outline-offset: 2px;
+}
+
+/* A small confirmation pop for a state badge appearing (tile check, skip
+ * glyph). Scale only — no bounce, no overshoot past 1: under Article 6 this
+ * is confirmation that a tap landed, not a celebration of completing. */
+@keyframes stoa-pop-in {
+  from {
+    transform: scale(0.4);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+.stoa-pop-in {
+  animation: stoa-pop-in 180ms cubic-bezier(0.2, 0.8, 0.3, 1) both;
+}
+
+/* Loading placeholders. Dexie resolves in a few frames, but those frames
+ * are a full-height layout jump — the grid appears under whatever the user
+ * was already reaching for. Reserving the space is the fix; the shimmer
+ * just says "this is coming" rather than "this is empty". */
+@keyframes stoa-skeleton-sheen {
+  from {
+    background-position: -180% 0;
+  }
+  to {
+    background-position: 180% 0;
+  }
+}
+.stoa-skeleton {
+  background-color: var(--stoa-surface);
+  background-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    color-mix(in srgb, var(--stoa-text-muted) 12%, transparent) 50%,
+    transparent 100%
+  );
+  background-size: 180% 100%;
+  background-repeat: no-repeat;
+  animation: stoa-skeleton-sheen 1.4s ease-in-out infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
+  /* The three added this round. The skeleton keeps its surface colour and
+     simply stops moving; the pop lands instantly at its end state (`both`
+     fill mode means disabling the animation outright would strand it at
+     `from` — scale 0.4, opacity 0 — i.e. invisible). */
+  .stoa-pop-in {
+    animation: none;
+    transform: none;
+    opacity: 1;
+  }
+  .stoa-skeleton {
+    animation: none;
+    background-image: none;
+  }
+
   /* STOA-5 — these four were missing from this block entirely: the tab
      fade, both habit-completion entrances and the streak glow all kept
      animating for a user who has asked the OS for reduced motion. The

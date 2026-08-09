@@ -105,7 +105,10 @@
     "tasksSection": "Tasks",
     "atRiskLabelShort": "Missed {{missed}} of {{observed}} days",
     "planToday": "Today’s plan",
-    "planTomorrow": "Tomorrow’s plan"
+    "planTomorrow": "Tomorrow’s plan",
+    "dayStripLabel": "The last seven days",
+    "dayStripDay": "{{date}} — {{done}} of {{total}} done",
+    "dayStripRestDay": "{{date}} — nothing scheduled"
   },
   "habits": {
     "title": "Habits",
@@ -222,7 +225,20 @@
     "targetLabel": "Target: {{value}} {{unit}}",
     "decrease": "Decrease",
     "increase": "Increase",
-    "value": "Value"
+    "value": "Value",
+    "viewingDay": "Showing {{date}}",
+    "checkedInToast": "{{name}} checked off.",
+    "skippedLabel": "Skipped",
+    "emptyCta": "Create your first habit",
+    "filterByDomain": "Filter by life domain",
+    "filterAll": "All",
+    "quickSkip": "Skip today",
+    "quickClear": "Clear this day",
+    "quickHistory": "View history",
+    "quickEdit": "Edit habit",
+    "quickNote": "Note",
+    "quickNotePlaceholder": "Anything worth remembering about today",
+    "quickSaveNote": "Save note"
   },
   "todos": {
     "title": "Tasks",

@@ -1,5 +1,13 @@
 [
   {
+    "version": "1.15.0",
+    "bullets": [
+      "The last seven days now sit at the top of Today as a row of rings — you can see how each day went, and tap any of them to review or fill in that day right there.",
+      "Press and hold any habit for everything else: skip today without it counting as a miss, jot a note, clear the day, or jump straight to its history.",
+      "Filter the grid by life domain, undo a check-in from the toast that appears, and habit icons now show their detail instead of a solid shape."
+    ]
+  },
+  {
     "version": "1.14.0",
     "bullets": [
       "Today’s brief now folds away. Closed, it shows just your must-wins as plain text; open it and the full image and Save button come back — and it remembers how you left it.",

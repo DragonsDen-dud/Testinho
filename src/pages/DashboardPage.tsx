@@ -4,10 +4,13 @@ import { useNavigate } from 'react-router-dom'
 import { Sun, MoonStar, Check } from 'lucide-react'
 import { useAppSettings, updateAppSettings } from '../state/useAppSettings'
 import { useSpaces } from '../state/useSpaces'
-import { useHabits, useLogsForDate, useHabitLogsForHabits } from '../state/useHabits'
+import { useHabitsQuery, useLogsForDate, useHabitLogsForHabits } from '../state/useHabits'
+import { useDomains } from '../state/useDomains'
 import { useOpenTodosToday, useDoneTodosToday } from '../state/useTodos'
 import { useConnectivity } from '../state/useConnectivity'
 import { HabitGrid } from '../components/habits/HabitGrid'
+import { HabitGridSkeleton } from '../components/habits/HabitGridSkeleton'
+import { DayStrip } from '../components/habits/DayStrip'
 import { JustCompletedMoodPrompt } from '../components/habits/JustCompletedMoodPrompt'
 import { MorningBriefCard } from '../components/dailybrief/MorningBriefCard'
 import { EveningReviewCard } from '../components/dailybrief/EveningReviewCard'
@@ -26,6 +29,7 @@ import { usePullToRefresh } from '../lib/usePullToRefresh'
 import { isBackupReminderDue } from '../lib/backupReminder'
 import { isTasksPlanningEnabled } from '../lib/featureFlags'
 import { computeAtRiskHabit } from '../lib/habitAtRisk'
+import { buildDayStrip } from '../lib/dayStrip'
 import { todayKey, addDays } from '../lib/date'
 
 
@@ -129,7 +133,8 @@ export function DashboardPage() {
   const settings = useAppSettings()
   const spaces = useSpaces()
   const activeSpace = spaces.find((s) => s.id === settings?.activeSpaceId)
-  const allHabits = useHabits(settings?.activeSpaceId)
+  const { habits: allHabits, loaded: habitsLoaded } = useHabitsQuery(settings?.activeSpaceId)
+  const domains = useDomains(settings?.activeSpaceId)
   const date = todayKey()
   const todaysHabits = allHabits.filter((h) => isScheduledOnDate(h, date))
   // Fetched for all habits, not just today's — a dependency can point at a
@@ -139,6 +144,15 @@ export function DashboardPage() {
     allHabits.map((h) => h.id),
     date,
   )
+  // The day the grid is pointed at. Today unless the strip says otherwise —
+  // and it resets to today on remount, so a stale selection can never
+  // survive into a new session and silently log against the wrong day.
+  const [selectedDate, setSelectedDate] = useState(date)
+  const logsSelected = useLogsForDate(
+    allHabits.map((h) => h.id),
+    selectedDate,
+  )
+  const selectedHabits = allHabits.filter((h) => isScheduledOnDate(h, selectedDate))
   const [justCompletedTaskIds, setJustCompletedTaskIds] = useState<Set<string>>(new Set())
   const notDoneHabits = todaysHabits.filter((h) => logsToday.get(h.id)?.status !== 'done')
   const doneHabits = todaysHabits.filter((h) => logsToday.get(h.id)?.status === 'done')
@@ -240,7 +254,11 @@ export function DashboardPage() {
 
   // Longest currently-live streak across today's habits — a fact already
   // derivable from data on this screen, surfaced rather than computed anew.
-  const allLogsByHabit = useHabitLogsForHabits(todaysHabits.map((h) => h.id))
+  const allLogsByHabit = useHabitLogsForHabits(allHabits.map((h) => h.id))
+  // Built from every habit, not just today's — a day earlier in the week
+  // may have had a different set scheduled, and building the strip from
+  // today's list would understate those days.
+  const dayStrip = buildDayStrip(allHabits, allLogsByHabit, date)
   const longestStreak = todaysHabits.reduce((max, h) => {
     const logs = allLogsByHabit.get(h.id) ?? []
     const streak = h.habitType === 'build' ? computeBuildStreak(h, logs, date) : computeAvoidStreak(h, logs, date)
@@ -304,6 +322,17 @@ export function DashboardPage() {
 
         <DayProgress done={doneHabits.length} total={todaysHabits.length} />
 
+        {/* The trailing week: a completion overview you can also tap to
+            point the grid at any of those days. */}
+        <div className="mt-3">
+          <DayStrip
+            days={dayStrip}
+            selected={selectedDate}
+            onSelect={setSelectedDate}
+            locale={i18n.language}
+          />
+        </div>
+
         {/* Both days' plans, always reachable — see PlanChip for why. */}
         <div className="flex gap-2 mt-3">
           <PlanChip
@@ -350,17 +379,25 @@ export function DashboardPage() {
       {/* Tile-grid redesign — the day as a two-column grid of large tiles
           with To do / Done tabs, replacing the old Up-next list plus
           Done-today tray. See HabitGrid/HabitTile for the reasoning. */}
-      <HabitGrid
-        habits={todaysHabits}
-        logsToday={logsToday}
-        logsByHabit={allLogsByHabit}
-        atRiskHabitId={atRisk?.habitId}
-        atRiskLabel={
-          atRisk ? t('dashboard.atRiskLabelShort', { missed: atRisk.missedDays, observed: atRisk.observedDays }) : undefined
-        }
-        onOpenHistory={(habit) => navigate(`/habits/${habit.id}`)}
-        onLogged={handleHabitLogged}
-      />
+      {!habitsLoaded ? (
+        <HabitGridSkeleton />
+      ) : (
+        <HabitGrid
+          habits={selectedHabits}
+          logsToday={logsSelected}
+          logsByHabit={allLogsByHabit}
+          domains={domains}
+          date={selectedDate}
+          atRiskHabitId={atRisk?.habitId}
+          atRiskLabel={
+            atRisk ? t('dashboard.atRiskLabelShort', { missed: atRisk.missedDays, observed: atRisk.observedDays }) : undefined
+          }
+          onOpenHistory={(habit) => navigate(`/habits/${habit.id}`)}
+          onEditHabit={(habit) => navigate(`/habits/${habit.id}/edit`)}
+          onCreateHabit={() => navigate('/habits?new=1')}
+          onLogged={handleHabitLogged}
+        />
+      )}
 
       {moodPromptHabit && (
         <JustCompletedMoodPrompt

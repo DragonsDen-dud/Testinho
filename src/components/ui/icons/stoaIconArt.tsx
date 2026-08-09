@@ -54,8 +54,37 @@ import type { ReactNode } from 'react'
  */
 const ACCENT = 0.55
 
+/**
+ * THE HOLE IN THE RULE ABOVE, found by looking at a real tile.
+ *
+ * "Accent paints on top and reads as a lighter plane" is only true where
+ * the accent overlaps the *plate*. Where it overlaps the solid mass — which
+ * is most internal detail: the window in a battery, the tab on a folder,
+ * the strings on a guitar — it is currentColor at 0.55 over currentColor at
+ * 1.0, i.e. the same colour. The detail disappears and the icon renders as
+ * a featureless blob.
+ *
+ * It is invisible in both directions (white over white collapses exactly as
+ * black over black does), so no opacity value can fix it. The accent has to
+ * be a different colour, not a lighter one.
+ *
+ * The fix, without touching 63 call sites or hardcoding a hue: accent
+ * masses read two CSS variables. Unset, they resolve to the old behaviour
+ * exactly — so every existing caller renders identically. A caller that
+ * knows what is behind the glyph (a badge knows its own plate colour) sets
+ * `--stoa-icon-accent` to it, and the accent becomes a true cut-out that
+ * reads whichever way round the ink is.
+ *
+ * `style` rather than presentation attributes because `var()` resolves in
+ * CSS and does not resolve in an SVG attribute.
+ */
 const S = { fill: 'currentColor' } as const
-const A = { fill: 'currentColor', opacity: ACCENT } as const
+const A = {
+  style: {
+    fill: 'var(--stoa-icon-accent, currentColor)',
+    opacity: `var(--stoa-icon-accent-opacity, ${ACCENT})`,
+  },
+} as const
 /** For the few genuinely linear forms. */
 const L = {
   fill: 'none',
