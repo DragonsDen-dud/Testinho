@@ -3,17 +3,29 @@ import { db } from '../db/db'
 import { listActiveHabits } from '../data/habits'
 import type { Habit, HabitLog } from '../db/types'
 
+/**
+ * Same query as useHabits, but keeps the "hasn't resolved yet" signal that
+ * useHabits deliberately swallows.
+ *
+ * The distinction matters for anything that renders differently when empty:
+ * `[]` from a live query that hasn't run yet and `[]` from a user with no
+ * habits look identical, which is how Today ended up flashing an empty
+ * layout and then jumping when the real data landed a few frames later.
+ */
+export function useHabitsQuery(spaceId: string | null | undefined): { habits: Habit[]; loaded: boolean } {
+  const rows = useLiveQuery(async () => {
+    if (!spaceId) return []
+    const list = await listActiveHabits(spaceId)
+    // Same defensive posture as safeCreatedDate (habitStrength.ts) — a
+    // malformed/missing createdAt on real data must not crash the sort
+    // that runs on every Habits-tab render (black-screen incident).
+    return list.sort((a, b) => (a.createdAt ?? '').localeCompare(b.createdAt ?? ''))
+  }, [spaceId])
+  return { habits: rows ?? [], loaded: rows !== undefined }
+}
+
 export function useHabits(spaceId: string | null | undefined): Habit[] {
-  return (
-    useLiveQuery(async () => {
-      if (!spaceId) return []
-      const rows = await listActiveHabits(spaceId)
-      // Same defensive posture as safeCreatedDate (habitStrength.ts) — a
-      // malformed/missing createdAt on real data must not crash the sort
-      // that runs on every Habits-tab render (black-screen incident).
-      return rows.sort((a, b) => (a.createdAt ?? '').localeCompare(b.createdAt ?? ''))
-    }, [spaceId]) ?? []
-  )
+  return useHabitsQuery(spaceId).habits
 }
 
 export function useHabitLogs(habitId: string | undefined): HabitLog[] {

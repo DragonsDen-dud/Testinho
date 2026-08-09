@@ -37,3 +37,9 @@ export function writeUiPref(key: string, value: boolean): void {
 
 /** The Daily Brief's expanded/collapsed state on Today. */
 export const BRIEF_EXPANDED_PREF = 'briefExpanded'
+
+/** Which grid tab was last chosen — true means "Done". Stored so the grid
+ * reopens where you left it rather than snapping back to "To do" on every
+ * navigation. Still only a default: resolveGridTab's all-done flip and any
+ * explicit tap both continue to win. */
+export const GRID_TAB_PREF = 'gridTabDone'

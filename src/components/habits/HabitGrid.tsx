@@ -1,13 +1,18 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import type { Habit, HabitLog } from '../../db/types'
+import type { Habit, HabitLog, LifeDomain } from '../../db/types'
 import { HabitTile } from './HabitTile'
 import { QuickValueSheet } from './QuickValueSheet'
+import { HabitQuickActions } from './HabitQuickActions'
 import { SegmentedTabs } from '../ui/SegmentedTabs'
 import { EmptyState } from '../ui/EmptyState'
-import { logHabit } from '../../data/habits'
+import { DomainFilter } from './DomainFilter'
+import { logHabit, clearHabitLog } from '../../data/habits'
+import { showUndoToast } from '../../state/toast'
 import { unmetDependencyNames } from '../../lib/habitDependencies'
-import { todayKey } from '../../lib/date'
+import { todayKey, formatHumanDate } from '../../lib/date'
+import { haptic } from '../../lib/haptics'
+import { readUiPref, writeUiPref, GRID_TAB_PREF } from '../../lib/uiPrefs'
 import { resolveGridTab, type HabitGridTab } from '../../lib/habitGridTabs'
 
 /**
@@ -23,9 +28,13 @@ import { resolveGridTab, type HabitGridTab } from '../../lib/habitGridTabs'
  * day with several habits the completed set was off-screen and the
  * remaining set was already scrolling. Two tabs over one grid keeps either
  * view to a single screen, which is the whole reason to use tiles at all.
- * "To do" is the default because that is what the screen is for; it flips
- * to "Done" only when nothing is left, so an all-clear day shows the day's
- * work rather than an empty panel.
+ *
+ * NOW DATE-AWARE. `date` used to be hard-coded to today. It is a prop so the
+ * day strip above can point the whole grid at any recent day — reviewing and
+ * backfilling yesterday is then the same screen and the same gestures as
+ * doing today, rather than a separate catch-up page. Every write below
+ * routes through `date`, so nothing silently logs against today while you
+ * are looking at Thursday.
  */
 export function HabitGrid({
   habits,
@@ -33,11 +42,16 @@ export function HabitGrid({
   logsByHabit,
   atRiskHabitId,
   atRiskLabel,
+  domains,
+  date = todayKey(),
   onOpenHistory,
+  onEditHabit,
+  onCreateHabit,
   onLogged,
 }: {
-  /** Already filtered to what this screen should show (e.g. scheduled today). */
+  /** Already filtered to what this screen should show (e.g. scheduled). */
   habits: Habit[]
+  /** Logs for `date`, keyed by habit id. */
   logsToday: Map<string, HabitLog>
   /** Full history per habit, for streaks and the 7-day strip. */
   logsByHabit: Map<string, HabitLog[]>
@@ -46,25 +60,38 @@ export function HabitGrid({
    * with the list would have quietly removed a shipped feature. */
   atRiskHabitId?: string
   atRiskLabel?: string
+  /** For the domain filter chips. Omitted → no filter row. */
+  domains?: LifeDomain[]
+  /** The day the grid is showing. Defaults to today. */
+  date?: string
   onOpenHistory: (habit: Habit) => void
+  onEditHabit?: (habit: Habit) => void
+  onCreateHabit?: () => void
   /** Fired after an explicit completion, so the page can run its
    * post-completion mood prompt exactly as before. */
   onLogged?: (habitId: string) => void
 }) {
-  const { t } = useTranslation()
-  const date = todayKey()
-  const [tab, setTab] = useState<HabitGridTab>('todo')
+  const { t, i18n } = useTranslation()
+  const isToday = date === todayKey()
+  const [tab, setTab] = useState<HabitGridTab>(() =>
+    readUiPref(GRID_TAB_PREF, false) ? 'done' : 'todo',
+  )
   const [valueEntryFor, setValueEntryFor] = useState<Habit | null>(null)
+  const [quickActionsFor, setQuickActionsFor] = useState<Habit | null>(null)
+  const [domainId, setDomainId] = useState<string | null>(null)
 
-  const notDone = habits
+  const visible = domainId ? habits.filter((h) => h.domainId === domainId) : habits
+
+  const notDone = visible
     .filter((h) => logsToday.get(h.id)?.status !== 'done')
     .sort((a, b) => Number(b.id === atRiskHabitId) - Number(a.id === atRiskHabitId))
-  const done = habits.filter((h) => logsToday.get(h.id)?.status === 'done')
+  const done = visible.filter((h) => logsToday.get(h.id)?.status === 'done')
 
   // Land on whichever tab has something in it, but only as an initial
   // default — never fight an explicit choice. `hasChosen` latches on the
-  // first real interaction.
-  const [hasChosen, setHasChosen] = useState(false)
+  // first real interaction, and the choice is remembered per device so the
+  // grid opens where you left it.
+  const [hasChosen, setHasChosen] = useState(() => readUiPref(GRID_TAB_PREF, false))
   const effectiveTab = resolveGridTab({
     notDoneCount: notDone.length,
     doneCount: done.length,
@@ -81,20 +108,35 @@ export function HabitGrid({
       setValueEntryFor(habit)
       return
     }
+    haptic('tap')
     if (current?.status === 'done') {
       await logHabit(habit.id, date, 'not_done')
       return
     }
     await logHabit(habit.id, date, 'done')
+    // An accidental tap on a 176px target is a real possibility, and the
+    // habit immediately leaves the "to do" tab — so without this the way
+    // back is "switch tabs, find it, tap again". Undo restores the exact
+    // prior state, including "there was no log at all", which re-tapping
+    // does not (that would leave an explicit not_done behind).
+    showUndoToast(t('habits.checkedInToast', { name: habit.name }), () => {
+      haptic('undo')
+      void (current ? logHabit(habit.id, date, current.status) : clearHabitLog(habit.id, date))
+    })
     onLogged?.(habit.id)
   }
 
   return (
     <div className="flex flex-col gap-3">
+      {domains && domains.length > 1 && (
+        <DomainFilter domains={domains} habits={habits} value={domainId} onChange={setDomainId} />
+      )}
+
       <SegmentedTabs
         value={effectiveTab}
         onChange={(k) => {
           setHasChosen(true)
+          writeUiPref(GRID_TAB_PREF, k === 'done')
           setTab(k as HabitGridTab)
         }}
         tabs={[
@@ -103,8 +145,29 @@ export function HabitGrid({
         ]}
       />
 
+      {/* Viewing a past day is a mode, and a mode needs to announce itself —
+          otherwise a check-in lands on a day the user didn't mean. */}
+      {!isToday && (
+        <p className="text-xs text-[var(--stoa-accent)] px-1">
+          {t('habits.viewingDay', { date: formatHumanDate(date, i18n.language) })}
+        </p>
+      )}
+
       {shown.length === 0 ? (
-        <EmptyState text={effectiveTab === 'todo' ? t('habits.gridAllDone') : t('habits.gridNoneDone')} />
+        <EmptyState
+          text={
+            habits.length === 0
+              ? t('habits.empty')
+              : effectiveTab === 'todo'
+                ? t('habits.gridAllDone')
+                : t('habits.gridNoneDone')
+          }
+          action={
+            habits.length === 0 && onCreateHabit
+              ? { label: t('habits.emptyCta'), onClick: onCreateHabit }
+              : undefined
+          }
+        />
       ) : (
         <div className="grid grid-cols-2 gap-2.5">
           {shown.map((habit) => (
@@ -113,10 +176,15 @@ export function HabitGrid({
               habit={habit}
               todayLog={logsToday.get(habit.id)}
               logs={logsByHabit.get(habit.id) ?? []}
+              date={date}
               blocked={unmetDependencyNames(habit, habits, logsToday).join(', ') || undefined}
               atRiskNote={habit.id === atRiskHabitId && effectiveTab === 'todo' ? atRiskLabel : undefined}
               onToggle={() => void toggle(habit)}
               onOpenHistory={() => onOpenHistory(habit)}
+              onLongPress={() => {
+                haptic('tap')
+                setQuickActionsFor(habit)
+              }}
             />
           ))}
         </div>
@@ -131,6 +199,25 @@ export function HabitGrid({
           onSaved={() => {
             onLogged?.(valueEntryFor.id)
             setValueEntryFor(null)
+          }}
+        />
+      )}
+
+      {quickActionsFor && (
+        <HabitQuickActions
+          habit={quickActionsFor}
+          date={date}
+          log={logsToday.get(quickActionsFor.id)}
+          onClose={() => setQuickActionsFor(null)}
+          onOpenHistory={() => {
+            const habit = quickActionsFor
+            setQuickActionsFor(null)
+            onOpenHistory(habit)
+          }}
+          onEdit={() => {
+            const habit = quickActionsFor
+            setQuickActionsFor(null)
+            onEditHabit?.(habit)
           }}
         />
       )}

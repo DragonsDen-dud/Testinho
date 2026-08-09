@@ -113,7 +113,10 @@
     "tasksSection": "Задачи",
     "atRiskLabelShort": "Пропущено {{missed}} из {{observed}} дней",
     "planToday": "План на сегодня",
-    "planTomorrow": "План на завтра"
+    "planTomorrow": "План на завтра",
+    "dayStripLabel": "Последние семь дней",
+    "dayStripDay": "{{date}} — выполнено {{done}} из {{total}}",
+    "dayStripRestDay": "{{date}} — ничего не запланировано"
   },
   "habits": {
     "title": "Привычки",
@@ -242,7 +245,20 @@
     "targetLabel": "Цель: {{value}} {{unit}}",
     "decrease": "Уменьшить",
     "increase": "Увеличить",
-    "value": "Значение"
+    "value": "Значение",
+    "viewingDay": "Показано: {{date}}",
+    "checkedInToast": "«{{name}}» отмечено.",
+    "skippedLabel": "Пропущено",
+    "emptyCta": "Создать первую привычку",
+    "filterByDomain": "Фильтр по сфере жизни",
+    "filterAll": "Все",
+    "quickSkip": "Пропустить сегодня",
+    "quickClear": "Очистить этот день",
+    "quickHistory": "История",
+    "quickEdit": "Изменить привычку",
+    "quickNote": "Заметка",
+    "quickNotePlaceholder": "Что стоит запомнить об этом дне",
+    "quickSaveNote": "Сохранить заметку"
   },
   "todos": {
     "title": "Задачи",

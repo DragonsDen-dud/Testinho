@@ -2,14 +2,15 @@ import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useAppSettings } from '../state/useAppSettings'
-import { useHabits, useLogsForDate, useHabitLogsForHabits } from '../state/useHabits'
+import { useHabitsQuery, useLogsForDate, useHabitLogsForHabits } from '../state/useHabits'
+import { useDomains } from '../state/useDomains'
 import { createHabit, updateHabit, archiveHabit, deleteHabit, restoreHabit, pauseHabit, resumeHabit } from '../data/habits'
 import { showUndoToast } from '../state/toast'
 import { HabitForm } from '../components/habits/HabitForm'
 import { HabitGrid } from '../components/habits/HabitGrid'
+import { HabitGridSkeleton } from '../components/habits/HabitGridSkeleton'
 import { JustCompletedMoodPrompt } from '../components/habits/JustCompletedMoodPrompt'
 import { HabitDetailSheet } from '../components/habits/HabitDetailSheet'
-import { EmptyState } from '../components/ui/EmptyState'
 import { todayKey } from '../lib/date'
 import { computeCatchUpDays, countCatchUpPending } from '../lib/habitCatchUp'
 
@@ -19,7 +20,8 @@ export function HabitsPage() {
   const params = useParams()
   const location = useLocation()
   const settings = useAppSettings()
-  const habits = useHabits(settings?.activeSpaceId)
+  const { habits, loaded: habitsLoaded } = useHabitsQuery(settings?.activeSpaceId)
+  const domains = useDomains(settings?.activeSpaceId)
   const logsToday = useLogsForDate(
     habits.map((h) => h.id),
     todayKey(),
@@ -113,17 +115,24 @@ export function HabitsPage() {
         </div>
       )}
 
-      {habits.length === 0 && <EmptyState text={t('habits.empty')} />}
-
       {/* Same grid as Today — one component, so the two screens can't
-          drift into different treatments of the same content. */}
-      <HabitGrid
-        habits={habits}
-        logsToday={logsToday}
-        logsByHabit={catchUpLogsByHabit}
-        onOpenHistory={(habit) => navigate(`/habits/${habit.id}`)}
-        onLogged={handleLogged}
-      />
+          drift into different treatments of the same content. The grid owns
+          its own empty state now (with a create action), so the page-level
+          EmptyState that used to sit above it would have been a duplicate. */}
+      {!habitsLoaded ? (
+        <HabitGridSkeleton />
+      ) : (
+        <HabitGrid
+          habits={habits}
+          logsToday={logsToday}
+          logsByHabit={catchUpLogsByHabit}
+          domains={domains}
+          onOpenHistory={(habit) => navigate(`/habits/${habit.id}`)}
+          onEditHabit={(habit) => navigate(`/habits/${habit.id}/edit`)}
+          onCreateHabit={() => setCreating(true)}
+          onLogged={handleLogged}
+        />
+      )}
 
       {moodPromptHabit && (
         <JustCompletedMoodPrompt

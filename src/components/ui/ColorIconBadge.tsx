@@ -80,7 +80,11 @@ export function ColorIconBadge({
           a secondary mass at reduced opacity, see icons/stoaIcons.tsx), so
           the previous trick of stacking two copies of a Lucide outline to
           fake depth is gone. One glyph, drawn with the depth built in. */}
-      <StoaIcon name={icon} size={Math.round(iconPx * 1.18)} color={iconColor} />
+      {/* accentColor is the plate's own hue, so the glyph's secondary mass
+          cuts through to the badge behind it rather than tinting the solid
+          mass by 45% — which, on a single-hue glyph, is no change at all
+          and renders internal detail invisible. */}
+      <StoaIcon name={icon} size={Math.round(iconPx * 1.18)} color={iconColor} accentColor={color} />
       {indicator && (
         <span
           aria-label={indicator.label}
