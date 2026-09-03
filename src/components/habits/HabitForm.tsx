@@ -4,8 +4,8 @@ import { Sheet } from '../ui/Sheet'
 import { Field, Input, Select } from '../ui/Input'
 import { Button } from '../ui/Button'
 import { Chip } from '../ui/Chip'
-import { ColorIconBadge } from '../ui/ColorIconBadge'
-import { IconPicker } from '../ui/IconPicker'
+import { HabitLookPicker } from './HabitLookPicker'
+import { suggestForHabitName } from '../../lib/iconSuggest'
 import { useDomains } from '../../state/useDomains'
 import { useTimeBlocks } from '../../state/useTimeBlocks'
 import { useCategoryStyleMap } from '../../state/useCategoryStyles'
@@ -71,6 +71,8 @@ export function HabitForm({
     () => initial?.icon ?? resolveHabitDomainStyle(initial?.domainId, domains, styleMap).icon,
   )
   const [iconTouched, setIconTouched] = useState(!!initial?.icon)
+  const [emoji, setEmoji] = useState<string | undefined>(initial?.emoji)
+  const [image, setImage] = useState<Blob | undefined>(initial?.image)
   const [scheduleType, setScheduleType] = useState<ScheduleType>(initial?.schedule.type ?? 'daily')
   const [weekdays, setWeekdays] = useState<number[]>(initial?.schedule.params.weekdays ?? [1, 2, 3, 4, 5])
   const [timesPerWeek, setTimesPerWeek] = useState(initial?.schedule.params.n ?? 3)
@@ -99,6 +101,20 @@ export function HabitForm({
     if (iconTouched) return
     setIcon(resolveHabitDomainStyle(domainId, domains, styleMap).icon)
   }, [domainId, iconTouched]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Name-based suggestion, for NEW habits only, and only until the user
+  // touches the look themselves. Without this every habit in a domain
+  // opens with that domain's hash glyph — so "Push ups", "Vitamins" and
+  // "Cold shower" all start as the same arbitrary symbol, which is the
+  // main reason the icons read as noise. Editing an existing habit never
+  // re-suggests: its current look is a decision already made.
+  useEffect(() => {
+    if (initial || iconTouched) return
+    const hit = suggestForHabitName(name)
+    if (!hit) return
+    setIcon(hit.icon)
+    setEmoji(hit.emoji)
+  }, [name, initial, iconTouched])
 
   const isPaused = !!(initial?.pausedFrom && initial?.pausedUntil)
   const candidateDependencies = allHabits.filter((h) => h.id !== initial?.id)
@@ -131,6 +147,13 @@ export function HabitForm({
       // the default. Untouched, it stays undefined and keeps dynamically
       // resolving from the domain, exactly like a pre-Part-A habit.
       icon: iconTouched ? icon : undefined,
+      // Unlike `icon`, these two are only ever set by an explicit choice
+      // (or an accepted name suggestion), so they persist as-is. `|| undefined`
+      // normalises a cleared emoji to absent rather than storing '' — the
+      // resolver treats blank as unset, but not writing it at all keeps
+      // the record honest.
+      emoji: emoji || undefined,
+      image,
       timeBlockId: timeBlockId || undefined,
       schedule: {
         type: scheduleType,
@@ -182,20 +205,23 @@ export function HabitForm({
       </Field>
     ),
     icon: (
-      <Field label={t('habits.icon')}>
-        <div className="flex flex-col gap-3">
-          <div className="flex justify-center">
-            <ColorIconBadge color={previewColor} icon={icon} size="detail" />
-          </div>
-          <IconPicker
-            value={icon}
-            color={previewColor}
-            onChange={(next) => {
-              setIcon(next)
-              setIconTouched(true)
-            }}
-          />
-        </div>
+      <Field label={t('habits.look')}>
+        <HabitLookPicker
+          name={name}
+          color={previewColor}
+          image={image}
+          emoji={emoji}
+          icon={icon}
+          onChange={(next) => {
+            // Any interaction here counts as touching the look, which both
+            // stops the domain re-sync and stops the name suggestion from
+            // overwriting a deliberate choice on the next keystroke.
+            setIconTouched(true)
+            if ('image' in next) setImage(next.image)
+            if ('emoji' in next) setEmoji(next.emoji)
+            if (next.icon !== undefined) setIcon(next.icon)
+          }}
+        />
       </Field>
     ),
     schedule: (

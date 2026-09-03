@@ -12,6 +12,7 @@ import { Button } from '../ui/Button'
 import { Chip } from '../ui/Chip'
 import { ColorIconBadge } from '../ui/ColorIconBadge'
 import { IconPicker } from '../ui/IconPicker'
+import { suggestForHabitName } from '../../lib/iconSuggest'
 import { MicButton } from '../ui/MicButton'
 import { AddToCalendarButton } from '../calendar/AddToCalendarButton'
 import { useDomains } from '../../state/useDomains'
@@ -57,6 +58,7 @@ export function QuickCreateHabitModal({
   // like a habit created before this round.
   const [icon, setIcon] = useState(() => resolveHabitDomainStyle(domainId, domains, styleMap).icon)
   const [iconTouched, setIconTouched] = useState(false)
+  const [emoji, setEmoji] = useState<string | undefined>(undefined)
   const [iconPickerOpen, setIconPickerOpen] = useState(false)
 
   // useDomains/useTimeBlocks/useHabits are Dexie live queries: they start
@@ -89,6 +91,18 @@ export function QuickCreateHabitModal({
     setIcon(resolveHabitDomainStyle(domainId, domains, styleMap).icon)
   }, [domainId, iconTouched]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Same name-based suggestion as the full form (lib/iconSuggest.ts). The
+  // quick path is where a habit is most likely to be created without ever
+  // opening the look picker, so it is the path that benefits most from the
+  // default being right.
+  useEffect(() => {
+    if (iconTouched) return
+    const hit = suggestForHabitName(name)
+    if (!hit) return
+    setIcon(hit.icon)
+    setEmoji(hit.emoji)
+  }, [name, iconTouched])
+
   function handleTranscript(transcript: string) {
     const result = parseVoiceQuickCreate(transcript, domains)
     setName((prev) => (prev.trim() ? appendTranscript(prev, result.title) : result.title))
@@ -109,6 +123,7 @@ export function QuickCreateHabitModal({
       habitType: 'build',
       domainId: domainId || undefined,
       icon: iconTouched ? icon : undefined,
+      emoji,
       timeBlockId: timeBlockId || undefined,
       schedule: { type: 'daily', params: {} },
       reminderTimes: reminderTime ? [reminderTime] : [],
@@ -182,7 +197,7 @@ export function QuickCreateHabitModal({
             onClick={() => setIconPickerOpen(true)}
             className="flex items-center gap-1.5 rounded-full border border-[var(--stoa-border)] bg-[var(--stoa-surface)] pl-1 pr-3 py-1 text-sm"
           >
-            <ColorIconBadge color={previewColor} icon={icon} size="row" />
+            <ColorIconBadge color={previewColor} icon={icon} emoji={emoji} size="row" />
             {t('habits.icon')}
           </button>
         </div>
@@ -242,11 +257,12 @@ export function QuickCreateHabitModal({
         <Sheet title={t('habits.icon')} onClose={() => setIconPickerOpen(false)}>
           <div className="flex flex-col gap-3">
             <div className="flex justify-center">
-              <ColorIconBadge color={previewColor} icon={icon} size="detail" />
+              <ColorIconBadge color={previewColor} icon={icon} emoji={emoji} size="detail" />
             </div>
             <IconPicker
               value={icon}
               onChange={(next) => {
+                setEmoji(undefined)
                 setIcon(next)
                 setIconTouched(true)
               }}

@@ -3,6 +3,8 @@ import { useTranslation } from 'react-i18next'
 import type { Habit, LifeDomain, CategoryStyle } from '../../db/types'
 import { useDomains } from '../../state/useDomains'
 import { useCategoryStyleMap } from '../../state/useCategoryStyles'
+import { resolveHabitLook } from '../../lib/habitLook'
+import { useBlobUrl } from '../../lib/useBlobUrl'
 import { resolveCategoryStyle } from '../../data/categoryStyles'
 import { ColorIconBadge } from '../ui/ColorIconBadge'
 
@@ -53,6 +55,19 @@ export function HabitCategoryBadge({ habit, size = 'row' }: { habit: Habit; size
   }
 
   const domainStyle = resolveHabitDomainStyle(habit.domainId, domains, styleMap)
-  const icon = habit.icon ?? domainStyle.icon
-  return <ColorIconBadge color={domainStyle.color} icon={icon} size={size} indicator={indicator} />
+  // Same resolver the tile uses, so a habit's photo/emoji/icon is the same
+  // everywhere it appears — the "closed circuit" rule, extended from colour
+  // to the art itself.
+  const look = resolveHabitLook(habit, domainStyle.icon)
+  const imageUrl = useBlobUrl(look.kind === 'photo' ? look.image : undefined)
+  return (
+    <ColorIconBadge
+      color={domainStyle.color}
+      icon={look.kind === 'icon' ? look.icon : domainStyle.icon}
+      emoji={look.kind === 'emoji' ? look.emoji : undefined}
+      imageUrl={imageUrl}
+      size={size}
+      indicator={indicator}
+    />
+  )
 }

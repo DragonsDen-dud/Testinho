@@ -166,6 +166,29 @@ export interface Habit {
   // unchanged. Color is deliberately NOT part of this: it keeps resolving
   // from the habit's LifeDomain via categoryStyles, untouched by this field.
   icon?: string
+  /**
+   * A full-colour emoji standing in for the drawn icon.
+   *
+   * Its own field rather than overloading `icon`: `icon` holds a name from
+   * CATEGORY_ICONS and is matched against that registry, so sneaking a
+   * codepoint into it would mean every reader has to guess which kind of
+   * value it is holding. Two fields, one resolver (lib/habitLook.ts).
+   *
+   * Emoji are the cheapest possible route to rich, expressive habit art:
+   * the platform ships them, they cost zero bundle bytes, they render at
+   * native quality on iOS, and there are hundreds of them.
+   */
+  emoji?: string
+  /**
+   * A photo the user chose for this habit.
+   *
+   * Article 23 — always the already-compressed Blob (see
+   * lib/imageCompression.ts), same contract as the photo fields on
+   * HabitLog/Todo/JournalEntry. Not indexed, so it needed no Dexie version
+   * bump; unset on every habit that predates it, and the resolver falls
+   * back exactly as before.
+   */
+  image?: Blob
   timeBlockId?: string
   schedule: HabitSchedule
   measurable?: { targetValue: number; unit: string }
