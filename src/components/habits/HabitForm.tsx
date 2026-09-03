@@ -4,7 +4,9 @@ import { Sheet } from '../ui/Sheet'
 import { Field, Input, Select } from '../ui/Input'
 import { Button } from '../ui/Button'
 import { Chip } from '../ui/Chip'
+import { MicButton } from '../ui/MicButton'
 import { HabitLookPicker } from './HabitLookPicker'
+import { appendTranscript } from '../../lib/speechRecognition'
 import { suggestForHabitName } from '../../lib/iconSuggest'
 import { useDomains } from '../../state/useDomains'
 import { useTimeBlocks } from '../../state/useTimeBlocks'
@@ -23,10 +25,20 @@ import type { NewHabitInput } from '../../data/habits'
 
 const WEEKDAY_KEYS = [0, 1, 2, 3, 4, 5, 6]
 
+/**
+ * The one and only habit creation/edit flow (STOA-8). The compact
+ * QuickCreateHabitModal that used to sit beside it was removed after the two
+ * drifted apart (PR #17's look picker had to be added to each separately);
+ * the quick-add FAB now opens this form via /habits?new=1. Editing is this
+ * same component with `initial` set — not a parallel implementation.
+ *
+ * Spine first: Name → Look → Type are fixed at the top in that order; every
+ * other field follows in the order/visibility set in Settings → Habit
+ * fields (lib/habitFields.ts).
+ */
 export function HabitForm({
   spaceId,
   initial,
-  initialTitle,
   allHabits = [],
   onSave,
   onClose,
@@ -37,10 +49,6 @@ export function HabitForm({
 }: {
   spaceId: string
   initial?: Habit
-  /** Pre-fills the name field for a new habit (e.g. carried over from the
-   * Part 1 compact quick-create's "Open full editor" link) — ignored when
-   * editing an existing habit, `initial` always wins. */
-  initialTitle?: string
   allHabits?: Habit[]
   onSave: (data: NewHabitInput) => void
   onClose: () => void
@@ -55,7 +63,7 @@ export function HabitForm({
   const styleMap = useCategoryStyleMap()
   const settings = useAppSettings()
 
-  const [name, setName] = useState(initial?.name ?? initialTitle ?? '')
+  const [name, setName] = useState(initial?.name ?? '')
   const [habitType, setHabitType] = useState<HabitType>(initial?.habitType ?? 'build')
   const [domainId, setDomainId] = useState(initial?.domainId ?? '')
   const [timeBlockId, setTimeBlockId] = useState(initial?.timeBlockId ?? '')
@@ -175,6 +183,30 @@ export function HabitForm({
     onSave(data)
   }
 
+  // STOA-8 — the look is part of the fixed spine (Name → Look → Type), no
+  // longer a reorderable/hideable catalog entry, so it lives outside
+  // fieldBlocks. Same picker and same onChange contract as PR #17.
+  const lookBlock = (
+    <Field label={t('habits.look')}>
+      <HabitLookPicker
+        name={name}
+        color={previewColor}
+        image={image}
+        emoji={emoji}
+        icon={icon}
+        onChange={(next) => {
+          // Any interaction here counts as touching the look, which both
+          // stops the domain re-sync and stops the name suggestion from
+          // overwriting a deliberate choice on the next keystroke.
+          setIconTouched(true)
+          if ('image' in next) setImage(next.image)
+          if ('emoji' in next) setEmoji(next.emoji)
+          if (next.icon !== undefined) setIcon(next.icon)
+        }}
+      />
+    </Field>
+  )
+
   // Part 3b — each configurable field as one self-contained block, keyed by
   // the same catalog Settings reorders. A block that renders `null` (pause
   // on a brand-new habit, dependencies with no other habit to depend on) is
@@ -202,26 +234,6 @@ export function HabitForm({
             </option>
           ))}
         </Select>
-      </Field>
-    ),
-    icon: (
-      <Field label={t('habits.look')}>
-        <HabitLookPicker
-          name={name}
-          color={previewColor}
-          image={image}
-          emoji={emoji}
-          icon={icon}
-          onChange={(next) => {
-            // Any interaction here counts as touching the look, which both
-            // stops the domain re-sync and stops the name suggestion from
-            // overwriting a deliberate choice on the next keystroke.
-            setIconTouched(true)
-            if ('image' in next) setImage(next.image)
-            if ('emoji' in next) setEmoji(next.emoji)
-            if (next.icon !== undefined) setIcon(next.icon)
-          }}
-        />
       </Field>
     ),
     schedule: (
@@ -475,14 +487,28 @@ export function HabitForm({
         }}
       >
         <Field label={t('habits.name')}>
-          <Input
-            autoFocus
-            placeholder={t('habits.namePlaceholder')}
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-          />
+          <div className="flex gap-2 items-center">
+            <Input
+              autoFocus
+              placeholder={t('habits.namePlaceholder')}
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="flex-1"
+              required
+            />
+            {/* Carried over from the removed quick-create modal so voice
+                entry of a habit name isn't lost with it. Merged onto the
+                current value via the functional updater so a manual edit
+                made while listening is never clobbered (same discipline as
+                every other mic field). */}
+            <MicButton
+              lang={i18n.language}
+              onTranscript={(transcript) => setName((prev) => appendTranscript(prev, transcript))}
+            />
+          </div>
         </Field>
+
+        {lookBlock}
 
         <Field label={t('habits.type')}>
           <div className="flex gap-2">
@@ -491,12 +517,12 @@ export function HabitForm({
           </div>
         </Field>
 
-        {/* Part 3b — everything below Name/Type renders in the order, and
+        {/* Part 3b — everything below the spine renders in the order, and
             with the visibility, Denys sets in Settings → Habit fields. A
             hidden field is simply not rendered; its state is still seeded
             from the habit and still submitted, so hiding "Stake" on a habit
-            that has one preserves that stake untouched. Name and Type are
-            deliberately not in the catalog (see lib/habitFields.ts). */}
+            that has one preserves that stake untouched. Name, Look and Type
+            are deliberately not in the catalog (see lib/habitFields.ts). */}
         {fieldOrder.map((key) => (
           <div key={key} className="contents">
             {fieldBlocks[key]}

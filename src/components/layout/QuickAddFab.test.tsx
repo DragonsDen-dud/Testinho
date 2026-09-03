@@ -9,16 +9,14 @@ import { createSpace } from '../../data/spaces'
 import { updateAppSettings } from '../../state/useAppSettings'
 
 /**
- * Article 49 — the FAB is a navigation shortcut for Journal (still routes
- * to the real screen via ?new=1, which that page watches for). Habit and
- * Task are different as of Part 1 (quick-create): they open the compact
- * quick-create modal in place, rather than navigating away — but that
- * modal itself calls the exact same createHabit/createTodo the full forms
- * use, so it's still "the real creation flow", just reached without a
- * route change. These tests seed a real Space (Dexie, not mocked) so the
- * modal has the domains/timeBlocks/priorities it needs to actually render,
- * matching how it behaves for a real user rather than asserting against a
- * stub.
+ * Article 49 — the FAB is a navigation shortcut for Habit and Journal
+ * (both route to the real screen via ?new=1, which those pages watch for;
+ * STOA-8 removed the compact habit quick-create modal so there is exactly
+ * one habit creation path). Task still opens the compact quick-create modal
+ * in place — that modal calls the exact same createTodo the full form
+ * uses. These tests seed a real Space (Dexie, not mocked) so the modal has
+ * the domains/timeBlocks/priorities it needs to actually render, matching
+ * how it behaves for a real user rather than asserting against a stub.
  */
 function renderAt(path: string) {
   return render(
@@ -66,15 +64,20 @@ describe('QuickAddFab visibility', () => {
   })
 })
 
-describe('QuickAddFab — Habit and Task open the compact quick-create modal in place', () => {
-  it('"Habit" opens the quick-create modal without navigating away', async () => {
+describe('QuickAddFab — Habit routes to the one real habit creation flow (STOA-8)', () => {
+  it('"Habit" navigates to /habits?new=1 instead of opening a second creation path', () => {
     renderAt('/')
     fireEvent.click(screen.getByLabelText('Quick add'))
     fireEvent.click(screen.getByText('Habit'))
-    expect(await screen.findByRole('heading', { name: 'New habit' })).toBeTruthy()
-    expect(screen.getByText('dashboard-marker')).toBeTruthy() // still on Dashboard, no route change
+    // Landed on the Habits screen, which owns HabitForm — the only place a
+    // habit can be created. No modal of the FAB's own is rendered.
+    expect(screen.getByText('habits-marker')).toBeTruthy()
+    expect(screen.queryByText('dashboard-marker')).toBeNull()
+    expect(screen.queryByRole('heading', { name: 'New habit' })).toBeNull()
   })
+})
 
+describe('QuickAddFab — Task opens the compact quick-create modal in place', () => {
   it('"Task" opens the quick-create modal without navigating away', async () => {
     renderAt('/')
     fireEvent.click(screen.getByLabelText('Quick add'))

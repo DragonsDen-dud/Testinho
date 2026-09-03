@@ -9,11 +9,12 @@ import type { HabitFieldConfig } from '../db/types'
  * over the fields the schema already has, stored once per install in
  * `AppSettings.habitFieldConfig`.
  *
- * `name` and `type` are absent from this list on purpose: a habit cannot be
- * created without a name, and `habitType` drives Article 14's entire
- * build/avoid polarity (including how a check-in is interpreted and how
- * Habit Strength is scored), so neither is a display preference. Everything
- * else here is optional at the schema level already.
+ * `name`, `icon` (the look) and `type` are absent from this list on purpose:
+ * a habit cannot be created without a name, the look is the second step of
+ * the fixed creation spine (STOA-8), and `habitType` drives Article 14's
+ * entire build/avoid polarity (including how a check-in is interpreted and
+ * how Habit Strength is scored), so none is a display preference.
+ * Everything else here is optional at the schema level already.
  *
  * Hiding a field never clears it. HabitForm seeds each field's state from
  * the habit being edited and submits that state regardless of whether the
@@ -23,7 +24,11 @@ import type { HabitFieldConfig } from '../db/types'
 export const HABIT_FIELD_KEYS = [
   'domain',
   'timeBlock',
-  'icon',
+  // STOA-8: 'icon' left this catalog — the look picker is now part of the
+  // form's fixed spine (Name → Look → Type) alongside name and type, so it
+  // is neither reorderable nor hideable. A stored order/hidden list that
+  // still names 'icon' is absorbed by resolveHabitFieldOrder's unknown-key
+  // rule below; no migration needed.
   'schedule',
   'measurable',
   'reminderTimes',

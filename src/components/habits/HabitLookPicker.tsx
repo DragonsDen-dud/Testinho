@@ -1,10 +1,11 @@
 import { useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ImagePlus, Smile, Shapes, Trash2 } from 'lucide-react'
+import { ImagePlus, Keyboard, Smile, Shapes, Trash2 } from 'lucide-react'
 import { SegmentedTabs } from '../ui/SegmentedTabs'
 import { IconPicker } from '../ui/IconPicker'
 import { HabitVisual } from './HabitVisual'
 import { EMOJI_GROUPS } from '../../lib/habitEmoji'
+import { pickTypedEmoji } from '../../lib/emojiInput'
 import { compressImage } from '../../lib/imageCompression'
 
 /** Habit art is shown at 46px on a tile and 52px at detail size, so a
@@ -13,7 +14,8 @@ import { compressImage } from '../../lib/imageCompression'
  * still covers a 3× retina render of the largest surface. */
 export const HABIT_IMAGE_MAX_DIMENSION = 320
 
-export type LookTab = 'photo' | 'emoji' | 'icon'
+/** Which grid is showing below the always-visible controls. */
+export type LookTab = 'emoji' | 'icon'
 
 /**
  * One place to choose how a habit looks.
@@ -30,14 +32,23 @@ export type LookTab = 'photo' | 'emoji' | 'icon'
  *    locally (Article 4) — it never leaves the device.
  *  - An EMOJI. Full colour, real shading, drawn by the platform vendor,
  *    rendered natively — and zero bundle bytes, which matters for an
- *    offline PWA. On iOS these are genuinely detailed artwork.
+ *    offline PWA. On iOS these are genuinely detailed artwork. Two ways
+ *    in: the curated grid, or (STOA-8) typing any emoji from the device's
+ *    own keyboard into the field at the top. Both write the same
+ *    `Habit.emoji` and draw through the same HabitVisual branch — a typed
+ *    🦑 and a tapped 🏃 are indistinguishable downstream.
  *
- * The drawn set stays as the third tab and the default, so nothing that
+ * The drawn set stays as the third tier and the default, so nothing that
  * exists today changes or breaks.
  *
- * The tabs are a *view*, not a mode: each tier writes its own field and
- * clearing one falls back to the next (see lib/habitLook.ts), so browsing
- * between tabs never destroys a choice.
+ * LAYOUT (STOA-8): the three affordances sit side by side, visible at once
+ * — the typed-emoji field and the photo button in one row, the emoji grid
+ * beneath. No tabs or disclosures hide any of them. The only toggle is the
+ * segmented control that swaps the grid between the curated emoji and the
+ * drawn icons, since those two grids are alternatives for the same slot.
+ *
+ * Each tier writes its own field and clearing one falls back to the next
+ * (see lib/habitLook.ts), so browsing here never destroys a choice.
  */
 export function HabitLookPicker({
   name,
@@ -59,7 +70,9 @@ export function HabitLookPicker({
   const fileRef = useRef<HTMLInputElement>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [tab, setTab] = useState<LookTab>(image ? 'photo' : emoji ? 'emoji' : 'icon')
+  // The curated grid is one of the three always-visible affordances, so it
+  // is the grid shown first; the drawn set is one tap away on the toggle.
+  const [tab, setTab] = useState<LookTab>('emoji')
 
   async function pickFile(file: File) {
     setBusy(true)
@@ -75,6 +88,31 @@ export function HabitLookPicker({
       setBusy(false)
     }
   }
+
+  /**
+   * The typed field is controlled by the *resolved* emoji, never by the raw
+   * keystrokes, so it can only ever display one whole emoji:
+   *  - typed value contains an emoji → that one (grapheme-aware, see
+   *    lib/emojiInput.ts) becomes the habit's emoji; any text or extra
+   *    emoji around it is discarded on the spot. Like a grid tap, this
+   *    drops a photo, which would otherwise keep winning precedence and
+   *    make the tap look dead.
+   *  - typed value is empty (the user deleted the emoji) → the emoji tier
+   *    is cleared and the look falls back to the drawn icon.
+   *  - typed value is text with no emoji → ignored; the previous emoji
+   *    stays and the field snaps back to it. Save is never blocked.
+   */
+  function handleTyped(raw: string) {
+    if (raw === '') {
+      if (emoji) onChange({ emoji: undefined })
+      return
+    }
+    const picked = pickTypedEmoji(raw, emoji)
+    if (picked && picked !== emoji) onChange({ emoji: picked, image: undefined })
+  }
+
+  const chooseButtonClass =
+    'min-h-11 rounded-xl border border-[var(--stoa-border)] bg-[var(--stoa-surface)] px-3 flex items-center justify-center gap-2 text-sm stoa-focusable'
 
   return (
     <div className="flex flex-col gap-3">
@@ -102,42 +140,62 @@ export function HabitLookPicker({
         )}
       </div>
 
+      {/* The two "bring your own" affordances, side by side with the grid
+          below — all three visible at once, none behind a tab. */}
+      <div className="grid grid-cols-2 gap-2">
+        <label className={`${chooseButtonClass} cursor-text focus-within:border-[var(--stoa-accent)]`}>
+          <Keyboard size={16} strokeWidth={1.75} aria-hidden className="shrink-0 text-[var(--stoa-text-muted)]" />
+          <input
+            type="text"
+            value={emoji ?? ''}
+            onChange={(e) => handleTyped(e.target.value)}
+            aria-label={t('habits.lookTypeLabel')}
+            placeholder={t('habits.lookTypePlaceholder')}
+            // No autocorrect/capitalisation: this field is for the keyboard's
+            // emoji key, and every text "correction" would just be discarded.
+            autoComplete="off"
+            autoCorrect="off"
+            autoCapitalize="off"
+            spellCheck={false}
+            enterKeyHint="done"
+            className="min-w-0 flex-1 bg-transparent outline-none text-center text-xl leading-none placeholder:text-sm placeholder:text-[var(--stoa-text-muted)]"
+          />
+        </label>
+
+        <input
+          ref={fileRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={(e) => {
+            const file = e.target.files?.[0]
+            e.target.value = ''
+            if (file) void pickFile(file)
+          }}
+        />
+        <button
+          type="button"
+          disabled={busy}
+          onClick={() => fileRef.current?.click()}
+          className={`${chooseButtonClass} disabled:opacity-50 ${image ? 'border-[var(--stoa-accent)]' : ''}`}
+        >
+          <ImagePlus size={16} strokeWidth={1.75} aria-hidden className="shrink-0 text-[var(--stoa-text-muted)]" />
+          <span className="truncate">
+            {busy ? t('photo.compressing') : image ? t('habits.lookPhotoReplace') : t('habits.lookPhotoChoose')}
+          </span>
+        </button>
+      </div>
+      {error && <p className="text-xs text-[var(--stoa-danger)]">{error}</p>}
+      {image && <p className="text-xs text-[var(--stoa-text-muted)]">{t('habits.lookPhotoHint')}</p>}
+
       <SegmentedTabs
         value={tab}
         onChange={(k) => setTab(k as LookTab)}
         tabs={[
-          { key: 'photo', label: t('habits.lookPhoto') },
           { key: 'emoji', label: t('habits.lookEmoji') },
           { key: 'icon', label: t('habits.lookIcon') },
         ]}
       />
-
-      {tab === 'photo' && (
-        <div className="flex flex-col gap-2">
-          <input
-            ref={fileRef}
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={(e) => {
-              const file = e.target.files?.[0]
-              e.target.value = ''
-              if (file) void pickFile(file)
-            }}
-          />
-          <button
-            type="button"
-            disabled={busy}
-            onClick={() => fileRef.current?.click()}
-            className="rounded-xl border border-dashed border-[var(--stoa-border)] py-6 flex flex-col items-center gap-2 text-sm text-[var(--stoa-text-muted)] disabled:opacity-50 stoa-focusable"
-          >
-            <ImagePlus size={22} strokeWidth={1.5} aria-hidden />
-            {busy ? t('photo.compressing') : image ? t('habits.lookPhotoReplace') : t('habits.lookPhotoChoose')}
-          </button>
-          {error && <p className="text-xs text-[var(--stoa-danger)]">{error}</p>}
-          <p className="text-xs text-[var(--stoa-text-muted)]">{t('habits.lookPhotoHint')}</p>
-        </div>
-      )}
 
       {tab === 'emoji' && (
         <div className="flex flex-col gap-3 max-h-72 overflow-y-auto">
