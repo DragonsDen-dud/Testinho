@@ -242,14 +242,16 @@
     "look": "Look",
     "lookPhoto": "Photo",
     "lookEmoji": "Emoji",
+    "lookTypeLabel": "Type your own emoji",
+    "lookTypePlaceholder": "Any emoji",
     "lookIcon": "Icon",
     "lookPreviewHint": "How this habit will appear everywhere.",
     "lookClear": "Remove photo and emoji",
     "lookPhotoChoose": "Choose a photo",
-    "lookPhotoReplace": "Choose a different photo",
+    "lookPhotoReplace": "Replace photo",
     "lookPhotoFailed": "That image couldn't be read. Try another one.",
     "lookPhotoHint": "Your photo stays on this device and is included in backups. It fills the whole tile.",
-    "lookEmojiHint": "Pick one, or type any emoji using your keyboard in the name field.",
+    "lookEmojiHint": "Tap one below, or type any emoji from your keyboard in the field above.",
     "lookIconHint": "STOA's own drawn set — takes the habit's colour."
   },
   "todos": {
@@ -574,7 +576,6 @@
   "quickCreate": {
     "categoryPrompt": "Category?",
     "whenPrompt": "When?",
-    "timeChip": "{{time}}",
     "calendarChip": "Will add to Calendar",
     "moreDetails": "More details",
     "hideDetails": "Hide details",
@@ -601,7 +602,6 @@
   "habitFields": {
     "domain": "Life domain",
     "timeBlock": "Time block",
-    "icon": "Icon",
     "schedule": "Schedule",
     "measurable": "Measurable value",
     "reminderTimes": "Reminder times",

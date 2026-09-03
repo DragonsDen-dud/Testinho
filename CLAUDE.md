@@ -58,6 +58,14 @@ and "Habits 2.0" rounds) — don't reinvent pieces of it that already exist.
   `TaskCategoryBadge`/`HabitCategoryBadge`'s `'tray'` size variant. All are optional,
   default to the existing behavior, and don't change the component's appearance for
   callers that don't pass them.
+- **One habit creation/edit flow, one look picker**: `HabitForm` (`src/components/habits/HabitForm.tsx`)
+  is the only place a habit is created or edited — STOA-8 removed the parallel
+  `QuickCreateHabitModal` after the two drifted; the FAB reaches it via `/habits?new=1`. Don't
+  reintroduce a second path. Its fixed spine is Name → Look → Type; only the fields after that
+  are in the Settings → Habit fields catalog (`lib/habitFields.ts`). `HabitLookPicker` is the one
+  look picker (photo / typed emoji / curated emoji / drawn icon); precedence is resolved once in
+  `lib/habitLook.ts` and drawn once by `HabitVisual`. Typed emoji go through
+  `lib/emojiInput.ts` (grapheme-aware, `Intl.Segmenter`) — never slice an emoji string by index.
 - **The tray/bubble completion pattern**: a completed-today habit or task renders as a
   `ColorIconBadge` "bubble" (its real icon+color, `'tray'` size) in a "Done today" tray,
   not a plain checked-off row — see `CompletedHabitBubble.tsx` / `CompletedTaskBubble.tsx`

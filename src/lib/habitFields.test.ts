@@ -19,12 +19,12 @@ describe('resolveHabitFieldOrder', () => {
 
   it('appends any catalog key the stored order predates, rather than dropping it', () => {
     // Simulates a config saved by an older build that had only three fields.
-    const order = resolveHabitFieldOrder({ order: ['note', 'domain', 'icon'] })
+    const order = resolveHabitFieldOrder({ order: ['note', 'domain', 'measurable'] })
     expect(order).toHaveLength(HABIT_FIELD_KEYS.length)
     for (const key of HABIT_FIELD_KEYS) expect(order).toContain(key)
     // The missing ones arrive in their default relative order, after the
     // stored ones.
-    expect(order.slice(0, 3)).toEqual(['note', 'domain', 'icon'])
+    expect(order.slice(0, 3)).toEqual(['note', 'domain', 'measurable'])
     expect(order.indexOf('timeBlock')).toBeLessThan(order.indexOf('schedule'))
   })
 

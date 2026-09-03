@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useAppSettings } from '../../state/useAppSettings'
-import { QuickCreateHabitModal } from '../quickcreate/QuickCreateHabitModal'
 import { QuickCreateTodoModal } from '../quickcreate/QuickCreateTodoModal'
 import { isTasksPlanningEnabled } from '../../lib/featureFlags'
 
@@ -16,14 +15,18 @@ const FAB_ROUTES = ['/', '/habits', '/todos', '/journal']
 const MENU_ITEMS = ['habit', 'todo', 'journal'] as const
 
 /**
- * Article 49 — a navigation shortcut, not a second implementation. Journal
- * still routes straight to its own real full flow via ?new=1 (unchanged —
- * Part 1's compact quick-create is scoped to Habit and Todo only). Habit
- * and Todo now open the compact quick-create modal instead of navigating
- * away — that modal itself calls the exact same createHabit/createTodo the
- * full forms use (see QuickCreateHabitModal.tsx / QuickCreateTodoModal.tsx),
- * and its own "Open full editor" link is what still reaches the full form
- * via the same ?new=1 convention, carrying over whatever title was typed.
+ * Article 49 — a navigation shortcut, not a second implementation.
+ *
+ * Habit (STOA-8) and Journal route straight to their screen's own real
+ * creation flow via the shared ?new=1 convention that page already watches
+ * for. There is exactly one way to create a habit — HabitForm on the Habits
+ * screen — and this button opens it; the compact QuickCreateHabitModal that
+ * used to sit here was removed because two creation paths had already
+ * drifted apart once (the look picker had to be added to each separately).
+ *
+ * Task still opens the compact quick-create modal in place (Tasks/Planning
+ * is flag-off and untouched by STOA-8); its "Open full editor" link reaches
+ * the full form via the same ?new=1 convention, carrying over the title.
  */
 export function QuickAddFab() {
   const { t } = useTranslation()
@@ -31,7 +34,7 @@ export function QuickAddFab() {
   const navigate = useNavigate()
   const settings = useAppSettings()
   const [open, setOpen] = useState(false)
-  const [quickCreating, setQuickCreating] = useState<'habit' | 'todo' | null>(null)
+  const [quickCreatingTodo, setQuickCreatingTodo] = useState(false)
 
   if (!FAB_ROUTES.includes(location.pathname)) return null
 
@@ -42,33 +45,26 @@ export function QuickAddFab() {
 
   function choose(key: (typeof MENU_ITEMS)[number]) {
     setOpen(false)
-    if (key === 'journal') {
-      navigate('/journal?new=1')
+    if (key === 'todo') {
+      setQuickCreatingTodo(true)
     } else {
-      setQuickCreating(key)
+      navigate(key === 'habit' ? '/habits?new=1' : '/journal?new=1')
     }
   }
 
-  function openFullEditor(base: '/habits' | '/todos', initialTitle: string) {
-    setQuickCreating(null)
+  function openFullTodoEditor(initialTitle: string) {
+    setQuickCreatingTodo(false)
     const query = initialTitle.trim() ? `?new=1&title=${encodeURIComponent(initialTitle.trim())}` : '?new=1'
-    navigate(`${base}${query}`)
+    navigate(`/todos${query}`)
   }
 
   return (
     <div className="fixed right-4 bottom-20 z-20 flex flex-col items-end gap-2">
-      {quickCreating === 'habit' && settings?.activeSpaceId && (
-        <QuickCreateHabitModal
-          spaceId={settings.activeSpaceId}
-          onClose={() => setQuickCreating(null)}
-          onOpenFullEditor={(title) => openFullEditor('/habits', title)}
-        />
-      )}
-      {quickCreating === 'todo' && settings?.activeSpaceId && (
+      {quickCreatingTodo && settings?.activeSpaceId && (
         <QuickCreateTodoModal
           spaceId={settings.activeSpaceId}
-          onClose={() => setQuickCreating(null)}
-          onOpenFullEditor={(title) => openFullEditor('/todos', title)}
+          onClose={() => setQuickCreatingTodo(false)}
+          onOpenFullEditor={openFullTodoEditor}
         />
       )}
       {open && (

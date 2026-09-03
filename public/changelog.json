@@ -1,5 +1,13 @@
 [
   {
+    "version": "1.17.0",
+    "bullets": [
+      "Type any emoji from your own keyboard as a habit’s icon — the field sits right beside the emoji grid and the photo option, and multi-part emoji like 👨‍👩‍👧, 👍🏽 or 🇺🇦 stay whole.",
+      "There is now one way to create a habit: the quick-add button opens the same form as the Habits screen, which starts with name, look and type.",
+      "The habit name field takes voice input, and a photo can be chosen without switching tabs."
+    ]
+  },
+  {
     "version": "1.16.0",
     "bullets": [
       "Habits can now use a photo of your own. Pick one and it fills the whole tile — your squat rack, your desk, your supplements — instead of a generic symbol.",

@@ -27,7 +27,6 @@ export function HabitsPage() {
     todayKey(),
   )
   const [creating, setCreating] = useState(false)
-  const [quickCreateTitle, setQuickCreateTitle] = useState<string | undefined>(undefined)
   const [searchParams, setSearchParams] = useSearchParams()
   // Tracks habits completed by an explicit click *in this session*, so the
   // one-shot collapse/milestone animation only ever plays for the action
@@ -39,19 +38,16 @@ export function HabitsPage() {
   // "Edit" button, never directly from the list anymore.
   const isEditRoute = location.pathname.endsWith('/edit')
 
-  // Article 49 — the quick-add FAB navigates here with ?new=1 rather than
-  // opening the form itself, so this is the same "New habit" flow whether
-  // reached from this page's own button or from any other screen. `title`
-  // additionally carries over whatever was typed into the Part 1 compact
-  // quick-create modal before the user chose "Open full editor", so
-  // switching to the full form doesn't lose it.
+  // Article 49 — the quick-add FAB (and Today's "create" action) navigate
+  // here with ?new=1 rather than opening a form of their own, so this is
+  // the one "New habit" flow whether reached from this page's own button or
+  // from any other screen (STOA-8: the compact quick-create modal that used
+  // to sit in the FAB is gone; this HabitForm is the only creation path).
   useEffect(() => {
     if (searchParams.get('new') === '1') {
       setCreating(true)
-      setQuickCreateTitle(searchParams.get('title') ?? undefined)
       setSearchParams((prev) => {
         prev.delete('new')
-        prev.delete('title')
         return prev
       })
     }
@@ -81,7 +77,6 @@ export function HabitsPage() {
 
   function closeForm() {
     setCreating(false)
-    setQuickCreateTitle(undefined)
     if (params.id) navigate('/habits')
   }
 
@@ -156,7 +151,6 @@ export function HabitsPage() {
         <HabitForm
           spaceId={settings.activeSpaceId}
           initial={editingHabit}
-          initialTitle={quickCreateTitle}
           allHabits={habits}
           onClose={closeForm}
           onSave={async (data) => {

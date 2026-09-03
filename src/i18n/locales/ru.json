@@ -262,14 +262,16 @@
     "look": "Вид",
     "lookPhoto": "Фото",
     "lookEmoji": "Эмодзи",
+    "lookTypeLabel": "Свой эмодзи с клавиатуры",
+    "lookTypePlaceholder": "Любой эмодзи",
     "lookIcon": "Иконка",
     "lookPreviewHint": "Так привычка будет выглядеть везде.",
     "lookClear": "Убрать фото и эмодзи",
     "lookPhotoChoose": "Выбрать фото",
-    "lookPhotoReplace": "Выбрать другое фото",
+    "lookPhotoReplace": "Заменить фото",
     "lookPhotoFailed": "Не удалось прочитать это изображение. Попробуйте другое.",
     "lookPhotoHint": "Фото остаётся на этом устройстве и попадает в резервную копию. Оно заполняет всю плитку.",
-    "lookEmojiHint": "Выберите один или введите любой эмодзи с клавиатуры.",
+    "lookEmojiHint": "Выберите ниже или введите любой эмодзи с клавиатуры в поле выше.",
     "lookIconHint": "Собственный набор STOA — принимает цвет привычки."
   },
   "todos": {
@@ -609,7 +611,6 @@
   "quickCreate": {
     "categoryPrompt": "Категория?",
     "whenPrompt": "Когда?",
-    "timeChip": "{{time}}",
     "calendarChip": "Добавится в Календарь",
     "moreDetails": "Подробнее",
     "hideDetails": "Скрыть подробности",
@@ -636,7 +637,6 @@
   "habitFields": {
     "domain": "Сфера жизни",
     "timeBlock": "Временной блок",
-    "icon": "Иконка",
     "schedule": "Расписание",
     "measurable": "Измеримое значение",
     "reminderTimes": "Время напоминаний",
