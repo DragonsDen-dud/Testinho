@@ -1,6 +1,7 @@
 import { useState, type CSSProperties } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StoaIcon } from '../ui/icons/stoaIcons'
+import { resolveHabitLook } from '../../lib/habitLook'
 import type { Habit } from '../../db/types'
 import { useHabitLogs } from '../../state/useHabits'
 import { useDomains } from '../../state/useDomains'
@@ -68,7 +69,15 @@ export function HabitPatternGrid({ habit, allHabits }: { habit: Habit; allHabits
   const domains = useDomains(habit.spaceId)
   const styleMap = useCategoryStyleMap()
   const domainStyle = resolveHabitDomainStyle(habit.domainId, domains, styleMap)
-  const icon = habit.icon ?? domainStyle.icon
+  // Same resolver as the tile and the badge. A day cell is ~26px, so the
+  // photo tier is deliberately NOT used here — a face-sized crop of a
+  // photograph is unrecognisable at that size and would just read as noise
+  // across thirty cells. Emoji do work small, so those come through; a
+  // photo habit falls back to its drawn icon for this one surface, which
+  // is the honest trade rather than a broken-looking grid.
+  const look = resolveHabitLook({ emoji: habit.emoji, icon: habit.icon }, domainStyle.icon)
+  const icon = look.kind === 'icon' ? look.icon : domainStyle.icon
+  const cellEmoji = look.kind === 'emoji' ? look.emoji : undefined
 
   const logs = useHabitLogs(habit.id)
   const logsByDate = new Map(logs.map((l) => [l.date, l]))
@@ -125,6 +134,7 @@ export function HabitPatternGrid({ habit, allHabits }: { habit: Habit; allHabits
               value={info.value}
               color={domainStyle.color}
               icon={icon}
+              emoji={cellEmoji}
               dayNumber={Number(date.slice(8, 10))}
               label={expanded ? '' : formatWeekdayShort(date, i18n.language)}
               active={editingDate === date}
@@ -155,6 +165,7 @@ function DayCircle({
   state,
   color,
   icon: iconName,
+  emoji,
   value,
   dayNumber,
   label,
@@ -165,6 +176,8 @@ function DayCircle({
   state: HabitDayState
   color: string
   icon: string
+  /** Full-colour emoji, drawn instead of the glyph on a filled day. */
+  emoji?: string
   value?: number
   dayNumber: number
   label: string
@@ -215,7 +228,13 @@ function DayCircle({
             {value}
           </span>
         ) : filled ? (
-          <StoaIcon name={iconName} size={Math.round(size * 0.6)} color={accessibleTextColor(color)} />
+          emoji ? (
+            <span aria-hidden style={{ fontSize: Math.round(size * 0.55), lineHeight: 1 }}>
+              {emoji}
+            </span>
+          ) : (
+            <StoaIcon name={iconName} size={Math.round(size * 0.6)} color={accessibleTextColor(color)} />
+          )
         ) : (
           <span className="text-[10px]" style={{ color: 'var(--stoa-text-muted)' }}>
             {dayNumber}

@@ -238,7 +238,19 @@
     "quickEdit": "Edit habit",
     "quickNote": "Note",
     "quickNotePlaceholder": "Anything worth remembering about today",
-    "quickSaveNote": "Save note"
+    "quickSaveNote": "Save note",
+    "look": "Look",
+    "lookPhoto": "Photo",
+    "lookEmoji": "Emoji",
+    "lookIcon": "Icon",
+    "lookPreviewHint": "How this habit will appear everywhere.",
+    "lookClear": "Remove photo and emoji",
+    "lookPhotoChoose": "Choose a photo",
+    "lookPhotoReplace": "Choose a different photo",
+    "lookPhotoFailed": "That image couldn't be read. Try another one.",
+    "lookPhotoHint": "Your photo stays on this device and is included in backups. It fills the whole tile.",
+    "lookEmojiHint": "Pick one, or type any emoji using your keyboard in the name field.",
+    "lookIconHint": "STOA's own drawn set — takes the habit's colour."
   },
   "todos": {
     "title": "Tasks",
@@ -641,5 +653,15 @@
     "mind": "Mind & wellbeing",
     "creative": "Creative",
     "focus": "Focus & goals"
+  },
+  "habitEmoji": {
+    "movement": "Movement",
+    "nourishment": "Food & drink",
+    "rest": "Rest & body",
+    "mind": "Mind",
+    "work": "Work & money",
+    "creative": "Creative",
+    "care": "People & home",
+    "avoid": "Cutting back"
   }
 }

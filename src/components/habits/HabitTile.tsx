@@ -2,7 +2,8 @@ import { useTranslation } from 'react-i18next'
 import { Check, History, SkipForward, StickyNote, TrendingDown } from 'lucide-react'
 import { useLongPress } from '../../lib/useLongPress'
 import type { Habit, HabitLog } from '../../db/types'
-import { StoaIcon } from '../ui/icons/stoaIcons'
+import { HabitVisual } from './HabitVisual'
+import { useBlobUrl } from '../../lib/useBlobUrl'
 import { resolveHabitDomainStyle } from './HabitCategoryBadge'
 import { useDomains } from '../../state/useDomains'
 import { useCategoryStyleMap } from '../../state/useCategoryStyles'
@@ -79,13 +80,27 @@ export function HabitTile({
   const styleMap = useCategoryStyleMap()
   const style = resolveHabitDomainStyle(habit.domainId, domains, styleMap)
   const color = style.color
-  const icon = habit.icon ?? style.icon
 
   const done = todayLog?.status === 'done'
   const skipped = todayLog?.status === 'skip'
   const hasNote = !!todayLog?.note?.trim()
   const ink = accessibleTextColor(color)
   const press = useLongPress(() => onLongPress?.(), onToggle)
+
+  // A photo the user chose earns the whole tile rather than a 46px plate:
+  // it is the most specific thing they could have said about this habit,
+  // and at plate size a photo is unrecognisable anyway. Emoji and drawn
+  // icons keep the plate — they are symbols, and a full-bleed symbol is
+  // just a large symbol.
+  const photoUrl = useBlobUrl(habit.image)
+  const photoTile = !!photoUrl
+
+  // On a photo tile everything sits on a dark scrim, so the ink is white
+  // regardless of done-ness — the habit's own contrast pair only applies
+  // when the habit's own colour is what's behind the text.
+  const textInk = photoTile ? '#ffffff' : done ? ink : 'var(--stoa-text)'
+  const mutedInk = photoTile ? 'rgba(255,255,255,0.82)' : done ? ink : 'var(--stoa-text-muted)'
+  const markInk = photoTile ? '#ffffff' : ink
 
   const streak = habit.habitType === 'build' ? computeBuildStreak(habit, logs, date) : computeAvoidStreak(habit, logs, date)
 
@@ -107,12 +122,46 @@ export function HabitTile({
         // Done tiles carry the habit's full gradient; not-done tiles carry a
         // low-alpha wash of the same hue over the surface, so the grid reads
         // as one colourful family in both states rather than "colour = done".
-        backgroundImage: done ? gradientFromColor(color) : undefined,
-        backgroundColor: done ? color : 'var(--stoa-surface)',
-        border: done ? '1px solid transparent' : '1px solid var(--stoa-border)',
+        backgroundImage: done && !photoTile ? gradientFromColor(color) : undefined,
+        backgroundColor: photoTile ? '#000' : done ? color : 'var(--stoa-surface)',
+        // No border at all on a photo tile: a 1px transparent border would
+        // let the black backdrop show as a hairline outside the image.
+        border: photoTile ? 'none' : done ? '1px solid transparent' : '1px solid var(--stoa-border)',
       }}
     >
-      {!done && (
+      {photoTile && (
+        <>
+          <img
+            src={photoUrl}
+            alt=""
+            draggable={false}
+            aria-hidden
+            className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+            // A done photo tile stays full-colour and gains the habit's hue
+            // as a wash (below); a not-done one is desaturated and dimmed,
+            // so "done" is still legible at a glance across the grid
+            // without the photo having to disappear.
+            // Desaturated rather than dimmed for the not-done state: the
+            // scrim already supplies the darkening the text needs, so
+            // subtracting brightness on top of it only made the picture
+            // muddy without making "done" any clearer.
+            style={{ filter: done ? 'saturate(1.05)' : 'saturate(0.7)' }}
+          />
+          {done && (
+            <span aria-hidden className="absolute inset-0 pointer-events-none mix-blend-multiply" style={{ background: color, opacity: 0.45 }} />
+          )}
+          {/* The scrim is what makes arbitrary user photos safe to put text
+              on. Bottom-weighted, because that is where the name and meta
+              line sit; the top stays clear so the picture is still visible. */}
+          <span
+            aria-hidden
+            className="absolute inset-0 pointer-events-none"
+            style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.45) 42%, rgba(0,0,0,0.12) 72%, rgba(0,0,0,0.28) 100%)' }}
+          />
+        </>
+      )}
+
+      {!done && !photoTile && (
         <span
           aria-hidden
           className="absolute inset-0 pointer-events-none"
@@ -138,7 +187,13 @@ export function HabitTile({
             decoration beside a label. The completion check rides its
             corner rather than the tile's, which is already occupied by the
             history button. */}
-        <span className="relative inline-flex shrink-0" style={{ width: 46, height: 46 }}>
+        <span
+          className="relative inline-flex shrink-0"
+          // On a photo tile the plate would be a thumbnail of the picture
+          // already filling the tile. The corner badge still needs an
+          // anchor, so the box stays and only the art inside it goes.
+          style={{ width: photoTile ? 22 : 46, height: photoTile ? 22 : 46 }}
+        >
           {/* On a done tile the badge INVERTS — ink plate, hue glyph —
               rather than tinting the tile's own colour, which the first
               render showed reading as a barely-visible smudge. The
@@ -146,22 +201,9 @@ export function HabitTile({
               already guarantees ≥4.5:1 between `ink` and `color`, and
               swapping which one is the background doesn't change a
               contrast ratio. */}
-          <span
-            className="inline-flex items-center justify-center rounded-2xl w-full h-full"
-            style={{
-              background: done ? ink : color,
-              backgroundImage: done ? undefined : gradientFromColor(color),
-            }}
-          >
-            {/* The plate is `ink` on a done tile and the hue otherwise, so
-                the accent cut-out has to follow it — see StoaIcon. */}
-            <StoaIcon
-              name={icon}
-              size={28}
-              color={done ? color : accessibleTextColor(color)}
-              accentColor={done ? ink : color}
-            />
-          </span>
+          {!photoTile && (
+            <HabitVisual habit={habit} fallbackIcon={style.icon} color={color} size={46} inverted={done} />
+          )}
           {/* One corner badge, three possible meanings. Skip gets its own
               glyph rather than being drawn as "not done", because a skipped
               day is deliberately not a miss (computeHabitDayInfo agrees) and
@@ -175,7 +217,7 @@ export function HabitTile({
                 height: 22,
                 right: -6,
                 bottom: -6,
-                background: done ? ink : 'var(--stoa-text-muted)',
+                background: done ? markInk : photoTile ? '#ffffff' : 'var(--stoa-text-muted)',
               }}
             >
               {done ? (
@@ -187,18 +229,24 @@ export function HabitTile({
           )}
         </span>
 
-        <div className="flex-1 min-w-0">
+        {/* On a photo tile the text block moves to the BOTTOM, where the
+            scrim is densest. Sitting at the top it overlapped the brightest
+            part of the picture and had to fight it — the standard fix for
+            text-over-photography is to put the text where the darkening is,
+            not to darken everything. */}
+        {photoTile && <span aria-hidden className="flex-1" />}
+        <div className={photoTile ? 'min-w-0' : 'flex-1 min-w-0'}>
           <div
             // break-words so a long single-word habit name wraps instead
             // of running out past the tile's rounded edge.
             className="font-heading text-[15px] leading-tight line-clamp-2 break-words"
-            style={{ color: done ? ink : 'var(--stoa-text)' }}
+            style={{ color: textInk, textShadow: photoTile ? '0 1px 3px rgba(0,0,0,0.55)' : undefined }}
           >
             {habit.name}
           </div>
           <div
             className="text-[11px] mt-1 tabular-nums flex items-center gap-1"
-            style={{ color: done ? ink : 'var(--stoa-text-muted)', opacity: done ? 0.72 : 1 }}
+            style={{ color: mutedInk, opacity: done && !photoTile ? 0.72 : 1 }}
           >
             <span className="min-w-0 truncate">
               {blocked
@@ -236,7 +284,13 @@ export function HabitTile({
                 className="flex-1 rounded-full"
                 style={{
                   height: 5,
-                  background: done ? ink : success ? color : 'var(--stoa-text-muted)',
+                  background: photoTile
+                    ? '#ffffff'
+                    : done
+                      ? ink
+                      : success
+                        ? color
+                        : 'var(--stoa-text-muted)',
                   opacity: inactive ? 0.15 : success ? (done ? 0.9 : 1) : 0.22,
                 }}
               />
@@ -252,7 +306,7 @@ export function HabitTile({
         onClick={onOpenHistory}
         aria-label={t('habits.openHistory', { name: habit.name })}
         className="absolute top-2.5 right-2.5 w-9 h-9 rounded-full flex items-center justify-center active:scale-90 transition-transform"
-        style={{ color: done ? ink : 'var(--stoa-text-muted)', opacity: done ? 0.75 : 0.8 }}
+        style={{ color: mutedInk, opacity: photoTile ? 0.95 : done ? 0.75 : 0.8 }}
       >
         <History size={16} strokeWidth={2} aria-hidden />
       </button>

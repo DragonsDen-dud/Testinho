@@ -1,5 +1,13 @@
 [
   {
+    "version": "1.16.0",
+    "bullets": [
+      "Habits can now use a photo of your own. Pick one and it fills the whole tile — your squat rack, your desk, your supplements — instead of a generic symbol.",
+      "Or pick an emoji: a curated, full-colour set grouped by movement, food, rest, mind, work, creative, people and cutting back.",
+      "New habits guess their own symbol from the name, so “Push ups”, “Vitamins” and “Cold shower” no longer all start out as the same icon."
+    ]
+  },
+  {
     "version": "1.15.0",
     "bullets": [
       "The last seven days now sit at the top of Today as a row of rings — you can see how each day went, and tap any of them to review or fill in that day right there.",

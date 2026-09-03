@@ -46,11 +46,19 @@ export function ColorIconBadge({
   icon,
   size = 'row',
   indicator,
+  emoji,
+  imageUrl,
 }: {
   color: string
   icon: string
   size?: 'row' | 'tray' | 'detail'
   indicator?: ColorIconBadgeIndicator
+  /** Full-colour emoji, shown instead of the drawn glyph. */
+  emoji?: string
+  /** Object URL for a habit photo, shown instead of everything else. The
+   * caller owns the URL's lifecycle (see HabitVisual's useBlobUrl) — this
+   * component must not mint one per render. */
+  imageUrl?: string
 }) {
   const px = SIZE_PX[size]
   const iconColor = accessibleTextColor(color)
@@ -58,6 +66,9 @@ export function ColorIconBadge({
   const iconPx = Math.round(px * 0.52)
   return (
     <span
+      // NOT overflow-hidden: the build/avoid indicator below is positioned
+      // at -2px and would be clipped. The photo is circular by its own
+      // rounded-full instead.
       className="relative inline-flex items-center justify-center rounded-full shrink-0"
       style={{
         width: px,
@@ -80,11 +91,28 @@ export function ColorIconBadge({
           a secondary mass at reduced opacity, see icons/stoaIcons.tsx), so
           the previous trick of stacking two copies of a Lucide outline to
           fake depth is gone. One glyph, drawn with the depth built in. */}
-      {/* accentColor is the plate's own hue, so the glyph's secondary mass
-          cuts through to the badge behind it rather than tinting the solid
-          mass by 45% — which, on a single-hue glyph, is no change at all
-          and renders internal detail invisible. */}
-      <StoaIcon name={icon} size={Math.round(iconPx * 1.18)} color={iconColor} accentColor={color} />
+      {/* Three tiers, most specific first, matching lib/habitLook.ts's own
+          precedence so a badge and a tile can never disagree about which
+          art a habit has. The corner indicator is unaffected by which tier
+          wins — build-vs-avoid still needs its own signal on all three. */}
+      {imageUrl ? (
+        <img
+          src={imageUrl}
+          alt=""
+          draggable={false}
+          className="absolute inset-0 w-full h-full object-cover rounded-full"
+        />
+      ) : emoji ? (
+        <span aria-hidden style={{ fontSize: Math.round(px * 0.56), lineHeight: 1 }}>
+          {emoji}
+        </span>
+      ) : (
+        /* accentColor is the plate's own hue, so the glyph's secondary mass
+           cuts through to the badge behind it rather than tinting the solid
+           mass by 45% — which, on a single-hue glyph, is no change at all
+           and renders internal detail invisible. */
+        <StoaIcon name={icon} size={Math.round(iconPx * 1.18)} color={iconColor} accentColor={color} />
+      )}
       {indicator && (
         <span
           aria-label={indicator.label}
