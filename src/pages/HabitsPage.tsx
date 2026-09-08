@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { LibraryBig } from 'lucide-react'
 import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useAppSettings } from '../state/useAppSettings'
 import { useHabitsQuery, useLogsForDate, useHabitLogsForHabits } from '../state/useHabits'
@@ -9,6 +10,7 @@ import { showUndoToast } from '../state/toast'
 import { HabitForm } from '../components/habits/HabitForm'
 import { HabitGrid } from '../components/habits/HabitGrid'
 import { HabitGridSkeleton } from '../components/habits/HabitGridSkeleton'
+import { HabitLibrarySheet } from '../components/habits/HabitLibrarySheet'
 import { JustCompletedMoodPrompt } from '../components/habits/JustCompletedMoodPrompt'
 import { HabitDetailSheet } from '../components/habits/HabitDetailSheet'
 import { todayKey } from '../lib/date'
@@ -27,6 +29,7 @@ export function HabitsPage() {
     todayKey(),
   )
   const [creating, setCreating] = useState(false)
+  const [libraryOpen, setLibraryOpen] = useState(false)
   const [searchParams, setSearchParams] = useSearchParams()
   // Tracks habits completed by an explicit click *in this session*, so the
   // one-shot collapse/milestone animation only ever plays for the action
@@ -110,6 +113,17 @@ export function HabitsPage() {
         </div>
       )}
 
+      {/* The library sits on Habits rather than Today: Today is for doing
+          the day, Habits is where the set itself is managed. */}
+      <button
+        type="button"
+        onClick={() => setLibraryOpen(true)}
+        className="self-start rounded-full px-3.5 py-2 text-sm flex items-center gap-1.5 border border-[var(--stoa-border)] active:scale-95 transition-transform stoa-focusable"
+      >
+        <LibraryBig size={15} strokeWidth={1.75} aria-hidden className="text-[var(--stoa-text-muted)]" />
+        {t('habitLibrary.open')}
+      </button>
+
       {/* Same grid as Today — one component, so the two screens can't
           drift into different treatments of the same content. The grid owns
           its own empty state now (with a create action), so the page-level
@@ -144,6 +158,25 @@ export function HabitsPage() {
           allHabits={habits}
           onClose={() => navigate('/habits')}
           onEdit={() => navigate(`/habits/${viewingHabit.id}/edit`)}
+        />
+      )}
+
+      {libraryOpen && settings?.activeSpaceId && (
+        <HabitLibrarySheet
+          spaceId={settings.activeSpaceId}
+          domains={domains}
+          existingHabits={habits}
+          onClose={() => setLibraryOpen(false)}
+          onAdded={(createdIds) => {
+            setLibraryOpen(false)
+            // A real undo, not a decorative one: adding six habits at once
+            // and then having to delete them one by one would be worse than
+            // not offering the bulk add at all. Soft delete, so Undo and
+            // Trash restore land in exactly the same place (Article 20).
+            showUndoToast(t('habitLibrary.addedToast', { count: createdIds.length }), () => {
+              void Promise.all(createdIds.map((id) => deleteHabit(id)))
+            })
+          }}
         />
       )}
 

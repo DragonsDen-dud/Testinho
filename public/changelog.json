@@ -1,5 +1,13 @@
 [
   {
+    "version": "1.18.0",
+    "bullets": [
+      "A habit library: 32 prefilled starting points across movement, sleep, food, mind, work, people and cutting back. Pick several at once and they arrive as ordinary habits, already scheduled and counted — rename or delete any of them like normal.",
+      "Keep quotes that matter to you. Add the line, who said it and where it's from, and one of them sits quietly at the bottom of Today each day.",
+      "Deleted quotes go to Trash like everything else, and both new features are fully translated in English and Russian."
+    ]
+  },
+  {
     "version": "1.17.0",
     "bullets": [
       "Type any emoji from your own keyboard as a habit’s icon — the field sits right beside the emoji grid and the photo option, and multi-part emoji like 👨‍👩‍👧, 👍🏽 or 🇺🇦 stay whole.",

@@ -6,6 +6,7 @@ import { useAppSettings } from '../state/useAppSettings'
 import { listTrashedHabits, restoreHabit, purgeHabit } from '../data/habits'
 import { listTrashedTodos, restoreTodo, purgeTodo } from '../data/todos'
 import { listTrashedProjects, restoreProject, purgeProject } from '../data/projects'
+import { listTrashedQuotes, restoreQuote, purgeQuote } from '../data/quotes'
 import { Button } from '../components/ui/Button'
 import { EmptyState } from '../components/ui/EmptyState'
 
@@ -63,7 +64,12 @@ export function TrashPage() {
   const trashedHabits = useLiveQuery(() => (spaceId ? listTrashedHabits(spaceId) : []), [spaceId]) ?? []
   const trashedTodos = useLiveQuery(() => (spaceId ? listTrashedTodos(spaceId) : []), [spaceId]) ?? []
   const trashedProjects = useLiveQuery(() => (spaceId ? listTrashedProjects(spaceId) : []), [spaceId]) ?? []
-  const isEmpty = trashedHabits.length === 0 && trashedTodos.length === 0 && trashedProjects.length === 0
+  const trashedQuotes = useLiveQuery(() => (spaceId ? listTrashedQuotes(spaceId) : []), [spaceId]) ?? []
+  const isEmpty =
+    trashedHabits.length === 0 &&
+    trashedTodos.length === 0 &&
+    trashedProjects.length === 0 &&
+    trashedQuotes.length === 0
 
   return (
     <div className="p-4 max-w-md mx-auto w-full flex flex-col gap-4">
@@ -93,6 +99,14 @@ export function TrashPage() {
         label={(td) => td.title}
         onRestore={restoreTodo}
         onPurgeForever={purgeTodo}
+        deleteForeverConfirmText={t('trash.deleteForeverConfirm')}
+      />
+      <TrashSection
+        title={t('trash.quotesSection')}
+        items={trashedQuotes}
+        label={(q) => q.text}
+        onRestore={restoreQuote}
+        onPurgeForever={purgeQuote}
         deleteForeverConfirmText={t('trash.deleteForeverConfirm')}
       />
       <TrashSection

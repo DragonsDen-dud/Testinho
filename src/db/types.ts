@@ -446,3 +446,32 @@ export interface ReminderState {
   lastActionAt?: string // ISO — last explicit user action (acknowledge/snooze/dismiss)
   snoozeUntil?: string // ISO — only meaningful while state === 'snoozed'
 }
+
+/**
+ * A short piece of text the user wants to keep in front of them —
+ * a quote from a book, a podcast, a person, or a line of their own.
+ *
+ * ARTICLE 1 IS WHY THIS IS AN ENTITY AND NOT A BUILT-IN LIST. The spec is
+ * explicit that no line of code may encode the user's particular interests
+ * or influences — personalisation goes through data. So STOA ships no
+ * quotes of its own and endorses no source: the collection starts empty and
+ * everything in it is something the user typed or pasted.
+ *
+ * That also settles the accuracy question, which matters more than it
+ * looks: a built-in list of quotes attributed to real people would be
+ * asserting that those people said those words. Here the user is the one
+ * making the attribution, about text they chose.
+ */
+export interface Quote {
+  id: string
+  spaceId: string
+  text: string
+  /** Who said it, if the user wants to record that. Free text. */
+  author?: string
+  /** Where it came from — a book, an episode, a conversation. */
+  source?: string
+  createdAt: string
+  updatedAt: string
+  /** Article 20 — soft delete, same contract as every other entity. */
+  deletedAt?: string
+}
