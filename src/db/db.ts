@@ -17,6 +17,7 @@ import type {
   CategoryStyle,
   SleepLog,
   EveningReview,
+  Quote,
 } from './types'
 import { CURRENT_VERSION } from '../lib/changelog'
 
@@ -38,6 +39,7 @@ export class StoaDatabase extends Dexie {
   categoryStyles!: Table<CategoryStyle, string>
   sleepLogs!: Table<SleepLog, string>
   eveningReviews!: Table<EveningReview, string>
+  quotes!: Table<Quote, string>
 
   constructor() {
     super('stoa')
@@ -134,6 +136,13 @@ export class StoaDatabase extends Dexie {
     // upsert-by-composite-key lookup sleepLogs and habitLogs already use.
     this.version(9).stores({
       eveningReviews: 'id, spaceId, date, [spaceId+date]',
+    })
+    // v10: user-owned quotes. Additive only — no existing table changes
+    // shape, so nothing needs an upgrade() callback. Indexed by spaceId
+    // alone: a quote collection is small and always read whole for a
+    // Space, so a composite index would buy nothing.
+    this.version(10).stores({
+      quotes: 'id, spaceId, deletedAt',
     })
   }
 }

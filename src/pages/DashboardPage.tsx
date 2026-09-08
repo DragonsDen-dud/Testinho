@@ -21,6 +21,7 @@ import { isEveningPromptTime } from '../lib/eveningPrompt'
 import { ConnectedTaskCard } from '../components/todos/redesign/ConnectedTaskCard'
 import { CompletedTaskBubble } from '../components/dashboard/CompletedTaskBubble'
 import { ConnectivityPanel } from '../components/dashboard/ConnectivityPanel'
+import { DailyQuoteCard } from '../components/dashboard/DailyQuoteCard'
 import { SectionHeader } from '../components/ui/SectionHeader'
 import { BackupReminderBanner } from '../components/dashboard/BackupReminderBanner'
 import { isScheduledOnDate, computeBuildStreak, computeAvoidStreak } from '../lib/habitStrength'
@@ -30,6 +31,8 @@ import { isBackupReminderDue } from '../lib/backupReminder'
 import { isTasksPlanningEnabled } from '../lib/featureFlags'
 import { computeAtRiskHabit } from '../lib/habitAtRisk'
 import { buildDayStrip } from '../lib/dayStrip'
+import { pickQuoteForDate } from '../lib/dailyQuote'
+import { useQuotes } from '../state/useQuotes'
 import { todayKey, addDays } from '../lib/date'
 
 
@@ -135,6 +138,7 @@ export function DashboardPage() {
   const activeSpace = spaces.find((s) => s.id === settings?.activeSpaceId)
   const { habits: allHabits, loaded: habitsLoaded } = useHabitsQuery(settings?.activeSpaceId)
   const domains = useDomains(settings?.activeSpaceId)
+  const quotes = useQuotes(settings?.activeSpaceId)
   const date = todayKey()
   const todaysHabits = allHabits.filter((h) => isScheduledOnDate(h, date))
   // Fetched for all habits, not just today's — a dependency can point at a
@@ -259,6 +263,7 @@ export function DashboardPage() {
   // may have had a different set scheduled, and building the strip from
   // today's list would understate those days.
   const dayStrip = buildDayStrip(allHabits, allLogsByHabit, date)
+  const dailyQuote = pickQuoteForDate(quotes, date)
   const longestStreak = todaysHabits.reduce((max, h) => {
     const logs = allLogsByHabit.get(h.id) ?? []
     const streak = h.habitType === 'build' ? computeBuildStreak(h, logs, date) : computeAvoidStreak(h, logs, date)
@@ -432,6 +437,11 @@ export function DashboardPage() {
           )}
         </section>
       )}
+
+      {/* One of the user's own quotes, below the day's work — it is
+          something to read, not something to do, so it never outranks the
+          habits. Absent entirely when the collection is empty. */}
+      {dailyQuote && <DailyQuoteCard quote={dailyQuote} />}
 
       <ConnectivityPanel statuses={connectivityStatuses} />
 

@@ -2,6 +2,7 @@ import { db } from '../db/db'
 import { purgeExpiredHabits } from './habits'
 import { purgeExpiredTodos } from './todos'
 import { purgeExpiredProjects } from './projects'
+import { purgeExpiredQuotes } from './quotes'
 
 /** Article 20 — auto-purge trash past AppSettings.trashRetentionDays. Run once per app start. */
 export async function purgeExpiredTrash(): Promise<void> {
@@ -10,4 +11,5 @@ export async function purgeExpiredTrash(): Promise<void> {
   await purgeExpiredHabits(retentionDays)
   await purgeExpiredTodos(retentionDays)
   await purgeExpiredProjects(retentionDays)
+  await purgeExpiredQuotes(retentionDays)
 }

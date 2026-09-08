@@ -8,6 +8,7 @@ import { RemindersSettingsSection } from '../components/settings/RemindersSettin
 import { HomeScreenOrderSection } from '../components/settings/HomeScreenOrderSection'
 import { HabitFieldsSection } from '../components/settings/HabitFieldsSection'
 import { BackupSection } from '../components/settings/BackupSection'
+import { QuotesSection } from '../components/settings/QuotesSection'
 import { isTasksPlanningEnabled } from '../lib/featureFlags'
 import type { Language, ThemePreset } from '../db/types'
 
@@ -131,6 +132,8 @@ export function SettingsPage() {
       <RemindersSettingsSection />
 
       <AiSettingsSection />
+
+      <QuotesSection />
 
       <BackupSection />
 
